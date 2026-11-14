@@ -1036,6 +1036,7 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, push, set, remove, onValue, query, orderByChild, get, update, onDisconnect, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
 /* bootOverlay 強制解除 */
 (function forceBootOverlayHide() {
@@ -1087,6 +1088,7 @@ const FAVICON_NOTIFY = "data:image/svg+xml," + encodeURIComponent(
 const faviconLink = document.getElementById('faviconLink');
 function setFavicon(url) { faviconLink.href = url; }
 
+// ===== Firebase 設定（指定の chat-d04a6 プロジェクト）=====
 const firebaseConfig = {
   apiKey: "AIzaSyAexiMqMGTzd1r9IzHb4_aQomhPf-DCB6U",
   authDomain: "chat-d04a6.firebaseapp.com",
@@ -1094,9 +1096,11 @@ const firebaseConfig = {
   projectId: "chat-d04a6",
   storageBucket: "chat-d04a6.firebasestorage.app",
   messagingSenderId: "290611121392",
-  appId: "1:290611121392:web:c45ca30c8099f85bf08635"
+  appId: "1:290611121392:web:c45ca30c8099f85bf08635",
+  measurementId: "G-3ZENK6R0JV"
 };
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const db = getDatabase(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
