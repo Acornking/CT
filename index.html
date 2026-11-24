@@ -9,7 +9,6 @@
 <link id="faviconLink" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23c0392b'/%3E%3Cpath d='M32 8 L38 24 L54 24 L41 34 L46 50 L32 40 L18 50 L23 34 L10 24 L26 24 Z' fill='%23fff'/%3E%3C/svg%3E">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-/* ==================== クリスマス版スタイル ==================== */
 :root {
   --xmas-red: #c0392b;
   --xmas-red-light: #e74c3c;
@@ -19,7 +18,6 @@
   --xmas-blue-light: #d6eaf8;
   --xmas-blue-dark: #2c5f7c;
   --xmas-gold: #d4af37;
-  --xmas-snow: #fdfefe;
   --xmas-bg: #eaf4fc;
   --xmas-bg-gradient: linear-gradient(180deg, #d6eaf8 0%, #eaf4fc 100%);
 }
@@ -34,11 +32,24 @@ body {
 }
 input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
 
-/* 雪の降るアニメーション */
-#snowLayer {
+/* ===== 背景レイヤー ===== */
+#siteBackgroundLayer {
+  position: fixed; inset: 0; z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+#siteBackgroundLayer.hidden { display: none; }
+
+/* ===== 天候レイヤー ===== */
+#weatherLayer {
   position: fixed; inset: 0; pointer-events: none; z-index: 1;
   overflow: hidden;
 }
+
+/* ===== 雪 ===== */
 .snowflake {
   position: absolute; top: -20px;
   color: #fff;
@@ -49,19 +60,78 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 }
 @keyframes snowfall {
   0% { transform: translateY(-20px) rotate(0deg); }
-  100% { transform: translateY(100vh) rotate(360deg); }
+  100% { transform: translateY(105vh) rotate(360deg); }
+}
+
+/* ===== 雨 ===== */
+.raindrop {
+  position: absolute; top: -30px;
+  width: 2px; height: 18px;
+  background: linear-gradient(180deg, rgba(135,206,235,0.1), rgba(44,95,124,0.8));
+  animation: rainfall linear infinite;
+  border-radius: 1px;
+}
+@keyframes rainfall {
+  0% { transform: translateY(-30px); }
+  100% { transform: translateY(105vh); }
+}
+
+/* ===== どんぐり ===== */
+.acorn {
+  position: absolute; top: -40px;
+  font-size: 24px;
+  animation: acornfall linear infinite;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+@keyframes acornfall {
+  0% { transform: translateY(-40px) rotate(0deg); }
+  50% { transform: translateY(50vh) rotate(180deg); }
+  100% { transform: translateY(105vh) rotate(360deg); }
+}
+
+/* ===== 雷 ===== */
+#thunderFlash {
+  position: fixed; inset: 0; z-index: 2;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+#thunderFlash.flash {
+  animation: thunderFlash 0.6s ease-out;
+}
+@keyframes thunderFlash {
+  0% { opacity: 0; }
+  10% { opacity: 0.9; }
+  20% { opacity: 0.2; }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+.lightning-bolt {
+  position: absolute;
+  top: 0;
+  width: 40px;
+  height: 60vh;
+  pointer-events: none;
+  animation: lightningBolt 0.8s ease-out forwards;
+  opacity: 0;
+}
+@keyframes lightningBolt {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 #appContainer {
   display: flex; flex-direction: column;
   height: 100vh; height: 100dvh;
   max-width: 900px; width: 100%; margin: 0 auto;
-  background: var(--xmas-bg-gradient);
-  position: relative; z-index: 2;
+  background: rgba(234,244,252,0.92);
+  backdrop-filter: blur(2px);
+  position: relative; z-index: 10;
   box-shadow: 0 0 30px rgba(44,95,124,0.2);
 }
+#appContainer.has-bg { background: rgba(255,255,255,0.75); backdrop-filter: blur(3px); }
 
-/* ヘッダー: 赤緑グラデーション */
 #appHeader {
   flex-shrink: 0;
   background: linear-gradient(135deg, #c0392b 0%, #145a32 100%);
@@ -95,7 +165,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .avatar-online-wrap { position: relative; display: inline-flex; flex-shrink: 0; }
 .avatar-online-wrap .online-dot { position: absolute; right: -1px; bottom: -1px; width: 13px; height: 13px; border: 2px solid #fff; }
 
-/* チャットリスト */
 .chat-list { display: flex; flex-direction: column; gap: 2px; }
 .chat-item {
   display: flex; align-items: center; gap: 12px;
@@ -118,13 +187,7 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .chat-item-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
 .chat-item-time { font-size: 10px; color: #9ca3af; }
 .chat-item-badge { background: var(--xmas-red); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 9999px; min-width: 20px; text-align: center; }
-.group-avatars { display: flex; position: relative; width: 40px; height: 40px; }
-.group-avatars .avatar-sm { position: absolute; width: 26px; height: 26px; }
-.group-avatars .avatar-sm:nth-child(1) { top: 0; left: 0; z-index: 3; }
-.group-avatars .avatar-sm:nth-child(2) { bottom: 0; right: 0; z-index: 2; }
-.group-avatars .avatar-sm:nth-child(3) { top: 0; right: 0; z-index: 1; width: 22px; height: 22px; }
 
-/* チャット画面 */
 #chatView { display: flex; flex-direction: column; height: 100%; position: relative; }
 .chat-header {
   flex-shrink: 0;
@@ -137,27 +200,20 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .chat-header-body { flex: 1; min-width: 0; }
 .chat-header-name { font-size: 16px; font-weight: 700; color: var(--xmas-green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat-header-meta { font-size: 11px; color: #6b7280; display: flex; align-items: center; gap: 6px; margin-top: 1px; }
-
 .chat-messages-wrap {
   flex: 1; overflow-y: auto; overflow-x: hidden;
   padding: 16px 14px;
-  background: linear-gradient(180deg, #f0f8ff 0%, #fdfefe 100%);
+  background: rgba(240,248,255,0.85);
 }
 .chat-messages { display: flex; flex-direction: column; gap: 4px; }
-
 .date-divider { display: flex; align-items: center; justify-content: center; margin: 16px 0; position: relative; }
 .date-divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #d6eaf8; z-index: 0; }
 .date-divider span { position: relative; z-index: 1; background: #fff; padding: 3px 12px; font-size: 11px; color: var(--xmas-blue-dark); font-weight: 600; border-radius: 9999px; border: 1px solid var(--xmas-blue); }
 
-.system-message { text-align: center; margin: 12px 0; }
-.system-message span { background: #f0f8ff; color: #6b7280; font-size: 11px; padding: 4px 12px; border-radius: 9999px; border: 1px solid #d6eaf8; }
-
 .msg-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 6px; max-width: 100%; }
 .msg-row.mine { flex-direction: row-reverse; }
-.msg-row.msg-grouped { margin-bottom: 2px; }
 .msg-avatar-slot { width: 32px; flex-shrink: 0; display: flex; justify-content: center; }
 .msg-avatar-slot .avatar-sm { width: 32px; height: 32px; border: 2px solid #fff; }
-.msg-avatar-slot.empty { visibility: hidden; height: 32px; }
 .msg-body { max-width: min(78%, 520px); display: flex; flex-direction: column; min-width: 0; }
 .msg-row.mine .msg-body { align-items: flex-end; }
 .msg-meta { font-size: 11px; color: #6b7280; margin-bottom: 3px; padding: 0 4px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
@@ -182,64 +238,10 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
   color: #7a1f14;
   border-bottom-right-radius: 4px;
 }
-.msg-row.mine.msg-grouped .msg-bubble { border-bottom-right-radius: 16px; }
-.msg-row:not(.mine).msg-grouped .msg-bubble { border-bottom-left-radius: 16px; }
 .msg-content { white-space: pre-wrap; word-break: break-word; }
 .msg-content a { color: #2563eb; text-decoration: underline; word-break: break-all; }
-.msg-row.mine .msg-content a { color: #7a1f14; }
-
-.reply-quote { background: rgba(0,0,0,0.05); border-left: 3px solid var(--xmas-blue-dark); border-radius: 6px; padding: 5px 8px; margin-bottom: 6px; font-size: 11px; color: #4b5563; cursor: pointer; max-width: 100%; }
-.reply-quote .reply-name { font-weight: 700; color: var(--xmas-blue-dark); }
-.msg-row.mine .reply-quote { background: rgba(0,0,0,0.06); border-left-color: var(--xmas-red); }
-.msg-row.mine .reply-quote .reply-name { color: var(--xmas-red); }
-
-.msg-reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; padding: 0 4px; }
-.msg-row.mine .msg-reactions { justify-content: flex-end; }
-.reaction-chip { display: inline-flex; align-items: center; gap: 3px; background: #fff; border: 1px solid #d6eaf8; border-radius: 9999px; padding: 2px 8px; font-size: 13px; cursor: pointer; user-select: none; }
-.reaction-chip.mine { background: #ffe0e0; border-color: var(--xmas-red-light); }
-.reaction-chip .reaction-count { font-size: 11px; font-weight: 700; color: #6b7280; }
-.reaction-chip.mine .reaction-count { color: var(--xmas-red); }
-
 .msg-file { margin-top: 6px; display: block; border-radius: 12px; overflow: hidden; cursor: zoom-in; max-width: 100%; border: 1px solid #d6eaf8; background: #f9fafb; }
 .msg-file img { display: block; max-height: 280px; max-width: 100%; object-fit: contain; }
-.msg-file.only-file { margin-top: 0; }
-.msg-sticker { display: block; cursor: zoom-in; max-width: 100%; }
-.msg-sticker img { display: block; max-width: 160px; max-height: 160px; background: transparent; }
-.msg-bubble.sticker-only { background: transparent !important; border: none !important; padding: 0 !important; }
-
-.read-receipt { font-size: 10px; color: var(--xmas-blue-dark); font-weight: 600; margin-top: 2px; padding: 0 4px; display: flex; align-items: center; gap: 3px; justify-content: flex-end; }
-.edited-label { font-size: 10px; color: #9ca3af; font-style: italic; }
-
-.msg-menu-btn { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.95); border: 1px solid #d6eaf8; color: #6b7280; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; flex-shrink: 0; align-self: center; }
-.msg-bubble-wrap:hover .msg-menu-btn, .msg-menu-btn.open { opacity: 1; }
-@media (hover: none) { .msg-menu-btn { opacity: 0.7; } }
-
-.msg-menu-popup { position: fixed; background: #fff; border: 1px solid #d6eaf8; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 170px; z-index: 30000; overflow: hidden; }
-.msg-menu-popup button { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 14px; font-size: 13px; background: none; border: none; cursor: pointer; color: #374151; }
-.msg-menu-popup button:hover { background: #f0f8ff; }
-.msg-menu-popup button.danger { color: var(--xmas-red); }
-
-.chat-header-menu-btn { background: #f0f8ff; border: 1px solid #d6eaf8; border-radius: 8px; padding: 7px 11px; cursor: pointer; font-size: 14px; color: var(--xmas-green); font-weight: 700; display: flex; align-items: center; justify-content: center; }
-.chat-call-btn { background: linear-gradient(135deg, #27ae60, #145a32); border: none; border-radius: 8px; padding: 7px 11px; cursor: pointer; color: #fff; font-weight: 700; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(20,90,50,0.3); }
-.chat-call-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.chat-header-menu-popup { position: fixed; background: #fff; border: 1px solid #d6eaf8; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 200px; z-index: 30000; overflow: hidden; }
-.chat-header-menu-popup button { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 11px 14px; font-size: 13px; background: none; border: none; cursor: pointer; color: #374151; }
-.chat-header-menu-popup button:hover { background: #f0f8ff; }
-.chat-header-menu-popup button.danger { color: var(--xmas-red); }
-
-.reaction-picker { position: fixed; background: #fff; border: 1px solid #d6eaf8; border-radius: 9999px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; gap: 2px; padding: 6px 8px; z-index: 31000; }
-.reaction-picker button { width: 34px; height: 34px; border-radius: 50%; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-#typingIndicatorSlot { min-height: 0; }
-#typingIndicatorSlot:not(:empty) { min-height: 40px; margin-bottom: 6px; }
-.typing-indicator-row { display: flex; align-items: flex-end; gap: 8px; }
-.typing-bubble { background: #fff; border: 1px solid #d6eaf8; border-radius: 16px; border-bottom-left-radius: 4px; padding: 10px 14px; display: inline-flex; align-items: center; gap: 6px; }
-.typing-bubble .typing-label { font-size: 12px; color: #6b7280; }
-.typing-bubble .typing-dots { display: inline-flex; gap: 3px; }
-.typing-bubble .typing-dots span { width: 6px; height: 6px; background: var(--xmas-green); border-radius: 50%; animation: typingBounce 1.2s infinite ease-in-out; }
-.typing-bubble .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
-.typing-bubble .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
-@keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-3px); opacity: 1; } }
 
 .chat-input-form { flex-shrink: 0; background: #fff; border-top: 2px solid var(--xmas-blue); padding: 10px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom)); z-index: 40; }
 .chat-input-row { display: flex; align-items: flex-end; gap: 8px; }
@@ -250,57 +252,25 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .chat-send-btn { background: linear-gradient(135deg, var(--xmas-red), #922b21); color: #fff; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(192,57,43,0.4); }
 .chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.msg-preview { margin-bottom: 10px; padding: 10px; background: #f0f8ff; border: 1px solid #d6eaf8; border-radius: 10px; display: none; position: relative; }
-.msg-preview.show { display: flex; gap: 10px; align-items: center; }
-.msg-preview img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
-.msg-preview-info { flex: 1; min-width: 0; font-size: 12px; color: var(--xmas-blue-dark); word-break: break-all; }
-.msg-preview-remove { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; background: var(--xmas-red); color: #fff; border: 2px solid #fff; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-.reply-preview { margin-bottom: 8px; padding: 8px 10px; background: #f0f8ff; border-left: 4px solid var(--xmas-blue-dark); border-radius: 8px; display: none; align-items: center; gap: 8px; font-size: 12px; color: #4b5563; position: relative; }
-.reply-preview.show { display: flex; }
-.reply-preview .reply-preview-body { flex: 1; min-width: 0; }
-.reply-preview .reply-preview-name { font-weight: 700; color: var(--xmas-blue-dark); }
-.reply-preview .reply-preview-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; color: #6b7280; }
-.reply-preview .reply-preview-close { width: 22px; height: 22px; border-radius: 50%; background: var(--xmas-red); color: #fff; border: none; font-size: 12px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-
 .modal-backdrop { position: fixed; inset: 0; background: rgba(10,30,50,0.7); display: flex; align-items: center; justify-content: center; z-index: 20000; padding: 16px; }
 .modal-backdrop.hidden { display: none; }
 .modal-content { background: #fff; border-radius: 14px; padding: 22px; max-width: 520px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.35); max-height: 90vh; overflow-y: auto; border: 2px solid var(--xmas-blue); }
 .modal-content h3 { color: var(--xmas-green) !important; }
 
-#lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 40000; display: none; align-items: center; justify-content: center; padding: 24px; cursor: zoom-out; }
-#lightbox.show { display: flex; }
-#lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
-#lightbox .lightbox-close { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; background: rgba(255,255,255,0.15); border: none; color: #fff; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
 #statusBanner { position: fixed; top: 12px; left: 50%; transform: translate(-50%, -150%); z-index: 25000; padding: 10px 20px; font-size: 13px; font-weight: 600; border-radius: 9999px; transition: transform 0.35s, opacity 0.3s; opacity: 0; box-shadow: 0 6px 20px rgba(0,0,0,0.2); white-space: nowrap; max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
 #statusBanner.show { transform: translate(-50%, 0); opacity: 1; }
-
-#loginToastContainer { position: fixed; top: 60px; right: 16px; z-index: 26000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: 340px; }
-@keyframes toastSlideIn { 0% { opacity: 0; transform: translateX(40px); } 100% { opacity: 1; transform: translateX(0); } }
 
 #bootOverlay { position: fixed; inset: 0; background: linear-gradient(135deg, #c0392b 0%, #145a32 100%); z-index: 99997; display: flex; align-items: center; justify-content: center; color: #fff; flex-direction: column; gap: 16px; }
 #bootOverlay.hidden { display: none; }
 #bootOverlay .boot-spinner { width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.3); border-top-color: var(--xmas-gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-.loading-spinner { display: inline-block; width: 1rem; height: 1rem; border: 2px solid #e5e7eb; border-top: 2px solid var(--xmas-blue); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
-
 #banOverlay { position: fixed; inset: 0; background: #000; z-index: 99999; display: none; align-items: center; justify-content: center; color: #fff; text-align: center; flex-direction: column; padding: 20px; }
 #banOverlay.show { display: flex; }
 #pendingApprovalOverlay { position: fixed; inset: 0; background: linear-gradient(135deg, #c0392b 0%, #145a32 100%); z-index: 99998; display: none; align-items: center; justify-content: center; color: #fff; flex-direction: column; padding: 24px; text-align: center; }
 #pendingApprovalOverlay.show { display: flex; }
-
-#privateModeOverlay { position: fixed; inset: 0; z-index: 9999999; background: #000; display: none; align-items: center; justify-content: center; color: #fff; flex-direction: column; padding: 24px; text-align: center; }
-#privateModeOverlay.show { display: flex; }
-
 #emergencyOverlay { position: fixed; inset: 0; z-index: 2147483647; background: #000; display: none; cursor: none; }
 #emergencyOverlay.show { display: block; }
-
-#announcementBanner { position: fixed; top: 0; left: 0; right: 0; z-index: 9997; background: linear-gradient(90deg, #c0392b, #145a32, #c0392b); background-size: 200% 100%; animation: bannerSlide 4s linear infinite; color: #fff; padding: 12px 44px 12px 16px; font-size: 14px; display: none; text-align: center; font-weight: 700; }
-#announcementBanner.show { display: block; }
-#announcementBanner .ann-close { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.25); border: none; color: #fff; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-@keyframes bannerSlide { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
 
 .primary-btn { background: linear-gradient(135deg, var(--xmas-green), #0e3d22); color: #fff; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
 .primary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -317,45 +287,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .story-name { font-size: 11px; color: #374151; max-width: 64px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .story-add { width: 62px; height: 62px; border-radius: 50%; border: 2px dashed var(--xmas-blue); background: #f0f8ff; display: flex; align-items: center; justify-content: center; color: var(--xmas-blue-dark); }
 
-#storyViewer { position: fixed; inset: 0; z-index: 20000; background: #000; display: none; align-items: center; justify-content: center; }
-#storyViewer.show { display: flex; }
-#storyViewer .story-stage { position: relative; width: 100%; max-width: 420px; height: 100vh; max-height: 780px; background: #111; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-.story-progress-bar { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; gap: 3px; z-index: 5; }
-.story-segment { flex: 1; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden; }
-.story-segment > div { height: 100%; width: 0%; background: #fff; }
-.story-header { position: absolute; top: 20px; left: 12px; right: 12px; display: flex; align-items: center; gap: 10px; z-index: 5; color: #fff; }
-.story-header img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #fff; object-fit: cover; }
-.story-close-btn { margin-left: auto; background: rgba(0,0,0,0.4); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.story-nav-left, .story-nav-right { position: absolute; top: 60px; bottom: 90px; width: 30%; z-index: 3; cursor: pointer; }
-.story-nav-left { left: 0; }
-.story-nav-right { right: 0; }
-#storyStageContent { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-#storyStageContent img { max-width: 100%; max-height: 100%; object-fit: contain; }
-#storyStageContent .story-text-content { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 40px; font-size: 26px; font-weight: 700; color: #fff; text-align: center; word-break: break-word; }
-.story-footer { position: absolute; bottom: 12px; left: 12px; right: 12px; display: flex; align-items: center; gap: 8px; z-index: 5; }
-.story-footer input { flex: 1; border-radius: 9999px; padding: 10px 16px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: #fff; font-size: 13px; outline: none; }
-.story-footer input::placeholder { color: rgba(255,255,255,0.65); }
-.story-like-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); cursor: pointer; color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.story-like-btn.liked { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.7); color: #ef4444; }
-.heart-float { position: fixed; pointer-events: none; color: #ef4444; z-index: 2147483646; animation: heartFloatUp 0.9s ease-out forwards; }
-@keyframes heartFloatUp { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -20px) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -120px) scale(0.8); opacity: 0; } }
-
-.preset-avatar { width: 52px; height: 52px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; object-fit: cover; }
-.preset-avatar.selected { border-color: var(--xmas-green); }
-.member-chip { display: inline-flex; align-items: center; gap: 4px; background: #f0f8ff; border: 1px solid #d6eaf8; border-radius: 9999px; padding: 2px 8px 2px 2px; font-size: 12px; color: var(--xmas-blue-dark); margin: 2px; }
-.member-chip img { width: 20px; height: 20px; border-radius: 50%; }
-.member-chip .remove-x { cursor: pointer; color: var(--xmas-red); font-weight: bold; margin-left: 2px; font-size: 14px; }
-
-#scrollToBottomBtn { position: absolute; bottom: 90px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: var(--xmas-green); color: #fff; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 45; box-shadow: 0 2px 8px rgba(20,90,50,0.4); }
-#scrollToBottomBtn.show { display: flex; }
-
-.svg-icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
-.icon-12 { width: 12px; height: 12px; } .icon-14 { width: 14px; height: 14px; } .icon-16 { width: 16px; height: 16px; }
-.icon-18 { width: 18px; height: 18px; } .icon-20 { width: 20px; height: 20px; } .icon-22 { width: 22px; height: 22px; }
-.icon-24 { width: 24px; height: 24px; } .icon-28 { width: 28px; height: 28px; } .icon-32 { width: 32px; height: 32px; }
-.icon-40 { width: 40px; height: 40px; } .icon-48 { width: 48px; height: 48px; } .icon-64 { width: 64px; height: 64px; }
-
-/* グループ通話パネル */
 #groupCallPanel { position: fixed; bottom: 20px; right: 20px; width: 340px; max-width: calc(100vw - 32px); background: linear-gradient(135deg, #145a32 0%, #0e3d22 100%); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); z-index: 34000; overflow: hidden; display: none; flex-direction: column; color: #fff; border: 2px solid var(--xmas-gold); }
 #groupCallPanel.show { display: flex; }
 #groupCallPanel .gcp-header { padding: 10px 12px; background: linear-gradient(135deg, #c0392b, #145a32); display: flex; align-items: center; gap: 8px; }
@@ -368,15 +299,13 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 #groupCallPanel .gcp-participant .gcp-pinfo { flex: 1; min-width: 0; }
 #groupCallPanel .gcp-participant .gcp-pname { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #groupCallPanel .gcp-participant .gcp-pstatus { font-size: 10px; color: #94a3b8; }
-#groupCallPanel .gcp-participant .gcp-pmic { font-size: 16px; }
 #groupCallPanel .gcp-controls { padding: 12px; display: flex; justify-content: center; gap: 10px; background: rgba(0,0,0,0.2); }
 #groupCallPanel .gcp-ctrl { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, transform 0.15s; }
 #groupCallPanel .gcp-ctrl:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
 #groupCallPanel .gcp-ctrl.off { background: #dc2626; }
 #groupCallPanel .gcp-ctrl.end { background: linear-gradient(135deg, #dc2626, #991b1b); width: 64px; border: 2px solid #ef4444; box-shadow: 0 0 12px rgba(239, 68, 68, 0.6); }
 
-/* メンバー一覧モーダル */
-#groupMembersModal .modal-content { max-height: 85vh; }
+/* メンバー一覧 */
 .member-list-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #d6eaf8; border-radius: 10px; margin-bottom: 8px; background: #f8fcff; }
 .member-list-item .ml-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid var(--xmas-blue); }
 .member-list-item .ml-info { flex: 1; min-width: 0; }
@@ -385,23 +314,33 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .member-list-item .ml-status { font-size: 10px; color: #16a34a; font-weight: 600; flex-shrink: 0; }
 .member-list-item .ml-status.offline { color: #9ca3af; }
 
-/* 通話招待トースト */
-#callInviteToast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 35000; background: linear-gradient(135deg, #c0392b, #145a32); color: #fff; padding: 14px 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); display: none; align-items: center; gap: 14px; border: 2px solid var(--xmas-gold); max-width: calc(100vw - 32px); }
-#callInviteToast.show { display: flex; }
-#callInviteToast button { background: #fff; color: var(--xmas-green); border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; }
+/* ===== 管理者設定モーダル ===== */
+#adminBgModal .modal-content, #adminWeatherModal .modal-content { max-width: 560px; }
+.bg-preview-box { width: 100%; height: 160px; border-radius: 10px; border: 2px dashed var(--xmas-blue); background: linear-gradient(180deg, #d6eaf8 0%, #eaf4fc 100%); background-size: cover; background-position: center; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; color: var(--xmas-blue-dark); font-size: 12px; }
+.weather-option-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 12px; border: 2px solid #d6eaf8; border-radius: 12px; background: #fff; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 700; color: var(--xmas-green); }
+.weather-option-btn:hover { background: #f0f8ff; border-color: var(--xmas-blue); }
+.weather-option-btn.selected { background: linear-gradient(135deg, #d6eaf8, #87ceeb); border-color: var(--xmas-blue-dark); color: var(--xmas-blue-dark); box-shadow: 0 2px 8px rgba(135,206,235,0.5); }
+.weather-option-btn .wo-icon { font-size: 32px; }
+
+.svg-icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
+.icon-12 { width: 12px; height: 12px; } .icon-16 { width: 16px; height: 16px; } .icon-18 { width: 18px; height: 18px; }
+.icon-20 { width: 20px; height: 20px; } .icon-24 { width: 24px; height: 24px; }
 
 @media (max-width: 500px) {
   .header-title { font-size: 17px; }
   .msg-body { max-width: 82%; }
-  .modal-content { padding: 18px; }
   #groupCallPanel { width: calc(100vw - 24px); bottom: 12px; right: 12px; }
 }
 </style>
 </head>
 <body>
 
-<!-- 雪レイヤー -->
-<div id="snowLayer"></div>
+<!-- 背景レイヤー -->
+<div id="siteBackgroundLayer" class="hidden"></div>
+<!-- 天候レイヤー -->
+<div id="weatherLayer"></div>
+<!-- 雷フラッシュ -->
+<div id="thunderFlash"></div>
 
 <!-- 起動画面 -->
 <div id="bootOverlay">
@@ -410,7 +349,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
   <div style="font-size:14px;color:rgba(255,255,255,0.8);">アカウントを確認しています...</div>
 </div>
 
-<!-- 承認待ちオーバーレイ -->
 <div id="pendingApprovalOverlay">
   <div style="font-size:48px;margin-bottom:12px;">⏳</div>
   <div style="font-size:22px;font-weight:800;margin-bottom:8px;">管理者の承認待ちです</div>
@@ -419,23 +357,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
   <div style="margin-top:24px;">
     <button id="pendingApprovalLogoutBtn" style="background:#ef4444;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;">ログアウト</button>
   </div>
-</div>
-
-<!-- 非公開モード -->
-<div id="privateModeOverlay">
-  <div style="font-size:64px;margin-bottom:16px;">🔒</div>
-  <div style="font-size:22px;font-weight:800;margin-bottom:8px;color:#fca5a5;">現在非公開モードです</div>
-  <div style="font-size:13px;color:#cbd5e1;max-width:420px;line-height:1.7;">管理者がサイトを非公開に設定しています。<br>一般ユーザーのアクセスはブロックされています。</div>
-  <div style="margin-top:24px;">
-    <button id="privateModeLogoutBtn" style="background:#ef4444;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;">ログアウト</button>
-  </div>
-</div>
-
-<div id="emergencyOverlay"></div>
-
-<div id="announcementBanner">
-  <span id="announcementText"></span>
-  <button class="ann-close" id="announcementClose">✕</button>
 </div>
 
 <div id="banOverlay">
@@ -448,12 +369,7 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 
 <div id="statusBanner"></div>
 <div id="loginToastContainer"></div>
-<div id="lightbox">
-  <button class="lightbox-close" id="lightboxClose">✕</button>
-  <img id="lightboxImg" src="" alt="">
-</div>
 
-<!-- 通話招待トースト -->
 <div id="callInviteToast">
   <span style="font-size:24px;">📞</span>
   <div style="flex:1;min-width:0;">
@@ -464,7 +380,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
   <button id="callInviteDismissBtn" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.5);padding:6px 10px;">✕</button>
 </div>
 
-<!-- グループ通話パネル -->
 <div id="groupCallPanel">
   <div class="gcp-header">
     <span style="font-size:18px;">📞</span>
@@ -482,28 +397,19 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 </div>
 
 <div id="appContainer">
-  <!-- ログイン画面 -->
   <div id="loginView" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:20px;">
     <div style="background:#fff; border:2px solid var(--xmas-gold); border-radius:16px; padding:36px 28px; max-width:420px; width:100%; text-align:center; box-shadow:0 8px 32px rgba(192,57,43,0.15);">
-      <div style="margin-bottom:12px; display:flex; justify-content:center;">
-        <div style="font-size:64px;">🎄</div>
-      </div>
+      <div style="margin-bottom:12px; display:flex; justify-content:center;"><div style="font-size:64px;">🎄</div></div>
       <h1 style="font-size:26px; font-weight:800; color:var(--xmas-green); margin:0 0 8px;">69CT</h1>
       <p style="font-size:13px; color:#6b7280; margin:0 0 6px;">ご利用にはGoogleアカウントでのログインが必要です。</p>
       <p style="font-size:12px; color:#9ca3af; margin:0 0 24px;">初回ログイン時は管理者の承認が必要です。</p>
       <button id="googleLoginBtn" style="background:#fff; border:1.5px solid #d1d5db; border-radius:10px; padding:12px 20px; font-size:14px; font-weight:700; color:#374151; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; width:100%;">
-        <svg width="20" height="20" viewBox="0 0 48 48">
-          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/>
-          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
-          <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
-          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.2 5.2C41.4 35.3 44 30.1 44 24c0-1.3-.1-2.3-.4-3.5z"/>
-        </svg>
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.2 5.2C41.4 35.3 44 30.1 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
         Googleでログイン
       </button>
     </div>
   </div>
 
-  <!-- メイン画面 -->
   <div id="mainView" style="display:none; flex-direction:column; height:100%;">
     <header id="appHeader">
       <div class="header-user">
@@ -521,35 +427,21 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
         </div>
       </div>
       <div class="header-actions">
-        <button id="newChatBtn" class="primary-btn" style="padding:7px 12px;font-size:12px;display:flex;align-items:center;gap:4px;">＋ チャット</button>
-        <button id="stickerManageBtn" class="icon-btn" title="マイスタンプ">😊</button>
+        <button id="newChatBtn" class="primary-btn" style="padding:7px 12px;font-size:12px;">＋ チャット</button>
+        <!-- ★ 管理者専用: 背景変更 -->
+        <button id="adminBgBtn" class="icon-btn" style="display:none;background:var(--xmas-red);color:#fff;border-color:var(--xmas-red);" title="背景画像を変更">🎨 背景</button>
+        <!-- ★ 管理者専用: 天候 -->
+        <button id="adminWeatherBtn" class="icon-btn" style="display:none;background:var(--xmas-blue-dark);color:#fff;border-color:var(--xmas-blue-dark);" title="天候を変更">🌦 天候</button>
         <button id="profileBtn" class="icon-btn">👤</button>
-        <button id="announceBtn" class="icon-btn" style="display:none;background:var(--xmas-red);color:#fff;border-color:var(--xmas-red);">📢</button>
-        <button id="privateModeBtn" class="icon-btn" style="display:none;background:var(--xmas-blue-dark);color:#fff;border-color:var(--xmas-blue-dark);">🔒</button>
-        <button id="banUserBtn" class="icon-btn" style="display:none;background:var(--xmas-red);color:#fff;border-color:var(--xmas-red);">🚫</button>
-        <button id="adminStoryDeleteBtn" class="icon-btn" style="display:none;background:#ec4899;color:#fff;border-color:#ec4899;">🎬</button>
-        <button id="emergencyHistoryBtn" class="icon-btn" style="display:none;background:var(--xmas-red);color:#fff;border-color:var(--xmas-red);">⚠️</button>
-        <button id="notificationBtn" class="icon-btn" style="display:none;background:var(--xmas-blue-dark);color:#fff;border-color:var(--xmas-blue-dark);">🔔</button>
-        <button id="approvalBtn" class="icon-btn" style="display:none;background:var(--xmas-green);color:#fff;border-color:var(--xmas-green);">✅</button>
-        <button id="emergencyHelpBtn" class="icon-btn" style="border-radius:50%;width:32px;height:32px;padding:0;">？</button>
-        <button id="emergencyBtn" class="icon-btn" style="background:var(--xmas-red);color:#fff;border-color:var(--xmas-red);" title="緊急停止">🚨</button>
         <button id="logoutBtn" class="icon-btn">ログアウト</button>
       </div>
     </header>
 
     <main id="appMain">
-      <!-- チャットリスト -->
       <div id="chatListView" style="display:flex; flex-direction:column; height:100%;">
         <div style="flex-shrink:0; background:#fff; border-bottom:2px solid var(--xmas-blue);">
           <div style="padding:8px 14px 0; display:flex; justify-content:space-between; align-items:center;">
             <span style="font-size:12px; font-weight:700; color:var(--xmas-green);">🎅 ストーリー</span>
-            <button id="myArchiveBtn" style="background:none;border:none;color:var(--xmas-blue-dark);font-size:11px;font-weight:600;cursor:pointer;">📦 アーカイブ</button>
-          </div>
-          <div id="storiesStrip" class="stories-strip">
-            <div class="story-bubble" id="storyAddBtn">
-              <div class="story-add" style="font-size:24px;">＋</div>
-              <span class="story-name">あなた</span>
-            </div>
           </div>
         </div>
         <div class="scroll-area">
@@ -557,7 +449,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
         </div>
       </div>
 
-      <!-- チャット画面 -->
       <div id="chatView" style="display:none;">
         <div class="chat-header">
           <button id="backToChatListBtn" class="icon-btn" style="padding:6px 10px;">←</button>
@@ -566,38 +457,17 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
             <div class="chat-header-name" id="currentChatName"></div>
             <div class="chat-header-meta" id="currentChatMeta"></div>
           </div>
-          <button id="chatCallBtn" class="chat-call-btn" title="音声通話" style="display:none;">📞</button>
+          <button id="chatCallBtn" class="chat-call-btn" title="音声通話" style="display:none;background:linear-gradient(135deg,#27ae60,#145a32);border:none;border-radius:8px;padding:7px 11px;color:#fff;cursor:pointer;">📞</button>
           <button id="chatHeaderMenuBtn" class="chat-header-menu-btn">⋮</button>
         </div>
         <div class="chat-messages-wrap" id="chatMessagesWrap">
           <div class="chat-messages" id="messagesContainer"></div>
           <div id="typingIndicatorSlot"></div>
         </div>
-        <button id="scrollToBottomBtn">↓</button>
         <form class="chat-input-form" id="messageForm">
-          <div class="reply-preview" id="replyPreviewBox">
-            <div class="reply-preview-body">
-              <div class="reply-preview-name" id="replyPreviewName"></div>
-              <div class="reply-preview-text" id="replyPreviewText"></div>
-            </div>
-            <button type="button" class="reply-preview-close" id="replyPreviewCloseBtn">✕</button>
-          </div>
-          <div class="msg-preview" id="messagePreviewBox">
-            <img id="messagePreviewImg" src="" alt="">
-            <div class="msg-preview-info">
-              <div id="messagePreviewInfo"></div>
-              <div style="font-size:11px;color:#6b7280;margin-top:2px;">送信待ち</div>
-            </div>
-            <button type="button" class="msg-preview-remove" id="msgPreviewRemoveBtn">✕</button>
-          </div>
           <div class="chat-input-row">
             <div class="chat-input-wrap">
               <textarea id="messageInput" rows="1" maxlength="2000" placeholder="メッセージを入力..."></textarea>
-              <button type="button" id="stickerOpenBtn" class="chat-input-icon-btn" title="スタンプ">😊</button>
-              <label class="chat-input-icon-btn" style="cursor:pointer;">
-                📷
-                <input type="file" id="messageFileInput" accept="image/*" style="display:none;">
-              </label>
             </div>
             <button type="submit" id="sendBtn" class="chat-send-btn">➤</button>
           </div>
@@ -607,22 +477,59 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
   </div>
 </div>
 
-<!-- ===== モーダル類 ===== -->
+<!-- ===== 管理者: 背景変更モーダル ===== -->
+<div id="adminBgModal" class="modal-backdrop hidden">
+  <div class="modal-content" style="border-top:6px solid var(--xmas-red);">
+    <h3 style="font-size:17px;font-weight:700;margin:0 0 8px;">🎨 背景画像を変更</h3>
+    <p style="font-size:11px;color:#6b7280;margin:0 0 12px;">アップロードした画像は自動でリサイズされ、全ユーザーの背景に反映されます。大きすぎる画像も自動圧縮されます。</p>
+    <div class="bg-preview-box" id="adminBgPreview">現在の背景（未設定）</div>
+    <label style="display:inline-flex;align-items:center;gap:6px;background:#f0f8ff;border:1px solid #d6eaf8;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:700;color:var(--xmas-blue-dark);cursor:pointer;margin-bottom:12px;">
+      📤 画像を選択（PNG/JPG/GIF/WebP）
+      <input type="file" id="adminBgFileInput" accept="image/*" style="display:none;">
+    </label>
+    <div id="adminBgMsg" style="font-size:12px;min-height:16px;margin-bottom:12px;color:#6b7280;"></div>
+    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+      <button id="adminBgResetBtn" class="secondary-btn" style="background:#dc2626;">🗑 デフォルトに戻す</button>
+      <div style="display:flex;gap:8px;">
+        <button id="adminBgCancelBtn" class="secondary-btn">キャンセル</button>
+        <button id="adminBgSaveBtn" class="primary-btn" disabled>保存して全体に反映</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 管理者: 天候モーダル ===== -->
+<div id="adminWeatherModal" class="modal-backdrop hidden">
+  <div class="modal-content" style="border-top:6px solid var(--xmas-blue-dark);">
+    <h3 style="font-size:17px;font-weight:700;margin:0 0 8px;">🌦 天候を選択</h3>
+    <p style="font-size:11px;color:#6b7280;margin:0 0 16px;">選択した天候が全ユーザーの画面に反映されます。</p>
+    <div id="weatherOptionsGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+      <button class="weather-option-btn" data-weather="none"><span class="wo-icon">☀️</span>無</button>
+      <button class="weather-option-btn" data-weather="snow"><span class="wo-icon">❄️</span>雪</button>
+      <button class="weather-option-btn" data-weather="rain"><span class="wo-icon">🌧️</span>雨</button>
+      <button class="weather-option-btn" data-weather="thunder"><span class="wo-icon">⛈️</span>雷</button>
+      <button class="weather-option-btn" data-weather="acorn"><span class="wo-icon">🌰</span>どんぐり</button>
+    </div>
+    <div id="adminWeatherMsg" style="font-size:12px;min-height:16px;margin-bottom:12px;color:#6b7280;"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;">
+      <button id="adminWeatherCancelBtn" class="secondary-btn">キャンセル</button>
+      <button id="adminWeatherSaveBtn" class="primary-btn">保存して全体に反映</button>
+    </div>
+  </div>
+</div>
+
+<!-- その他モーダル -->
 <div id="newChatModal" class="modal-backdrop hidden">
   <div class="modal-content">
     <h3 style="font-size:17px;font-weight:700;margin:0 0 4px;">新しいチャット</h3>
-    <p style="font-size:11px;color:#6b7280;margin:0 0 16px;">相手のメールアドレスを入力してください（2人以上でグループになります）</p>
-    <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px;">メールアドレス:</label>
+    <p style="font-size:11px;color:#6b7280;margin:0 0 16px;">相手のメールアドレスを入力してください</p>
     <div style="display:flex;gap:8px;margin-bottom:8px;">
       <input type="email" id="memberEmailInput" placeholder="example@gmail.com" style="flex:1;border:1px solid #d1d5db;padding:9px 12px;border-radius:8px;font-size:13px;outline:none;">
       <button id="addMemberBtn" type="button" class="primary-btn" style="padding:9px 14px;">追加</button>
     </div>
     <div id="memberSearchMsg" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div>
-    <div id="selectedMembersBox" style="min-height:44px;border:1px dashed #d1d5db;border-radius:8px;padding:8px;margin-bottom:14px;">
-      <span style="font-size:11px;color:#9ca3af;">まだ相手が追加されていません</span>
-    </div>
-    <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px;">グループ名（2人以上のとき任意）:</label>
-    <input type="text" id="groupNameInput" maxlength="30" placeholder="例: クリスマス会" style="width:100%;border:1px solid #d1d5db;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:16px;outline:none;">
+    <div id="selectedMembersBox" style="min-height:44px;border:1px dashed #d1d5db;border-radius:8px;padding:8px;margin-bottom:14px;"><span style="font-size:11px;color:#9ca3af;">まだ相手が追加されていません</span></div>
+    <input type="text" id="groupNameInput" maxlength="30" placeholder="グループ名（任意）" style="width:100%;border:1px solid #d1d5db;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:16px;outline:none;">
     <div style="display:flex;justify-content:flex-end;gap:8px;">
       <button id="newChatCancelBtn" class="secondary-btn">キャンセル</button>
       <button id="newChatCreateBtn" class="primary-btn">チャットを開始</button>
@@ -630,26 +537,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
   </div>
 </div>
 
-<div id="addMemberModal" class="modal-backdrop hidden">
-  <div class="modal-content" style="border-top:6px solid var(--xmas-blue-dark);">
-    <h3 style="font-size:17px;font-weight:700;margin:0 0 4px;">メンバーを追加</h3>
-    <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px;">メールアドレス:</label>
-    <div style="display:flex;gap:8px;margin-bottom:8px;">
-      <input type="email" id="addMemberEmailInput" placeholder="example@gmail.com" style="flex:1;border:1px solid #d1d5db;padding:9px 12px;border-radius:8px;font-size:13px;outline:none;">
-      <button id="addMemberSearchBtn" type="button" class="primary-btn" style="padding:9px 14px;">検索</button>
-    </div>
-    <div id="addMemberSearchMsg" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div>
-    <div id="addMemberResultBox" style="min-height:44px;border:1px dashed #d1d5db;border-radius:8px;padding:8px;margin-bottom:14px;">
-      <span style="font-size:11px;color:#9ca3af;">メールアドレスを入力して検索してください</span>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;">
-      <button id="addMemberCancelBtn" class="secondary-btn">キャンセル</button>
-      <button id="addMemberConfirmBtn" class="primary-btn">追加</button>
-    </div>
-  </div>
-</div>
-
-<!-- ★ グループメンバー一覧モーダル -->
 <div id="groupMembersModal" class="modal-backdrop hidden">
   <div class="modal-content" style="border-top:6px solid var(--xmas-green);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -657,20 +544,8 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
       <span id="groupMembersCount" style="font-size:12px;color:#6b7280;"></span>
     </div>
     <div id="groupMembersList" style="max-height:55vh;overflow-y:auto;"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
-      <button id="groupMembersAddBtn" class="primary-btn" style="display:none;">＋ メンバー追加</button>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px;">
       <button id="groupMembersCloseBtn" class="secondary-btn">閉じる</button>
-    </div>
-  </div>
-</div>
-
-<div id="editMsgModal" class="modal-backdrop hidden">
-  <div class="modal-content">
-    <h3 style="font-size:17px;font-weight:700;margin:0 0 14px;">メッセージを編集</h3>
-    <textarea id="editMsgInput" rows="4" maxlength="2000" style="width:100%;border:1px solid #d1d5db;padding:10px;border-radius:8px;font-size:14px;outline:none;resize:vertical;margin-bottom:14px;font-family:inherit;"></textarea>
-    <div style="display:flex;justify-content:flex-end;gap:8px;">
-      <button id="editMsgCancelBtn" class="secondary-btn">キャンセル</button>
-      <button id="editMsgSaveBtn" class="primary-btn">保存</button>
     </div>
   </div>
 </div>
@@ -680,18 +555,10 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
     <h3 style="font-size:17px;font-weight:700;margin:0 0 16px;">プロフィール設定</h3>
     <div style="text-align:center;margin-bottom:16px;">
       <img id="profileAvatarPreview" class="avatar-lg" src="" alt="" style="margin:0 auto;display:block;">
-      <p style="font-size:11px;color:#6b7280;margin-top:8px;">アイコンを選択</p>
       <div id="presetAvatarRow" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px;"></div>
-      <div style="margin-top:12px;">
-        <label style="display:inline-flex;align-items:center;gap:6px;background:#f0f8ff;border:1px solid #d6eaf8;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--xmas-blue-dark);cursor:pointer;">
-          📤 画像をアップロード
-          <input type="file" id="profileAvatarFileInput" accept="image/*" style="display:none;">
-        </label>
-      </div>
-      <div id="profileUploadMsg" style="font-size:11px;color:#6b7280;margin-top:6px;min-height:14px;"></div>
     </div>
-    <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px;">ニックネーム（最大20文字）:</label>
-    <input type="text" id="nicknameInput" maxlength="20" placeholder="例: サンタさん" style="width:100%;border:1px solid #d1d5db;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;outline:none;">
+    <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px;">ニックネーム:</label>
+    <input type="text" id="nicknameInput" maxlength="20" style="width:100%;border:1px solid #d1d5db;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;outline:none;">
     <div style="display:flex;justify-content:flex-end;gap:8px;">
       <button id="profileCancelBtn" class="secondary-btn">キャンセル</button>
       <button id="profileSaveBtn" class="primary-btn">保存</button>
@@ -699,63 +566,11 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
   </div>
 </div>
 
-<!-- その他モーダル (announceModal, adminBanPanel, adminStoryDeletePanel, emergencyHistoryPanel, approvalPanel, notificationPanel, emergencyHelpModal, storyPostModal, archiveModal, privateModeModal, stickerManageModal) は元コードと同構造で省略 -->
-<div id="announceModal" class="modal-backdrop hidden"><div class="modal-content" style="border:3px solid var(--xmas-green);"><h3 style="font-size:17px;font-weight:700;margin:0 0 8px;">📢 全体アナウンス</h3><textarea id="announceTextInput" rows="4" maxlength="200" style="width:100%;border:1px solid #d1d5db;padding:10px;border-radius:8px;font-size:13px;margin-bottom:12px;outline:none;resize:vertical;font-family:inherit;"></textarea><div style="display:flex;justify-content:flex-end;gap:8px;"><button id="announceCancel" class="secondary-btn">キャンセル</button><button id="announceSend" class="primary-btn">送信</button></div></div></div>
-
-<div id="adminBanPanel" class="modal-backdrop hidden"><div class="modal-content" style="border-top:6px solid var(--xmas-red);max-width:520px;"><h3 style="font-size:17px;font-weight:700;margin:0 0 12px;">🚫 ユーザーBAN</h3><input type="email" id="banEmailInput" placeholder="example@gmail.com" style="width:100%;border:1px solid #d1d5db;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:8px;outline:none;"><button id="banSearchRelatedBtn" class="primary-btn" style="width:100%;margin-bottom:12px;">関連アカウントを検索</button><div id="banSearchMsg" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div><div id="relatedAccountsBox" style="display:none;margin-bottom:14px;"><div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px;">関連アカウント</div><div id="relatedAccountsList" style="max-height:200px;overflow-y:auto;"></div></div><div style="display:flex;justify-content:flex-end;gap:8px;"><button id="banCancelBtn" class="secondary-btn">キャンセル</button><button id="banExecuteBtn" style="background:var(--xmas-red);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;">BANする</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px solid #e5e7eb;"><div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:8px;">現在のBANリスト:</div><div id="banListContainer" style="max-height:180px;overflow-y:auto;font-size:12px;"></div></div></div></div>
-
-<div id="adminStoryDeletePanel" class="modal-backdrop hidden"><div class="modal-content" style="border-top:6px solid #ec4899;max-width:480px;"><h3 style="font-size:17px;font-weight:700;margin:0 0 8px;">🎬 ストーリー削除</h3><input type="email" id="storyDeleteEmailInput" placeholder="example@gmail.com" style="width:100%;border:1px solid #d1d5db;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;outline:none;"><div id="storyDeleteSearchMsg" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div><div style="display:flex;justify-content:flex-end;gap:8px;"><button id="storyDeleteCancelBtn" class="secondary-btn">キャンセル</button><button id="storyDeleteExecuteBtn" class="primary-btn" style="background:#ec4899;">削除する</button></div></div></div>
-
-<div id="emergencyHistoryPanel" class="modal-backdrop hidden"><div class="modal-content" style="border-top:6px solid var(--xmas-red);max-width:560px;"><h3 style="font-size:17px;font-weight:700;margin:0 0 12px;">⚠️ 緊急ボタン発動履歴</h3><div id="emergencyHistoryList" style="max-height:55vh;overflow-y:auto;"></div><div style="display:flex;justify-content:flex-end;margin-top:16px;"><button id="emergencyHistoryCloseBtn" class="secondary-btn">閉じる</button></div></div></div>
-
-<div id="approvalPanel" class="modal-backdrop hidden"><div class="modal-content" style="border-top:6px solid var(--xmas-green);max-width:560px;"><h3 style="font-size:17px;font-weight:700;margin:0 0 12px;">✅ 承認リクエスト</h3><div id="approvalList" style="max-height:55vh;overflow-y:auto;"></div><div style="display:flex;justify-content:flex-end;margin-top:16px;"><button id="approvalCloseBtn" class="secondary-btn">閉じる</button></div></div></div>
-
-<div id="notificationPanel" class="modal-backdrop hidden"><div class="modal-content" style="border-top:6px solid var(--xmas-blue-dark);max-width:560px;"><h3 style="font-size:17px;font-weight:700;margin:0 0 12px;">🔔 ログイン通知</h3><div id="notificationList" style="max-height:55vh;overflow-y:auto;"></div><div style="display:flex;justify-content:flex-end;margin-top:16px;"><button id="notificationCloseBtn" class="secondary-btn">閉じる</button></div></div></div>
-
-<div id="emergencyHelpModal" class="modal-backdrop hidden"><div class="modal-content" style="border-top:6px solid var(--xmas-red);max-width:560px;"><h3 style="font-size:17px;font-weight:700;margin:0 0 12px;">🚨 緊急モードについて</h3><div style="font-size:13px;line-height:1.7;color:#374151;"><p>緊急ボタンはサイト全体を即座に停止させる機能です。</p><p><strong>管理者:</strong><br><span style="font-family:monospace;background:#f3f4f6;padding:2px 6px;border-radius:4px;">katou.noel114514@gmail.com</span><br><span style="font-family:monospace;background:#f3f4f6;padding:2px 6px;border-radius:4px;">18107@v.nakijin.ed.jp</span></p><p><strong>発動:</strong> 緊急ボタンを1回クリック</p><p><strong>解除:</strong> 黒い画面で <strong>Ctrl + D</strong></p></div><div style="display:flex;justify-content:flex-end;margin-top:20px;"><button id="emergencyHelpCloseBtn" class="secondary-btn">閉じる</button></div></div></div>
-
-<div id="storyPostModal" class="modal-backdrop hidden"><div class="modal-content"><h3 style="font-size:17px;font-weight:700;margin:0 0 12px;">📸 ストーリーを投稿</h3><textarea id="storyTextInput" rows="3" maxlength="200" placeholder="今なにしてる？" style="width:100%;border:1px solid #d1d5db;padding:10px;border-radius:8px;font-size:13px;margin-bottom:10px;outline:none;resize:vertical;font-family:inherit;"></textarea><label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px;">画像:</label><input type="file" id="storyFileInput" accept="image/*" style="width:100%;border:1px solid #d1d5db;padding:8px;border-radius:8px;font-size:12px;margin-bottom:8px;"><div id="storyUploadPreview" style="display:none;margin-top:8px;text-align:center;"></div><div id="storyPostMsg" style="font-size:12px;margin-bottom:8px;min-height:16px;"></div><div style="display:flex;justify-content:flex-end;gap:8px;"><button id="storyPostCancelBtn" class="secondary-btn">キャンセル</button><button id="storyPostBtn" class="primary-btn" style="background:linear-gradient(135deg,#ec4899,#8b5cf6);">投稿する</button></div></div></div>
-
-<div id="archiveModal" class="modal-backdrop hidden"><div class="modal-content"><h3 style="font-size:17px;font-weight:700;margin:0 0 12px;">📦 自分のストーリーアーカイブ</h3><div id="archiveList" style="max-height:55vh;overflow-y:auto;"></div><div style="display:flex;justify-content:flex-end;margin-top:16px;"><button id="archiveCloseBtn" class="secondary-btn">閉じる</button></div></div></div>
-
-<div id="privateModeModal" class="modal-backdrop hidden"><div class="modal-content" style="border-top:6px solid var(--xmas-blue-dark);max-width:480px;"><h3 style="font-size:17px;font-weight:700;margin:0 0 8px;">🔒 非公開モード設定</h3><p style="font-size:12px;color:#6b7280;margin:0 0 16px;line-height:1.6;">非公開モードを有効にすると、管理者以外のユーザーはアクセスできなくなります。</p><div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:16px;"><div><div style="font-size:14px;font-weight:700;color:#374151;">非公開モード</div><div id="privateModeStatusLabel" style="font-size:11px;color:#9ca3af;margin-top:2px;">現在: 無効</div></div><button id="privateModeToggleBtn" class="primary-btn">無効</button></div><div style="display:flex;justify-content:flex-end;"><button id="privateModeModalCloseBtn" class="secondary-btn">閉じる</button></div></div></div>
-
-<div id="stickerManageModal" class="modal-backdrop hidden"><div class="modal-content" style="border-top:6px solid var(--xmas-gold);max-width:520px;"><h3 style="font-size:17px;font-weight:700;margin:0 0 8px;">😊 マイスタンプ</h3><label style="display:inline-flex;align-items:center;gap:6px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#b45309;cursor:pointer;margin-bottom:12px;">📤 スタンプを追加<input type="file" id="stickerUploadInput" accept="image/*,image/gif" style="display:none;"></label><div id="stickerUploadMsg" style="font-size:11px;min-height:14px;margin-bottom:8px;"></div><div id="stickerManageGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:50vh;overflow-y:auto;padding:4px;"></div><div style="display:flex;justify-content:flex-end;margin-top:16px;"><button id="stickerManageCloseBtn" class="secondary-btn">閉じる</button></div></div></div>
-
-<div id="stickerPicker" style="position:fixed;z-index:31000;background:#fff;border:1px solid #d6eaf8;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:10px;display:none;max-width:340px;min-width:220px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-size:12px;font-weight:700;">スタンプ</span><button id="stickerPickerManageBtn" style="background:none;border:none;color:var(--xmas-blue-dark);font-size:11px;font-weight:600;cursor:pointer;">+ 追加</button></div><div id="stickerPickerGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:240px;overflow-y:auto;"></div><div id="stickerPickerEmpty" style="font-size:11px;color:#9ca3af;text-align:center;padding:16px;display:none;">スタンプがありません</div></div>
-
-<div id="storyViewer">
-  <div class="story-stage">
-    <div class="story-progress-bar" id="storyProgressBar"></div>
-    <div class="story-header">
-      <img id="storyHeaderAvatar" src="" alt="">
-      <div>
-        <div style="font-size:13px;font-weight:700;" id="storyHeaderName"></div>
-        <div style="font-size:11px;opacity:0.75;" id="storyHeaderTime"></div>
-      </div>
-      <button class="story-close-btn" id="storyCloseBtn">✕</button>
-    </div>
-    <div class="story-nav-left" id="storyNavLeft"></div>
-    <div class="story-nav-right" id="storyNavRight"></div>
-    <div id="storyStageContent"></div>
-    <div class="story-stats-overlay" id="storyStatsOverlay" style="display:none;">
-      <span id="storyViewCount"></span>
-      <span id="storyLikeCount"></span>
-    </div>
-    <div class="story-footer">
-      <input type="text" id="storyReplyInput" placeholder="返信を送る..." maxlength="300">
-      <button class="story-like-btn" id="storyLikeBtn">❤️</button>
-    </div>
-  </div>
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, push, set, remove, onValue, query, orderByChild, get, update, onDisconnect, limitToLast, child, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, push, set, remove, onValue, query, orderByChild, get, update, onDisconnect, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
-/* bootOverlay 強制解除 */
 (function forceBootOverlayHide() {
   const forceHide = () => { const el = document.getElementById('bootOverlay'); if (el) el.classList.add('hidden'); };
   setTimeout(forceHide, 12000);
@@ -765,7 +580,6 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase
 
 const ADMIN_EMAILS = ['katou.noel114514@gmail.com', '18107@v.nakijin.ed.jp'];
 function isAdmin(email) { return email && ADMIN_EMAILS.includes(email.toLowerCase()); }
-const BLOCKED_REDIRECT_URL = 'chrome-extension://jbddglgkkneonnineaohdhabjbgopi/pages/message-page.html?mode=blocked&category=LIST';
 
 const firebaseConfig = {
   apiKey: "AIzaSyA6MFlzWeKPHBwnCmkthev4oA7KfveDGN0",
@@ -786,70 +600,26 @@ setPersistence(auth, browserLocalPersistence).catch(() => {});
 let currentUser = null;
 let myProfile = { nickname: '', avatar: '' };
 let currentChatId = null;
-let chatsCache = {}, profilesCache = {}, bansCache = {}, emailBansCache = {}, readsCache = {}, typingCache = {}, presenceCache = {};
-let unsubs = {};
-let callUnsubs = {};
-let chatLatestListeners = {};
+let chatsCache = {}, profilesCache = {}, presenceCache = {}, typingCache = {}, readsCache = {};
+let unsubs = {}, groupCallUnsubs = {};
 const UNREAD_STORAGE_KEY = 'sikunai_unread_v5';
-const LASTREAD_STORAGE_KEY = 'sikunai_lastread_v5';
-const DEVICE_ID_KEY = 'sikunai_device_id_v1';
 function loadJson(key) { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { return {}; } }
 function saveJson(key, obj) { try { localStorage.setItem(key, JSON.stringify(obj)); } catch (e) {} }
-function getOrCreateDeviceId() { try { let id = localStorage.getItem(DEVICE_ID_KEY); if (!id) { id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 12); localStorage.setItem(DEVICE_ID_KEY, id); } return id; } catch (e) { return 'dev_unknown'; } }
-const MY_DEVICE_ID = getOrCreateDeviceId();
 let unreadCounts = loadJson(UNREAD_STORAGE_KEY);
-let lastReadAt = loadJson(LASTREAD_STORAGE_KEY);
-let isTabActive = !document.hidden;
 let isNearBottom = true;
-let unreadInChat = 0;
 let myPresenceRef = null, heartbeatTimer = null;
 let emergencyState = { active: false };
 let emergencyEnforcerInterval = null;
-let emergencyHoldTimer = null, emergencyHoldTriggered = false;
-let currentStoryUserId = null, currentStoryIndex = 0, currentStoryList = [];
-let currentStoryLikes = {}, currentStoryViews = {};
-let currentStoryAudioEl = null, currentStoryVideoEl = null;
-let typingTimeout = null, isCurrentlyTyping = false;
-let pendingMembers = [], editingMsgKey = null, openMenuKey = null, replyingTo = null, selectedAvatar = myProfile.avatar;
-let uploadedAvatarDataUrl = null;
-let groupCallState = {
-  active: false, chatId: null, participants: {}, localStream: null, muted: false, camOff: true, peerConnections: {}
-};
-let groupCallUnsubs = {};
+let pendingMembers = [], replyingTo = null, selectedAvatar = '';
+let groupCallState = { active: false, chatId: null, participants: {}, localStream: null, muted: false, peerConnections: {} };
 let currentInviteChatId = null;
+let pendingBgDataUrl = null;
+let selectedWeather = 'none';
+let currentBackgroundDataUrl = null;
+let weatherUnsub = null, backgroundUnsub = null;
+let weatherInterval = null;
 
-/* ========== デフォルトアバター (SVG) ========== */
-function makeAvatarSvg(bgColor) {
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="${bgColor}"/><circle cx="24" cy="26" r="3" fill="#fff"/><circle cx="40" cy="26" r="3" fill="#fff"/><path d="M22 38 Q32 46 42 38" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`
-  );
-}
-const DEFAULT_AVATAR = makeAvatarSvg('#c0392b');
-const PRESET_AVATARS = [
-  makeAvatarSvg('#c0392b'), makeAvatarSvg('#145a32'), makeAvatarSvg('#2c5f7c'),
-  makeAvatarSvg('#d4af37'), makeAvatarSvg('#87ceeb'), makeAvatarSvg('#e74c3c'),
-  makeAvatarSvg('#27ae60'), makeAvatarSvg('#8e44ad')
-];
-
-/* ========== 雪の降る演出 ========== */
-(function initSnow() {
-  const layer = document.getElementById('snowLayer');
-  if (!layer) return;
-  const flakes = ['❄','❅','❆','•','✻'];
-  for (let i = 0; i < 30; i++) {
-    const el = document.createElement('div');
-    el.className = 'snowflake';
-    el.textContent = flakes[Math.floor(Math.random() * flakes.length)];
-    el.style.left = Math.random() * 100 + '%';
-    el.style.animationDuration = (6 + Math.random() * 8) + 's';
-    el.style.animationDelay = (-Math.random() * 10) + 's';
-    el.style.fontSize = (10 + Math.random() * 12) + 'px';
-    el.style.opacity = 0.4 + Math.random() * 0.5;
-    layer.appendChild(el);
-  }
-})();
-
-/* ========== ユーティリティ ========== */
+/* ===== ユーティリティ ===== */
 function showStatusBanner(msg, type) {
   const el = document.getElementById('statusBanner');
   if (!el) return;
@@ -862,16 +632,70 @@ function showStatusBanner(msg, type) {
 }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function formatTime(ts) { if (!ts) return ''; const d = new Date(ts); return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0'); }
-function formatDate(ts) { if (!ts) return ''; const d = new Date(ts); const now = new Date(); const isToday = d.toDateString() === now.toDateString(); if (isToday) return '今日'; return (d.getMonth()+1) + '/' + d.getDate(); }
+function formatDate(ts) { if (!ts) return ''; const d = new Date(ts); const now = new Date(); if (d.toDateString() === now.toDateString()) return '今日'; return (d.getMonth()+1) + '/' + d.getDate(); }
 function linkify(text) { return escapeHtml(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'); }
 
-/* ========== ログイン ========== */
+function makeAvatarSvg(bgColor) {
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="${bgColor}"/><circle cx="24" cy="26" r="3" fill="#fff"/><circle cx="40" cy="26" r="3" fill="#fff"/><path d="M22 38 Q32 46 42 38" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`
+  );
+}
+const DEFAULT_AVATAR = makeAvatarSvg('#c0392b');
+const PRESET_AVATARS = [makeAvatarSvg('#c0392b'), makeAvatarSvg('#145a32'), makeAvatarSvg('#2c5f7c'), makeAvatarSvg('#d4af37'), makeAvatarSvg('#87ceeb'), makeAvatarSvg('#e74c3c'), makeAvatarSvg('#27ae60'), makeAvatarSvg('#8e44ad')];
+
+/* =========================================================
+   画像の自動リサイズ（大きすぎる画像も必ず通す）
+   ========================================================= */
+function resizeImageToDataUrl(file, maxDim = 1920, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) { reject(new Error('画像ファイルではありません')); return; }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      // 最大寸法を超えていたら縮小
+      if (width > maxDim || height > maxDim) {
+        if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+        else { width = Math.round(width * maxDim / height); height = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      // GIFはアニメーションが失われるが、静的背景なので問題なし
+      let dataUrl = canvas.toDataURL('image/jpeg', quality);
+      // DataURLが大きすぎる(>900KB)場合、再圧縮・再縮小
+      const sizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+      if (sizeKB > 900) {
+        // 段階的に縮小
+        const tryAgain = (dim, q) => {
+          if (dim < 400) { resolve(dataUrl); return; }
+          let w2 = width, h2 = height;
+          if (w2 > h2) { h2 = Math.round(h2 * dim / w2); w2 = dim; } else { w2 = Math.round(w2 * dim / h2); h2 = dim; }
+          const c2 = document.createElement('canvas'); c2.width = w2; c2.height = h2;
+          c2.getContext('2d').drawImage(img, 0, 0, w2, h2);
+          const d2 = c2.toDataURL('image/jpeg', q);
+          const s2 = Math.round(d2.length * 0.75 / 1024);
+          if (s2 <= 900) resolve(d2);
+          else tryAgain(dim - 200, q - 0.1);
+        };
+        tryAgain(maxDim - 300, 0.75);
+      } else {
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('画像の読み込みに失敗しました')); };
+    img.src = url;
+  });
+}
+
+/* ===== ログイン ===== */
 document.getElementById('googleLoginBtn').addEventListener('click', async () => {
   try { await signInWithPopup(auth, provider); } catch (e) { showStatusBanner('ログイン失敗: ' + e.message, 'error'); }
 });
 document.getElementById('logoutBtn').addEventListener('click', async () => { try { await signOut(auth); } catch (e) {} });
 document.getElementById('pendingApprovalLogoutBtn').addEventListener('click', async () => { try { await signOut(auth); } catch (e) {} });
-document.getElementById('privateModeLogoutBtn').addEventListener('click', async () => { try { await signOut(auth); } catch (e) {} });
 
 onAuthStateChanged(auth, async (user) => {
   document.getElementById('bootOverlay').classList.add('hidden');
@@ -882,25 +706,8 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   currentUser = user;
-  // BANチェック
   const banSnap = await get(ref(db, 'bans/' + user.uid));
-  const emailBanSnap = await get(ref(db, 'emailBans/' + encodeURIComponent(user.email || '')));
-  if (banSnap.exists() || emailBanSnap.exists()) {
-    document.getElementById('banOverlay').classList.add('show');
-    return;
-  }
-  // 承認チェック
-  const approvalSnap = await get(ref(db, 'approvals/' + user.uid));
-  if (!isAdmin(user.email) && (!approvalSnap.exists() || approvalSnap.val().status !== 'approved')) {
-    if (!approvalSnap.exists()) {
-      await set(ref(db, 'approvals/' + user.uid), { email: user.email, nickname: user.displayName || '', status: 'pending', requestedAt: Date.now() });
-    }
-    document.getElementById('pendingApprovalOverlay').classList.add('show');
-    document.getElementById('pendingApprovalEmail').textContent = user.email;
-    return;
-  }
-  document.getElementById('pendingApprovalOverlay').classList.remove('show');
-  // プロフィール読み込み
+  if (banSnap.exists()) { document.getElementById('banOverlay').classList.add('show'); return; }
   const profileSnap = await get(ref(db, 'profiles/' + user.uid));
   if (profileSnap.exists()) {
     myProfile = profileSnap.val();
@@ -910,42 +717,34 @@ onAuthStateChanged(auth, async (user) => {
     await set(ref(db, 'profiles/' + user.uid), myProfile);
   }
   selectedAvatar = myProfile.avatar;
-  // deviceLinks 保存
-  await update(ref(db, 'deviceLinks/' + MY_DEVICE_ID), { [user.uid]: true });
-  await update(ref(db, 'users/' + user.uid), { email: user.email, lastLoginAt: Date.now(), lastDeviceId: MY_DEVICE_ID });
-  // プレゼンス
+  await update(ref(db, 'users/' + user.uid), { email: user.email, lastLoginAt: Date.now() });
   myPresenceRef = ref(db, 'presence/' + user.uid);
   await set(myPresenceRef, { online: true, lastSeen: Date.now(), email: user.email });
   onDisconnect(myPresenceRef).update({ online: false, lastSeen: Date.now() });
   heartbeatTimer = setInterval(() => { if (myPresenceRef) set(myPresenceRef, { online: true, lastSeen: Date.now(), email: user.email }); }, 20000);
-  // UI切り替え
   document.getElementById('loginView').style.display = 'none';
   document.getElementById('mainView').style.display = 'flex';
   document.getElementById('myName').textContent = myProfile.nickname;
   document.getElementById('myAvatar').src = myProfile.avatar || DEFAULT_AVATAR;
   if (isAdmin(user.email)) {
-    ['announceBtn','banUserBtn','privateModeBtn','emergencyHistoryBtn','notificationBtn','approvalBtn','adminStoryDeleteBtn'].forEach(id => { const b = document.getElementById(id); if (b) b.style.display = 'flex'; });
+    document.getElementById('adminBgBtn').style.display = 'flex';
+    document.getElementById('adminWeatherBtn').style.display = 'flex';
   }
   initListeners();
-  initSnow();
+  initSiteSettings();
 });
 
-/* ========== リスナー初期化 ========== */
 function initListeners() {
   if (!currentUser) return;
-  // chats
   if (unsubs.chats) unsubs.chats();
   unsubs.chats = onValue(ref(db, 'userChats/' + currentUser.uid), (snap) => {
     chatsCache = snap.val() || {};
     renderChatList();
   });
-  // profiles
   if (unsubs.profiles) unsubs.profiles();
   unsubs.profiles = onValue(ref(db, 'profiles'), (snap) => {
     profilesCache = snap.val() || {};
-    if (document.getElementById('chatView').style.display !== 'none') renderMessages();
   });
-  // presence
   if (unsubs.presence) unsubs.presence();
   unsubs.presence = onValue(ref(db, 'presence'), (snap) => {
     presenceCache = snap.val() || {};
@@ -953,7 +752,208 @@ function initListeners() {
   });
 }
 
-/* ========== チャットリスト描画 ========== */
+/* =========================================================
+   サイト設定（背景・天候）の監視
+   ========================================================= */
+function initSiteSettings() {
+  // 背景
+  if (backgroundUnsub) backgroundUnsub();
+  backgroundUnsub = onValue(ref(db, 'siteSettings/background'), (snap) => {
+    const v = snap.val() || {};
+    currentBackgroundDataUrl = v.dataUrl || null;
+    applyBackground(currentBackgroundDataUrl);
+  });
+  // 天候
+  if (weatherUnsub) weatherUnsub();
+  weatherUnsub = onValue(ref(db, 'siteSettings/weather'), (snap) => {
+    const v = snap.val() || {};
+    applyWeather(v.type || 'none');
+  });
+}
+
+function applyBackground(dataUrl) {
+  const layer = document.getElementById('siteBackgroundLayer');
+  const appContainer = document.getElementById('appContainer');
+  if (dataUrl && dataUrl.length > 10) {
+    layer.style.backgroundImage = `url("${dataUrl}")`;
+    layer.classList.remove('hidden');
+    appContainer.classList.add('has-bg');
+  } else {
+    layer.style.backgroundImage = '';
+    layer.classList.add('hidden');
+    appContainer.classList.remove('has-bg');
+  }
+}
+
+/* =========================================================
+   天候エフェクト
+   ========================================================= */
+function clearWeather() {
+  const layer = document.getElementById('weatherLayer');
+  layer.innerHTML = '';
+  document.getElementById('thunderFlash').classList.remove('flash');
+  if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
+}
+
+function applyWeather(type) {
+  clearWeather();
+  if (!type || type === 'none') return;
+  const layer = document.getElementById('weatherLayer');
+  if (type === 'snow') {
+    const flakes = ['❄','❅','❆','•','✻','＊'];
+    for (let i = 0; i < 50; i++) {
+      const el = document.createElement('div');
+      el.className = 'snowflake';
+      el.textContent = flakes[Math.floor(Math.random() * flakes.length)];
+      el.style.left = Math.random() * 100 + '%';
+      el.style.animationDuration = (6 + Math.random() * 8) + 's';
+      el.style.animationDelay = (-Math.random() * 10) + 's';
+      el.style.fontSize = (10 + Math.random() * 14) + 'px';
+      el.style.opacity = 0.5 + Math.random() * 0.5;
+      layer.appendChild(el);
+    }
+  } else if (type === 'rain') {
+    for (let i = 0; i < 120; i++) {
+      const el = document.createElement('div');
+      el.className = 'raindrop';
+      el.style.left = Math.random() * 100 + '%';
+      el.style.animationDuration = (0.5 + Math.random() * 0.6) + 's';
+      el.style.animationDelay = (-Math.random() * 2) + 's';
+      el.style.opacity = 0.4 + Math.random() * 0.6;
+      el.style.height = (12 + Math.random() * 14) + 'px';
+      layer.appendChild(el);
+    }
+  } else if (type === 'acorn') {
+    const acorns = ['🌰','🌰','🌰','🍂','🍁'];
+    for (let i = 0; i < 30; i++) {
+      const el = document.createElement('div');
+      el.className = 'acorn';
+      el.textContent = acorns[Math.floor(Math.random() * acorns.length)];
+      el.style.left = Math.random() * 100 + '%';
+      el.style.animationDuration = (5 + Math.random() * 7) + 's';
+      el.style.animationDelay = (-Math.random() * 10) + 's';
+      el.style.fontSize = (18 + Math.random() * 16) + 'px';
+      layer.appendChild(el);
+    }
+  } else if (type === 'thunder') {
+    // 雨も降らせつつ雷をランダムに光らせる
+    for (let i = 0; i < 100; i++) {
+      const el = document.createElement('div');
+      el.className = 'raindrop';
+      el.style.left = Math.random() * 100 + '%';
+      el.style.animationDuration = (0.5 + Math.random() * 0.6) + 's';
+      el.style.animationDelay = (-Math.random() * 2) + 's';
+      el.style.opacity = 0.4 + Math.random() * 0.6;
+      layer.appendChild(el);
+    }
+    weatherInterval = setInterval(() => {
+      const flash = document.getElementById('thunderFlash');
+      flash.classList.remove('flash');
+      void flash.offsetWidth;
+      flash.classList.add('flash');
+      // 雷ボルトSVGをランダム位置に表示
+      const bolt = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      bolt.setAttribute('class', 'lightning-bolt');
+      bolt.setAttribute('viewBox', '0 0 40 60');
+      bolt.style.left = (10 + Math.random() * 80) + '%';
+      bolt.style.height = (40 + Math.random() * 40) + 'vh';
+      bolt.innerHTML = '<path d="M22 0 L10 32 L18 30 L12 60 L30 24 L22 26 Z" fill="#fff9c4" stroke="#d4af37" stroke-width="1"/>';
+      layer.appendChild(bolt);
+      setTimeout(() => bolt.remove(), 1000);
+    }, 4000 + Math.random() * 3000);
+  }
+}
+
+/* =========================================================
+   管理者: 背景変更
+   ========================================================= */
+document.getElementById('adminBgBtn').addEventListener('click', () => {
+  pendingBgDataUrl = null;
+  document.getElementById('adminBgMsg').textContent = '';
+  document.getElementById('adminBgSaveBtn').disabled = true;
+  const preview = document.getElementById('adminBgPreview');
+  if (currentBackgroundDataUrl) {
+    preview.style.backgroundImage = `url("${currentBackgroundDataUrl}")`;
+    preview.textContent = '';
+  } else {
+    preview.style.backgroundImage = '';
+    preview.textContent = '現在の背景（未設定）';
+  }
+  document.getElementById('adminBgModal').classList.remove('hidden');
+});
+document.getElementById('adminBgFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const msg = document.getElementById('adminBgMsg');
+  msg.textContent = '画像を処理中...';
+  msg.style.color = '#2c5f7c';
+  try {
+    const dataUrl = await resizeImageToDataUrl(file, 1920, 0.85);
+    pendingBgDataUrl = dataUrl;
+    const kb = Math.round(dataUrl.length * 0.75 / 1024);
+    msg.textContent = `✓ 準備完了 (${kb} KB) — 「保存して全体に反映」で全員に反映されます`;
+    msg.style.color = '#145a32';
+    const preview = document.getElementById('adminBgPreview');
+    preview.style.backgroundImage = `url("${dataUrl}")`;
+    preview.textContent = '';
+    document.getElementById('adminBgSaveBtn').disabled = false;
+  } catch (err) {
+    msg.textContent = '✗ ' + err.message;
+    msg.style.color = '#c0392b';
+  }
+  e.target.value = '';
+});
+document.getElementById('adminBgSaveBtn').addEventListener('click', async () => {
+  if (!pendingBgDataUrl) return;
+  try {
+    await set(ref(db, 'siteSettings/background'), { dataUrl: pendingBgDataUrl, updatedByEmail: currentUser.email, updatedAt: Date.now() });
+    showStatusBanner('背景を全員に反映しました 🎄', 'success');
+    document.getElementById('adminBgModal').classList.add('hidden');
+  } catch (err) {
+    showStatusBanner('保存失敗: ' + err.message, 'error');
+  }
+});
+document.getElementById('adminBgResetBtn').addEventListener('click', async () => {
+  if (!confirm('背景をデフォルト（元の水色背景）に戻しますか？')) return;
+  try {
+    await set(ref(db, 'siteSettings/background'), { dataUrl: '', updatedByEmail: currentUser.email, updatedAt: Date.now() });
+    showStatusBanner('背景をリセットしました', 'success');
+    document.getElementById('adminBgModal').classList.add('hidden');
+  } catch (err) {
+    showStatusBanner('リセット失敗: ' + err.message, 'error');
+  }
+});
+document.getElementById('adminBgCancelBtn').addEventListener('click', () => document.getElementById('adminBgModal').classList.add('hidden'));
+
+/* =========================================================
+   管理者: 天候
+   ========================================================= */
+document.getElementById('adminWeatherBtn').addEventListener('click', async () => {
+  const snap = await get(ref(db, 'siteSettings/weather'));
+  const v = snap.val() || {};
+  selectedWeather = v.type || 'none';
+  document.querySelectorAll('.weather-option-btn').forEach(btn => btn.classList.toggle('selected', btn.dataset.weather === selectedWeather));
+  document.getElementById('adminWeatherMsg').textContent = '';
+  document.getElementById('adminWeatherModal').classList.remove('hidden');
+});
+document.querySelectorAll('.weather-option-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedWeather = btn.dataset.weather;
+    document.querySelectorAll('.weather-option-btn').forEach(b => b.classList.toggle('selected', b === btn));
+  });
+});
+document.getElementById('adminWeatherSaveBtn').addEventListener('click', async () => {
+  try {
+    await set(ref(db, 'siteSettings/weather'), { type: selectedWeather, updatedByEmail: currentUser.email, updatedAt: Date.now() });
+    showStatusBanner('天候を全員に反映しました 🌦', 'success');
+    document.getElementById('adminWeatherModal').classList.add('hidden');
+  } catch (err) {
+    showStatusBanner('保存失敗: ' + err.message, 'error');
+  }
+});
+document.getElementById('adminWeatherCancelBtn').addEventListener('click', () => document.getElementById('adminWeatherModal').classList.add('hidden'));
+
+/* ===== チャットリスト描画 ===== */
 function renderChatList() {
   const container = document.getElementById('chatListContainer');
   if (!container) return;
@@ -964,14 +964,13 @@ function renderChatList() {
     return;
   }
   container.innerHTML = entries.map(c => {
-    const otherUid = c.members ? Object.keys(c.members).find(uid => uid !== currentUser.uid) : null;
+    const memberUids = c.members ? Object.keys(c.members) : [];
+    const otherUid = memberUids.find(uid => uid !== currentUser.uid);
     const otherProfile = otherUid ? profilesCache[otherUid] : null;
-    const isGroup = c.members && Object.keys(c.members).length > 2;
+    const isGroup = memberUids.length > 2;
     const name = isGroup ? (c.groupName || 'グループ') : (otherProfile ? otherProfile.nickname : 'チャット');
     const avatar = otherProfile?.avatar || DEFAULT_AVATAR;
     const unread = unreadCounts[c.id] || 0;
-    const presence = otherUid ? presenceCache[otherUid] : null;
-    const isOnline = presence?.online && (Date.now() - presence.lastSeen < 60000);
     return `
       <div class="chat-item ${unread > 0 ? 'unread' : ''}" data-id="${c.id}">
         <div class="chat-item-avatar-wrap">
@@ -982,18 +981,12 @@ function renderChatList() {
           <div class="chat-item-name">${escapeHtml(name)}</div>
           <div class="chat-item-last">${escapeHtml(c.latestText || 'メッセージなし')}</div>
         </div>
-        <div class="chat-item-side">
-          <div class="chat-item-time">${formatTime(c.latestAt)}</div>
-          ${unread > 0 ? `<div class="chat-item-badge">${unread}</div>` : ''}
-        </div>
+        <div class="chat-item-side"><div class="chat-item-time">${formatTime(c.latestAt)}</div>${unread > 0 ? `<div class="chat-item-badge">${unread}</div>` : ''}</div>
       </div>`;
   }).join('');
-  container.querySelectorAll('.chat-item').forEach(el => {
-    el.addEventListener('click', () => openChat(el.dataset.id));
-  });
+  container.querySelectorAll('.chat-item').forEach(el => el.addEventListener('click', () => openChat(el.dataset.id)));
 }
 
-/* ========== チャットを開く ========== */
 function openChat(chatId) {
   currentChatId = chatId;
   document.getElementById('chatListView').style.display = 'none';
@@ -1002,32 +995,25 @@ function openChat(chatId) {
   if (!c) return;
   const memberUids = Object.keys(c.members || {});
   const isGroup = memberUids.length > 2;
-  // ヘッダー描画
   const otherUid = memberUids.find(uid => uid !== currentUser.uid);
   const otherProfile = otherUid ? profilesCache[otherUid] : null;
   document.getElementById('currentChatName').textContent = isGroup ? (c.groupName || 'グループ') : (otherProfile?.nickname || 'チャット');
-  document.getElementById('currentChatMeta').innerHTML = isGroup
-    ? `<span>${memberUids.length}人のメンバー</span>`
-    : `<span class="${presenceCache[otherUid]?.online ? 'online' : ''}">${presenceCache[otherUid]?.online ? 'オンライン' : 'オフライン'}</span>`;
+  document.getElementById('currentChatMeta').innerHTML = isGroup ? `<span>${memberUids.length}人のメンバー</span>` : `<span class="${presenceCache[otherUid]?.online ? 'online' : ''}">${presenceCache[otherUid]?.online ? 'オンライン' : 'オフライン'}</span>`;
   document.getElementById('chatHeaderAvatars').innerHTML = `<img class="avatar" src="${escapeHtml(otherProfile?.avatar || DEFAULT_AVATAR)}" alt="">`;
-  // 通話ボタン (グループならグループ通話)
   const callBtn = document.getElementById('chatCallBtn');
   callBtn.style.display = 'flex';
-  callBtn.onclick = () => isGroup ? startGroupCall(chatId) : showStatusBanner('1対1通話は未実装です', 'error');
-  // 既読
+  callBtn.onclick = () => startGroupCall(chatId);
   update(ref(db, 'chats/' + chatId + '/reads/' + currentUser.uid), { lastReadAt: Date.now() });
   unreadCounts[chatId] = 0;
   saveJson(UNREAD_STORAGE_KEY, unreadCounts);
-  // メッセージリスナー
   if (unsubs.messages) unsubs.messages();
   unsubs.messages = onValue(query(ref(db, 'chats/' + chatId + '/messages'), limitToLast(100)), (snap) => {
     const msgs = [];
-    snap.forEach(child => { msgs.push({ key: child.key, ...child.val() }); });
+    snap.forEach(child => msgs.push({ key: child.key, ...child.val() }));
     msgs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
     window._currentMessages = msgs;
     renderMessages();
   });
-  // typing
   if (unsubs.typing) unsubs.typing();
   unsubs.typing = onValue(ref(db, 'chats/' + chatId + '/typing'), (snap) => {
     typingCache[chatId] = snap.val() || {};
@@ -1040,28 +1026,20 @@ function renderMessages() {
   const container = document.getElementById('messagesContainer');
   if (!container || !currentChatId) return;
   const msgs = window._currentMessages || [];
-  let html = '';
-  let lastDate = '';
+  let html = '', lastDate = '';
   msgs.forEach(m => {
     const date = formatDate(m.timestamp);
     if (date !== lastDate) { html += `<div class="date-divider"><span>${date}</span></div>`; lastDate = date; }
     const isMine = m.sender === currentUser.uid;
-    const profile = profilesCache[m.sender] || {};
-    const name = profile.nickname || '名無し';
-    const avatar = profile.avatar || DEFAULT_AVATAR;
+    const p = profilesCache[m.sender] || {};
     html += `
       <div class="msg-row ${isMine ? 'mine' : ''}" data-key="${m.key}">
-        <div class="msg-avatar-slot"><img class="avatar-sm" src="${escapeHtml(avatar)}" alt=""></div>
+        <div class="msg-avatar-slot"><img class="avatar-sm" src="${escapeHtml(p.avatar || DEFAULT_AVATAR)}" alt=""></div>
         <div class="msg-body">
-          <div class="msg-meta">
-            <span class="name">${escapeHtml(name)}</span>
-            <span class="time">${formatTime(m.timestamp)}</span>
-          </div>
+          <div class="msg-meta"><span class="name">${escapeHtml(p.nickname || '名無し')}</span><span class="time">${formatTime(m.timestamp)}</span></div>
           <div class="msg-bubble-wrap">
-            <div class="msg-bubble">
-              <div class="msg-content">${linkify(m.text || '')}</div>
-              ${m.fileUrl ? `<a class="msg-file" href="${escapeHtml(m.fileUrl)}" target="_blank"><img src="${escapeHtml(m.fileUrl)}" alt=""></a>` : ''}
-            </div>
+            <div class="msg-bubble"><div class="msg-content">${linkify(m.text || '')}</div>
+            ${m.fileUrl ? `<a class="msg-file" href="${escapeHtml(m.fileUrl)}" target="_blank"><img src="${escapeHtml(m.fileUrl)}" alt=""></a>` : ''}</div>
           </div>
         </div>
       </div>`;
@@ -1076,17 +1054,9 @@ function renderTypingIndicator() {
   const typers = Object.keys(typing).filter(uid => uid !== currentUser.uid && Date.now() - typing[uid] < 5000);
   if (typers.length === 0) { slot.innerHTML = ''; return; }
   const p = profilesCache[typers[0]] || {};
-  slot.innerHTML = `
-    <div class="typing-indicator-row">
-      <div class="msg-avatar-slot"><img class="avatar-sm" src="${escapeHtml(p.avatar || DEFAULT_AVATAR)}" alt=""></div>
-      <div class="typing-bubble">
-        <span class="typing-label">${escapeHtml(p.nickname || '誰か')} が入力中</span>
-        <span class="typing-dots"><span></span><span></span><span></span></span>
-      </div>
-    </div>`;
+  slot.innerHTML = `<div style="font-size:11px;color:#6b7280;padding:6px 8px;">${escapeHtml(p.nickname || '誰か')} が入力中...</div>`;
 }
 
-/* ========== メッセージ送信 ========== */
 document.getElementById('messageForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const input = document.getElementById('messageInput');
@@ -1106,21 +1076,19 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
   } catch (err) { showStatusBanner('送信失敗: ' + err.message, 'error'); }
 });
 
-/* 入力中表示 */
 document.getElementById('messageInput').addEventListener('input', () => {
   if (!currentChatId) return;
-  if (!isCurrentlyTyping) {
-    isCurrentlyTyping = true;
+  if (!window._typing) {
+    window._typing = true;
     set(ref(db, 'chats/' + currentChatId + '/typing/' + currentUser.uid), Date.now());
   }
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    isCurrentlyTyping = false;
+  clearTimeout(window._typingTimeout);
+  window._typingTimeout = setTimeout(() => {
+    window._typing = false;
     remove(ref(db, 'chats/' + currentChatId + '/typing/' + currentUser.uid));
   }, 3000);
 });
 
-/* ========== チャットリストに戻る ========== */
 document.getElementById('backToChatListBtn').addEventListener('click', () => {
   currentChatId = null;
   if (unsubs.messages) { unsubs.messages(); unsubs.messages = null; }
@@ -1129,7 +1097,7 @@ document.getElementById('backToChatListBtn').addEventListener('click', () => {
   document.getElementById('chatView').style.display = 'none';
 });
 
-/* ========== 新規チャット ========== */
+/* 新規チャット */
 document.getElementById('newChatBtn').addEventListener('click', () => {
   pendingMembers = [];
   document.getElementById('memberEmailInput').value = '';
@@ -1151,11 +1119,7 @@ document.getElementById('addMemberBtn').addEventListener('click', async () => {
   if (pendingMembers.find(m => m.uid === found[0])) { msgEl.textContent = 'すでに追加されています'; msgEl.style.color = '#f59e0b'; return; }
   pendingMembers.push({ uid: found[0], email, nickname: (profilesCache[found[0]]?.nickname) || email.split('@')[0] });
   msgEl.textContent = '追加しました'; msgEl.style.color = '#16a34a';
-  document.getElementById('selectedMembersBox').innerHTML = pendingMembers.map(m => `<span class="member-chip">${escapeHtml(m.nickname)}<span class="remove-x" data-uid="${m.uid}">×</span></span>`).join('');
-  document.querySelectorAll('.remove-x').forEach(el => el.addEventListener('click', () => {
-    pendingMembers = pendingMembers.filter(m => m.uid !== el.dataset.uid);
-    document.getElementById('selectedMembersBox').innerHTML = pendingMembers.length ? pendingMembers.map(m => `<span class="member-chip">${escapeHtml(m.nickname)}<span class="remove-x" data-uid="${m.uid}">×</span></span>`).join('') : '<span style="font-size:11px;color:#9ca3af;">まだ相手が追加されていません</span>';
-  }));
+  document.getElementById('selectedMembersBox').innerHTML = pendingMembers.map(m => `<span style="display:inline-flex;align-items:center;gap:4px;background:#f0f8ff;border:1px solid #d6eaf8;border-radius:9999px;padding:2px 8px;font-size:12px;color:#2c5f7c;margin:2px;">${escapeHtml(m.nickname)}</span>`).join('');
   document.getElementById('memberEmailInput').value = '';
 });
 document.getElementById('newChatCreateBtn').addEventListener('click', async () => {
@@ -1174,13 +1138,12 @@ document.getElementById('newChatCreateBtn').addEventListener('click', async () =
   setTimeout(() => openChat(chatId), 500);
 });
 
-/* ========== グループメンバー一覧 ========== */
+/* メンバー一覧 */
 document.getElementById('chatHeaderMenuBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   const c = chatsCache[currentChatId];
   if (!c) return;
   const memberUids = Object.keys(c.members || {});
-  const isGroup = memberUids.length > 2;
   const existing = document.querySelector('.chat-header-menu-popup');
   if (existing) existing.remove();
   const popup = document.createElement('div');
@@ -1188,22 +1151,17 @@ document.getElementById('chatHeaderMenuBtn').addEventListener('click', (e) => {
   const rect = e.currentTarget.getBoundingClientRect();
   popup.style.top = (rect.bottom + 6) + 'px';
   popup.style.right = (window.innerWidth - rect.right) + 'px';
-  popup.innerHTML = `
-    <button data-action="members">👥 メンバー一覧</button>
-    ${isGroup ? '<button data-action="addMember">＋ メンバーを追加</button>' : ''}
-    <button data-action="leave" class="danger">🚪 チャットを退出</button>
-  `;
+  popup.style.position = 'fixed';
+  popup.style.background = '#fff';
+  popup.style.border = '1px solid #d6eaf8';
+  popup.style.borderRadius = '10px';
+  popup.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+  popup.style.minWidth = '200px';
+  popup.style.zIndex = '30000';
+  popup.style.overflow = 'hidden';
+  popup.innerHTML = `<button data-action="members" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:11px 14px;font-size:13px;background:none;border:none;cursor:pointer;color:#374151;">👥 メンバー一覧</button>`;
   document.body.appendChild(popup);
   popup.querySelector('[data-action="members"]').addEventListener('click', () => { popup.remove(); showGroupMembers(); });
-  const addBtn = popup.querySelector('[data-action="addMember"]');
-  if (addBtn) addBtn.addEventListener('click', () => { popup.remove(); document.getElementById('addMemberModal').classList.remove('hidden'); });
-  popup.querySelector('[data-action="leave"]').addEventListener('click', async () => {
-    popup.remove();
-    if (!confirm('このチャットを退出しますか？')) return;
-    await remove(ref(db, 'userChats/' + currentUser.uid + '/' + currentChatId));
-    await remove(ref(db, 'chats/' + currentChatId + '/members/' + currentUser.uid));
-    document.getElementById('backToChatListBtn').click();
-  });
   setTimeout(() => document.addEventListener('click', () => popup.remove(), { once: true }), 100);
 });
 
@@ -1212,42 +1170,35 @@ function showGroupMembers() {
   if (!c) return;
   const memberUids = Object.keys(c.members || {});
   document.getElementById('groupMembersCount').textContent = `${memberUids.length}人`;
-  const html = memberUids.map(uid => {
+  document.getElementById('groupMembersList').innerHTML = memberUids.map(uid => {
     const p = profilesCache[uid] || {};
     const presence = presenceCache[uid];
     const isOnline = presence?.online && (Date.now() - presence.lastSeen < 60000);
-    const email = uid === currentUser.uid ? currentUser.email : (p.email || '');
-    return `
-      <div class="member-list-item">
-        <img class="ml-avatar" src="${escapeHtml(p.avatar || DEFAULT_AVATAR)}" alt="">
-        <div class="ml-info">
-          <div class="ml-name">${escapeHtml(p.nickname || '名無し')} ${uid === currentUser.uid ? '(自分)' : ''}</div>
-          <div class="ml-email">${escapeHtml(email || '(メール非公開)')}</div>
-        </div>
-        <div class="ml-status ${isOnline ? '' : 'offline'}">${isOnline ? '● オンライン' : '○ オフライン'}</div>
-      </div>`;
+    const email = uid === currentUser.uid ? currentUser.email : (p.email || '(メール非公開)');
+    return `<div class="member-list-item">
+      <img class="ml-avatar" src="${escapeHtml(p.avatar || DEFAULT_AVATAR)}" alt="">
+      <div class="ml-info">
+        <div class="ml-name">${escapeHtml(p.nickname || '名無し')} ${uid === currentUser.uid ? '(自分)' : ''}</div>
+        <div class="ml-email">${escapeHtml(email)}</div>
+      </div>
+      <div class="ml-status ${isOnline ? '' : 'offline'}">${isOnline ? '● オンライン' : '○ オフライン'}</div>
+    </div>`;
   }).join('');
-  document.getElementById('groupMembersList').innerHTML = html;
-  document.getElementById('groupMembersAddBtn').style.display = memberUids.length >= 2 ? 'inline-block' : 'none';
   document.getElementById('groupMembersModal').classList.remove('hidden');
 }
 document.getElementById('groupMembersCloseBtn').addEventListener('click', () => document.getElementById('groupMembersModal').classList.add('hidden'));
-document.getElementById('groupMembersAddBtn').addEventListener('click', () => {
-  document.getElementById('groupMembersModal').classList.add('hidden');
-  document.getElementById('addMemberModal').classList.remove('hidden');
-});
 
-/* ========== プロフィール ========== */
+/* プロフィール */
 document.getElementById('profileBtn').addEventListener('click', () => {
   document.getElementById('profileAvatarPreview').src = myProfile.avatar || DEFAULT_AVATAR;
   document.getElementById('nicknameInput').value = myProfile.nickname || '';
   const row = document.getElementById('presetAvatarRow');
-  row.innerHTML = PRESET_AVATARS.map((url, i) => `<img src="${url}" class="preset-avatar ${selectedAvatar === url ? 'selected' : ''}" data-url="${url}">`).join('');
+  row.innerHTML = PRESET_AVATARS.map(url => `<img src="${url}" class="preset-avatar" data-url="${url}" style="width:52px;height:52px;border-radius:50%;cursor:pointer;border:3px solid transparent;object-fit:cover;${selectedAvatar === url ? 'border-color:#145a32;' : ''}">`).join('');
   row.querySelectorAll('.preset-avatar').forEach(img => img.addEventListener('click', () => {
     selectedAvatar = img.dataset.url;
     document.getElementById('profileAvatarPreview').src = selectedAvatar;
-    row.querySelectorAll('.preset-avatar').forEach(i => i.classList.remove('selected'));
-    img.classList.add('selected');
+    row.querySelectorAll('.preset-avatar').forEach(i => i.style.borderColor = 'transparent');
+    img.style.borderColor = '#145a32';
   }));
   document.getElementById('profileModal').classList.remove('hidden');
 });
@@ -1263,76 +1214,52 @@ document.getElementById('profileSaveBtn').addEventListener('click', async () => 
   showStatusBanner('プロフィールを更新しました 🎄', 'success');
 });
 
-/* ========== グループ通話 (WebRTCメッシュ) ========== */
+/* グループ通話 (WebRTCメッシュ) */
 async function startGroupCall(chatId) {
   if (groupCallState.active) { document.getElementById('groupCallPanel').classList.add('show'); return; }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    groupCallState = { active: true, chatId, participants: {}, localStream: stream, muted: false, camOff: true, peerConnections: {} };
+    groupCallState = { active: true, chatId, participants: {}, localStream: stream, muted: false, peerConnections: {} };
     document.getElementById('groupCallPanel').classList.add('show');
-    document.getElementById('gcpTitle').textContent = '📞 グループ通話';
-    // 自分の参加を記録
     const myParticipantRef = ref(db, `chats/${chatId}/groupCall/participants/${currentUser.uid}`);
     await set(myParticipantRef, { joinedAt: Date.now(), muted: false, nickname: myProfile.nickname, avatar: myProfile.avatar, email: currentUser.email });
     onDisconnect(myParticipantRef).remove();
-    // 参加者リスナー
     groupCallUnsubs.participants = onValue(ref(db, `chats/${chatId}/groupCall/participants`), (snap) => {
       groupCallState.participants = snap.val() || {};
       renderGroupCallPanel();
-      // 新規参加者に対してオファー送信
       Object.keys(groupCallState.participants).forEach(uid => {
-        if (uid !== currentUser.uid && !groupCallState.peerConnections[uid]) {
-          createPeerConnection(chatId, uid, true);
-        }
+        if (uid !== currentUser.uid && !groupCallState.peerConnections[uid]) createPeerConnection(chatId, uid, true);
       });
     });
-    // シグナリングリスナー
     listenSignals(chatId);
   } catch (e) {
     showStatusBanner('マイクへのアクセスが拒否されました', 'error');
     endGroupCall();
   }
 }
-
 function renderGroupCallPanel() {
   const container = document.getElementById('gcpParticipants');
   if (!container) return;
-  const participants = groupCallState.participants;
-  container.innerHTML = Object.entries(participants).map(([uid, p]) => {
-    const isMe = uid === currentUser.uid;
-    return `
-      <div class="gcp-participant">
-        <img src="${escapeHtml(p.avatar || DEFAULT_AVATAR)}" alt="">
-        <div class="gcp-pinfo">
-          <div class="gcp-pname">${escapeHtml(p.nickname || '名無し')} ${isMe ? '(自分)' : ''}</div>
-          <div class="gcp-pstatus">${p.muted ? 'ミュート中' : '通話中'}</div>
-        </div>
-        <div class="gcp-pmic">${p.muted ? '🔇' : '🎤'}</div>
-      </div>`;
-  }).join('');
+  container.innerHTML = Object.entries(groupCallState.participants).map(([uid, p]) => `
+    <div class="gcp-participant">
+      <img src="${escapeHtml(p.avatar || DEFAULT_AVATAR)}" alt="">
+      <div class="gcp-pinfo"><div class="gcp-pname">${escapeHtml(p.nickname || '名無し')} ${uid === currentUser.uid ? '(自分)' : ''}</div><div class="gcp-pstatus">${p.muted ? 'ミュート中' : '通話中'}</div></div>
+      <div class="gcp-pmic">${p.muted ? '🔇' : '🎤'}</div>
+    </div>`).join('');
   document.getElementById('gcpMicBtn').textContent = groupCallState.muted ? '🔇' : '🎤';
   document.getElementById('gcpMicBtn').classList.toggle('off', groupCallState.muted);
 }
-
 async function createPeerConnection(chatId, targetUid, isInitiator) {
   if (groupCallState.peerConnections[targetUid]) return;
   const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] });
   groupCallState.peerConnections[targetUid] = pc;
   groupCallState.localStream.getTracks().forEach(track => pc.addTrack(track, groupCallState.localStream));
   pc.onicecandidate = (e) => {
-    if (e.candidate) {
-      push(ref(db, `chats/${chatId}/groupCall/participants/${currentUser.uid}/signals/${targetUid}`), { type: 'ice', candidate: e.candidate.toJSON(), from: currentUser.uid, at: Date.now() });
-    }
+    if (e.candidate) push(ref(db, `chats/${chatId}/groupCall/participants/${currentUser.uid}/signals/${targetUid}`), { type: 'ice', candidate: e.candidate.toJSON(), from: currentUser.uid, at: Date.now() });
   };
   pc.ontrack = (e) => {
-    // 音声再生
     let audio = document.getElementById('remoteAudio_' + targetUid);
-    if (!audio) {
-      audio = document.createElement('audio');
-      audio.id = 'remoteAudio_' + targetUid;
-      audio.autoplay = true;
-      document.body.appendChild(audio);
-    }
+    if (!audio) { audio = document.createElement('audio'); audio.id = 'remoteAudio_' + targetUid; audio.autoplay = true; document.body.appendChild(audio); }
     audio.srcObject = e.streams[0];
   };
   if (isInitiator) {
@@ -1340,11 +1267,8 @@ async function createPeerConnection(chatId, targetUid, isInitiator) {
     await pc.setLocalDescription(offer);
     await push(ref(db, `chats/${chatId}/groupCall/participants/${currentUser.uid}/signals/${targetUid}`), { type: 'offer', sdp: offer.sdp, from: currentUser.uid, at: Date.now() });
   }
-  return pc;
 }
-
 function listenSignals(chatId) {
-  // 自分宛のシグナルを監視
   groupCallUnsubs.signals = onValue(ref(db, `chats/${chatId}/groupCall/participants/${currentUser.uid}/signals`), async (snap) => {
     const signals = snap.val() || {};
     for (const [fromUid, sigs] of Object.entries(signals)) {
@@ -1352,11 +1276,14 @@ function listenSignals(chatId) {
         if (sig.processed) continue;
         if (sig.type === 'offer') {
           let pc = groupCallState.peerConnections[fromUid];
-          if (!pc) pc = await createPeerConnection(chatId, fromUid, false);
-          await pc.setRemoteDescription({ type: 'offer', sdp: sig.sdp });
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          await push(ref(db, `chats/${chatId}/groupCall/participants/${fromUid}/signals/${currentUser.uid}`), { type: 'answer', sdp: answer.sdp, from: currentUser.uid, at: Date.now() });
+          if (!pc) await createPeerConnection(chatId, fromUid, false);
+          pc = groupCallState.peerConnections[fromUid];
+          if (pc) {
+            await pc.setRemoteDescription({ type: 'offer', sdp: sig.sdp });
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            await push(ref(db, `chats/${chatId}/groupCall/participants/${fromUid}/signals/${currentUser.uid}`), { type: 'answer', sdp: answer.sdp, from: currentUser.uid, at: Date.now() });
+          }
         } else if (sig.type === 'answer') {
           const pc = groupCallState.peerConnections[fromUid];
           if (pc && pc.signalingState !== 'stable') await pc.setRemoteDescription({ type: 'answer', sdp: sig.sdp });
@@ -1364,27 +1291,22 @@ function listenSignals(chatId) {
           const pc = groupCallState.peerConnections[fromUid];
           if (pc) await pc.addIceCandidate(sig.candidate).catch(() => {});
         }
-        // 処理済みマーク
         await update(ref(db, `chats/${chatId}/groupCall/participants/${currentUser.uid}/signals/${fromUid}/${sigId}`), { processed: true });
       }
     }
   });
 }
-
 async function endGroupCall() {
   const { chatId, localStream, peerConnections } = groupCallState;
-  if (chatId) {
-    try { await remove(ref(db, `chats/${chatId}/groupCall/participants/${currentUser.uid}`)); } catch (e) {}
-  }
+  if (chatId) { try { await remove(ref(db, `chats/${chatId}/groupCall/participants/${currentUser.uid}`)); } catch (e) {} }
   Object.values(peerConnections).forEach(pc => pc.close());
   if (localStream) localStream.getTracks().forEach(t => t.stop());
   Object.keys(groupCallUnsubs).forEach(k => { if (groupCallUnsubs[k]) groupCallUnsubs[k](); });
   groupCallUnsubs = {};
   document.querySelectorAll('[id^="remoteAudio_"]').forEach(el => el.remove());
-  groupCallState = { active: false, chatId: null, participants: {}, localStream: null, muted: false, camOff: true, peerConnections: {} };
+  groupCallState = { active: false, chatId: null, participants: {}, localStream: null, muted: false, peerConnections: {} };
   document.getElementById('groupCallPanel').classList.remove('show');
 }
-
 document.getElementById('gcpCloseBtn').addEventListener('click', () => document.getElementById('groupCallPanel').classList.remove('show'));
 document.getElementById('gcpMicBtn').addEventListener('click', async () => {
   if (!groupCallState.localStream) return;
@@ -1396,29 +1318,13 @@ document.getElementById('gcpMicBtn').addEventListener('click', async () => {
 document.getElementById('gcpCamBtn').addEventListener('click', () => showStatusBanner('ビデオ通話は未対応です', 'error'));
 document.getElementById('gcpEndBtn').addEventListener('click', () => endGroupCall());
 
-/* ========== 通話招待リスナー ========== */
-function listenCallInvites(chatId) {
-  if (groupCallUnsubs.invite) groupCallUnsubs.invite();
-  groupCallUnsubs.invite = onValue(ref(db, `chats/${chatId}/groupCall/participants`), (snap) => {
-    const participants = snap.val() || {};
-    const others = Object.keys(participants).filter(uid => uid !== currentUser.uid);
-    if (others.length > 0 && !groupCallState.active) {
-      currentInviteChatId = chatId;
-      document.getElementById('callInviteName').textContent = '📞 グループ通話が開始されました';
-      document.getElementById('callInviteDesc').textContent = `${others.length}人が参加中`;
-      document.getElementById('callInviteToast').classList.add('show');
-    } else if (others.length === 0) {
-      document.getElementById('callInviteToast').classList.remove('show');
-    }
-  });
-}
 document.getElementById('callInviteJoinBtn').addEventListener('click', () => {
   document.getElementById('callInviteToast').classList.remove('show');
   if (currentInviteChatId) startGroupCall(currentInviteChatId);
 });
 document.getElementById('callInviteDismissBtn').addEventListener('click', () => document.getElementById('callInviteToast').classList.remove('show'));
 
-/* 起動時にチャット一覧から通話招待を監視 */
+/* 起動時に通話招待を監視 */
 setTimeout(() => {
   if (currentUser) {
     onValue(ref(db, 'userChats/' + currentUser.uid), (snap) => {
@@ -1426,7 +1332,6 @@ setTimeout(() => {
       Object.keys(chats).forEach(chatId => {
         const c = chats[chatId];
         if (c.members && Object.keys(c.members).length > 2) {
-          // グループのみ招待監視（重複防止）
           if (!groupCallUnsubs['invite_' + chatId]) {
             groupCallUnsubs['invite_' + chatId] = onValue(ref(db, `chats/${chatId}/groupCall/participants`), (ps) => {
               const parts = ps.val() || {};
@@ -1445,97 +1350,9 @@ setTimeout(() => {
   }
 }, 2000);
 
-/* ========== 画面離脱時 ========== */
 window.addEventListener('beforeunload', () => {
   if (groupCallState.active) endGroupCall();
   if (myPresenceRef) set(myPresenceRef, { online: false, lastSeen: Date.now() });
-});
-document.addEventListener('visibilitychange', () => { isTabActive = !document.hidden; });
-
-/* ========== その他既存機能の簡易実装 ========== */
-document.getElementById('stickerManageBtn').addEventListener('click', () => document.getElementById('stickerManageModal').classList.remove('hidden'));
-document.getElementById('stickerManageCloseBtn').addEventListener('click', () => document.getElementById('stickerManageModal').classList.add('hidden'));
-document.getElementById('announceBtn')?.addEventListener('click', () => document.getElementById('announceModal').classList.remove('hidden'));
-document.getElementById('announceCancel')?.addEventListener('click', () => document.getElementById('announceModal').classList.add('hidden'));
-document.getElementById('announceSend')?.addEventListener('click', async () => {
-  const text = document.getElementById('announceTextInput').value.trim();
-  if (!text) return;
-  await push(ref(db, 'announcements'), { text, by: currentUser.email, at: Date.now(), active: true });
-  document.getElementById('announceModal').classList.add('hidden');
-  showStatusBanner('アナウンスを送信しました', 'success');
-});
-document.getElementById('banUserBtn')?.addEventListener('click', () => document.getElementById('adminBanPanel').classList.remove('hidden'));
-document.getElementById('banCancelBtn')?.addEventListener('click', () => document.getElementById('adminBanPanel').classList.add('hidden'));
-document.getElementById('privateModeBtn')?.addEventListener('click', () => document.getElementById('privateModeModal').classList.remove('hidden'));
-document.getElementById('privateModeModalCloseBtn')?.addEventListener('click', () => document.getElementById('privateModeModal').classList.add('hidden'));
-document.getElementById('emergencyHistoryBtn')?.addEventListener('click', () => document.getElementById('emergencyHistoryPanel').classList.remove('hidden'));
-document.getElementById('emergencyHistoryCloseBtn')?.addEventListener('click', () => document.getElementById('emergencyHistoryPanel').classList.add('hidden'));
-document.getElementById('notificationBtn')?.addEventListener('click', () => document.getElementById('notificationPanel').classList.remove('hidden'));
-document.getElementById('notificationCloseBtn')?.addEventListener('click', () => document.getElementById('notificationPanel').classList.add('hidden'));
-document.getElementById('approvalBtn')?.addEventListener('click', () => document.getElementById('approvalPanel').classList.remove('hidden'));
-document.getElementById('approvalCloseBtn')?.addEventListener('click', () => document.getElementById('approvalPanel').classList.add('hidden'));
-document.getElementById('emergencyHelpBtn')?.addEventListener('click', () => document.getElementById('emergencyHelpModal').classList.remove('hidden'));
-document.getElementById('emergencyHelpCloseBtn')?.addEventListener('click', () => document.getElementById('emergencyHelpModal').classList.add('hidden'));
-document.getElementById('adminStoryDeleteBtn')?.addEventListener('click', () => document.getElementById('adminStoryDeletePanel').classList.remove('hidden'));
-document.getElementById('storyDeleteCancelBtn')?.addEventListener('click', () => document.getElementById('adminStoryDeletePanel').classList.add('hidden'));
-document.getElementById('archiveCloseBtn')?.addEventListener('click', () => document.getElementById('archiveModal').classList.add('hidden'));
-document.getElementById('storyPostCancelBtn')?.addEventListener('click', () => document.getElementById('storyPostModal').classList.add('hidden'));
-document.getElementById('storyAddBtn')?.addEventListener('click', () => document.getElementById('storyPostModal').classList.remove('hidden'));
-document.getElementById('myArchiveBtn')?.addEventListener('click', () => document.getElementById('archiveModal').classList.remove('hidden'));
-document.getElementById('storyCloseBtn')?.addEventListener('click', () => document.getElementById('storyViewer').classList.remove('show'));
-
-/* 緊急停止ボタン */
-document.getElementById('emergencyBtn')?.addEventListener('click', async () => {
-  if (!isAdmin(currentUser?.email)) { showStatusBanner('管理者のみ実行可能です', 'error'); return; }
-  if (!confirm('サイト全体を緊急停止しますか？')) return;
-  await set(ref(db, 'emergency'), { active: true, by: currentUser.email, at: Date.now() });
-  document.getElementById('emergencyOverlay').classList.add('show');
-  await push(ref(db, 'emergencyHistory'), { by: currentUser.email, at: Date.now() });
-});
-
-/* 緊急状態の監視 */
-onValue(ref(db, 'emergency'), (snap) => {
-  const v = snap.val() || {};
-  emergencyState = v;
-  if (v.active && !isAdmin(currentUser?.email)) {
-    document.getElementById('emergencyOverlay').classList.add('show');
-    document.title = '69CT';
-    // 解除監視
-    if (!emergencyEnforcerInterval) {
-      emergencyEnforcerInterval = setInterval(async () => {
-        const s = await get(ref(db, 'emergency'));
-        if (!s.val()?.active) {
-          document.getElementById('emergencyOverlay').classList.remove('show');
-          clearInterval(emergencyEnforcerInterval);
-          emergencyEnforcerInterval = null;
-        }
-      }, 1000);
-    }
-  } else {
-    document.getElementById('emergencyOverlay').classList.remove('show');
-  }
-});
-
-/* Ctrl+D で緊急解除 */
-document.addEventListener('keydown', async (e) => {
-  if (e.ctrlKey && e.key === 'd' && isAdmin(currentUser?.email)) {
-    e.preventDefault();
-    await set(ref(db, 'emergency'), { active: false, by: currentUser.email, at: Date.now() });
-    document.getElementById('emergencyOverlay').classList.remove('show');
-    showStatusBanner('緊急モードを解除しました', 'success');
-  }
-});
-
-/* スクロール位置監視 */
-document.getElementById('chatMessagesWrap')?.addEventListener('scroll', (e) => {
-  const el = e.currentTarget;
-  isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-});
-document.getElementById('scrollToBottomBtn')?.addEventListener('click', () => {
-  const wrap = document.getElementById('chatMessagesWrap');
-  wrap.scrollTop = wrap.scrollHeight;
-  isNearBottom = true;
-  document.getElementById('scrollToBottomBtn').classList.remove('show');
 });
 </script>
 </body>
