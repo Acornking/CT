@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Messenger & Stories App (Firebase + HTML Complete)</title>
+  <title>Messenger & Stories App (Firebase Realtime Database Complete)</title>
   <style>
     :root {
       --text-main: #111827;
@@ -146,7 +146,7 @@
       display: flex;
     }
 
-    .fb-status {
+    .rtdb-status {
       font-size: 11px;
       padding: 3px 8px;
       border-radius: 999px;
@@ -155,7 +155,7 @@
       margin-bottom: 10px;
       display: inline-block;
     }
-    .fb-status.connected {
+    .rtdb-status.connected {
       background: #dcfce7;
       color: #166534;
     }
@@ -418,7 +418,7 @@
 
   <div class="app-container">
     <div class="panel">
-      <div id="fb-status" class="fb-status">ローカルモード（Firebase設定でクラウド同期）</div>
+      <div id="rtdb-status" class="rtdb-status">ローカルモード（Realtime Database設定でクラウド同期）</div>
 
       <div class="top-bar">
         <div class="user-profile">
@@ -552,39 +552,37 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, updateDoc, doc,
-      onSnapshot, query, orderBy, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import {
-      getStorage, ref, uploadBytes, getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+      getDatabase, ref, push, set, update, onValue
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     // =====================================================
-    // Firebase設定（ご自身のプロジェクト設定に書き換えてください）
+    // Firebase Realtime Database 設定（ご自身の値に書き換え）
     // =====================================================
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
       projectId: "YOUR_PROJECT_ID",
       storageBucket: "YOUR_PROJECT_ID.appspot.com",
       messagingSenderId: "YOUR_SENDER_ID",
       appId: "YOUR_APP_ID"
     };
 
-    const isFirebaseConfigured = !firebaseConfig.apiKey.startsWith("YOUR_");
-    let db = null;
-    let storage = null;
+    const isRtdbConfigured =
+      !firebaseConfig.apiKey.startsWith("YOUR_") &&
+      !firebaseConfig.databaseURL.includes("YOUR_PROJECT_ID");
 
-    if (isFirebaseConfigured) {
+    let rtdb = null;
+
+    if (isRtdbConfigured) {
       try {
         const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        storage = getStorage(app);
-        const statusEl = document.getElementById("fb-status");
-        statusEl.textContent = "Firebase 接続中（リアルタイム同期）";
+        rtdb = getDatabase(app);
+        const statusEl = document.getElementById("rtdb-status");
+        statusEl.textContent = "Realtime Database 接続中（リアルタイム同期）";
         statusEl.classList.add("connected");
       } catch (e) {
-        console.warn("Firebase初期化エラーのためローカルモードで動作します:", e);
+        console.warn("Realtime Database 初期化エラー:", e);
       }
     }
 
@@ -593,7 +591,7 @@
     // =====================================================
     const state = {
       mails: [
-        { id: "init-1", title: "システムお知らせ", snippet: "アカウント設定が完了しました。", unread: false }
+        { id: "init-1", title: "システムお知らせ", snippet: "アカウント設定が完了しました。", unread: false, createdAt: 1 }
       ],
       stories: [
         {
@@ -602,15 +600,14 @@
           avatar: "https://api.dicebear.com/7.x/thumbs/svg?seed=Sakura",
           image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop",
           caption: "海辺でお散歩中🌊 いい天気！",
-          audioUrl: null
+          audioUrl: null,
+          createdAt: 1
         }
       ],
       messages: [
-        { id: "msg-1", sender: "other", text: "こんにちは！Firebase連携・ストーリー・音声送信に対応しました。" }
+        { id: "msg-1", sender: "other", text: "こんにちは！Firebase Realtime Database 完全版です。", createdAt: 1 }
       ],
-      draftImageFile: null,
-      draftImagePreviewUrl: "",
-      draftAudioBlob: null,
+      draftImageUrl: "",
       draftAudioUrl: null
     };
 
@@ -620,6 +617,15 @@
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
+    }
+
+    function blobToDataUrl(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
     }
 
     // =====================================================
@@ -663,9 +669,9 @@
       target.unread = false;
       renderMailsAndBadge();
 
-      if (db && !String(id).startsWith("init-")) {
+      if (rtdb && !String(id).startsWith("init-")) {
         try {
-          await updateDoc(doc(db, "mails", String(id)), { unread: false });
+          await update(ref(rtdb, `mails/${id}`), { unread: false });
         } catch (e) {
           console.error(e);
         }
@@ -686,8 +692,9 @@
         createdAt: Date.now()
       };
 
-      if (db) {
-        await addDoc(collection(db, "mails"), { ...newMail, serverTs: serverTimestamp() });
+      if (rtdb) {
+        const newRef = push(ref(rtdb, "mails"));
+        await set(newRef, newMail);
       } else {
         state.mails.unshift({ id: String(Date.now()), ...newMail });
         renderMailsAndBadge();
@@ -783,9 +790,7 @@
     }
 
     function openStoryCreateModal() {
-      state.draftImageFile = null;
-      state.draftImagePreviewUrl = "";
-      state.draftAudioBlob = null;
+      state.draftImageUrl = "";
       state.draftAudioUrl = null;
       document.getElementById("story-file-input").value = "";
       document.getElementById("story-url-input").value = "";
@@ -802,26 +807,23 @@
     document.getElementById("btn-open-story-modal").addEventListener("click", openStoryCreateModal);
     document.getElementById("btn-cancel-story").addEventListener("click", closeStoryCreateModal);
 
-    document.getElementById("story-file-input").addEventListener("change", e => {
+    document.getElementById("story-file-input").addEventListener("change", async e => {
       const file = e.target.files[0];
       if (!file) return;
-      state.draftImageFile = file;
-      state.draftImagePreviewUrl = URL.createObjectURL(file);
+      state.draftImageUrl = await blobToDataUrl(file);
       document.getElementById("story-url-input").value = "";
     });
 
     document.getElementById("story-url-input").addEventListener("input", e => {
       if (e.target.value.trim()) {
-        state.draftImageFile = null;
-        state.draftImagePreviewUrl = e.target.value.trim();
+        state.draftImageUrl = e.target.value.trim();
       }
     });
 
-    document.getElementById("story-audio-file").addEventListener("change", e => {
+    document.getElementById("story-audio-file").addEventListener("change", async e => {
       const file = e.target.files[0];
       if (!file) return;
-      state.draftAudioBlob = file;
-      state.draftAudioUrl = URL.createObjectURL(file);
+      state.draftAudioUrl = await blobToDataUrl(file);
       document.getElementById("story-audio-label").textContent = `選択済み: ${file.name}`;
     });
 
@@ -837,10 +839,9 @@
           storyRecorder.ondataavailable = e => {
             if (e.data.size > 0) storyAudioChunks.push(e.data);
           };
-          storyRecorder.onstop = () => {
+          storyRecorder.onstop = async () => {
             const blob = new Blob(storyAudioChunks, { type: "audio/webm" });
-            state.draftAudioBlob = blob;
-            state.draftAudioUrl = URL.createObjectURL(blob);
+            state.draftAudioUrl = await blobToDataUrl(blob);
             label.textContent = "録音音声を設定しました";
             stream.getTracks().forEach(t => t.stop());
           };
@@ -857,42 +858,27 @@
       }
     });
 
-    async function uploadToStorageIfPossible(blobOrFile, folder, fallbackUrl) {
-      if (!storage || !blobOrFile) return fallbackUrl || null;
-      try {
-        const ext = blobOrFile.name ? blobOrFile.name.split(".").pop() : "webm";
-        const fileRef = ref(storage, `${folder}/${Date.now()}.${ext}`);
-        await uploadBytes(fileRef, blobOrFile);
-        return await getDownloadURL(fileRef);
-      } catch (e) {
-        console.warn("Storageアップロード失敗、ローカルURLを使用:", e);
-        return fallbackUrl || null;
-      }
-    }
-
     document.getElementById("btn-publish-story").addEventListener("click", async () => {
       const urlInput = document.getElementById("story-url-input").value.trim();
-      const previewImage = state.draftImagePreviewUrl || urlInput;
-      if (!previewImage) {
+      const imageSrc = state.draftImageUrl || urlInput;
+      if (!imageSrc) {
         alert("ストーリーの画像を選択するか、画像URLを入力してください。");
         return;
       }
 
       const caption = document.getElementById("story-caption-input").value.trim() || "（貼り付け文字なし）";
-      const finalImageUrl = await uploadToStorageIfPossible(state.draftImageFile, "stories/images", previewImage);
-      const finalAudioUrl = await uploadToStorageIfPossible(state.draftAudioBlob, "stories/audio", state.draftAudioUrl);
-
       const storyData = {
         author: "あなた",
         avatar: document.getElementById("my-avatar").src,
-        image: finalImageUrl,
+        image: imageSrc,
         caption,
-        audioUrl: finalAudioUrl,
+        audioUrl: state.draftAudioUrl || null,
         createdAt: Date.now()
       };
 
-      if (db) {
-        await addDoc(collection(db, "stories"), { ...storyData, serverTs: serverTimestamp() });
+      if (rtdb) {
+        const newRef = push(ref(rtdb, "stories"));
+        await set(newRef, storyData);
       } else {
         state.stories.unshift({ id: String(Date.now()), ...storyData });
         renderStories();
@@ -964,8 +950,9 @@
       input.value = "";
 
       const msg = { sender: "me", text, createdAt: Date.now() };
-      if (db) {
-        await addDoc(collection(db, "messages"), { ...msg, serverTs: serverTimestamp() });
+      if (rtdb) {
+        const newRef = push(ref(rtdb, "messages"));
+        await set(newRef, msg);
       } else {
         state.messages.push({ id: String(Date.now()), ...msg });
         renderMessages();
@@ -991,8 +978,7 @@
           };
           chatRecorder.onstop = async () => {
             const blob = new Blob(chatAudioChunks, { type: "audio/webm" });
-            const localUrl = URL.createObjectURL(blob);
-            const audioUrl = await uploadToStorageIfPossible(blob, "chat/audio", localUrl);
+            const audioUrl = await blobToDataUrl(blob);
 
             const msg = {
               sender: "me",
@@ -1001,8 +987,9 @@
               createdAt: Date.now()
             };
 
-            if (db) {
-              await addDoc(collection(db, "messages"), { ...msg, serverTs: serverTimestamp() });
+            if (rtdb) {
+              const newRef = push(ref(rtdb, "messages"));
+              await set(newRef, msg);
             } else {
               state.messages.push({ id: String(Date.now()), ...msg });
               renderMessages();
@@ -1028,23 +1015,32 @@
     });
 
     // =====================================================
-    // 5. Firestore リアルタイム購読
+    // 5. Realtime Database リアルタイム購読
     // =====================================================
-    function subscribeFirestore() {
-      if (!db) return;
+    function subscribeRealtimeDatabase() {
+      if (!rtdb) return;
 
-      onSnapshot(query(collection(db, "mails"), orderBy("createdAt", "desc")), snap => {
-        state.mails = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      onValue(ref(rtdb, "mails"), snap => {
+        const val = snap.val() || {};
+        state.mails = Object.entries(val)
+          .map(([id, item]) => ({ id, ...item }))
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         renderMailsAndBadge();
       });
 
-      onSnapshot(query(collection(db, "stories"), orderBy("createdAt", "desc")), snap => {
-        state.stories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      onValue(ref(rtdb, "stories"), snap => {
+        const val = snap.val() || {};
+        state.stories = Object.entries(val)
+          .map(([id, item]) => ({ id, ...item }))
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         renderStories();
       });
 
-      onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "asc")), snap => {
-        state.messages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      onValue(ref(rtdb, "messages"), snap => {
+        const val = snap.val() || {};
+        state.messages = Object.entries(val)
+          .map(([id, item]) => ({ id, ...item }))
+          .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
         renderMessages();
       });
     }
@@ -1054,7 +1050,7 @@
     renderMailsAndBadge();
     renderStories();
     renderMessages();
-    subscribeFirestore();
+    subscribeRealtimeDatabase();
   </script>
 </body>
 </html>
