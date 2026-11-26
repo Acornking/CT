@@ -762,7 +762,7 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
           </div>
           <div class="chat-input-row">
             <div class="chat-input-wrap">
-              <textarea id="messageInput" rows="1" maxlength="2000" placeholder="🎄 メッセージを入力...（Shift+Enterで改行）"></textarea>
+              <textarea id="messageInput" rows="1" maxlength="2000" placeholder="🎄 Enterで送信 / Shift+Enterで改行..."></textarea>
               <button type="button" id="stickerOpenBtn" class="chat-input-icon-btn" title="スタンプ">
                 <svg class="svg-icon icon-22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="3" y="3" width="18" height="18" rx="4" stroke="#0369a1" stroke-width="2"/>
@@ -3173,394 +3173,329 @@ document.getElementById('messageFileInput').addEventListener('change', (e) => {
 document.getElementById('msgPreviewRemoveBtn').addEventListener('click', () => { pendingFileData = null; document.getElementById('messagePreviewBox').classList.remove('show'); });
 
 function setReplyTo(msg) {
-  const senderName = msg.authorUid === currentUser.uid ? '自分' : (profilesCache[msg.authorUid]?.nickname || '相手');
-  replyingTo = { key: msg.key, senderName, content: msg.content || (msg.type === 'sticker' ? 'スタンプ' : '画像') };
-  document.getElementById('replyPreviewName').textContent = senderName;
-  document.getElementById('replyPreviewText').textContent = replyingTo.content;
-  document.getElementById('replyPreviewBox').classList.add('show');
-  document.getElementById('messageInput').focus();
+  const senderName = msg.authorUid === currentUser.uid ? 'あなた' : (profilesCache[msg.authorUid]?.nickname || '相手');
+  replyingTo = { key: msg.key, senderName, content: msg.content || (msg.file ? '画像' : '') };
+  document.getElementById('replyPreviewName').textContent = senderName; document.getElementById('replyPreviewText').textContent = replyingTo.content;
+  document.getElementById('replyPreviewBox').classList.add('show'); document.getElementById('messageInput').focus();
 }
 function clearReply() { replyingTo = null; document.getElementById('replyPreviewBox').classList.remove('show'); }
 document.getElementById('replyPreviewCloseBtn').addEventListener('click', clearReply);
 
 function openMessageMenu(e, msg, isMine) {
-  closeMessageMenu();
+  closeOpenMenus();
   const popup = document.createElement('div'); popup.className = 'msg-menu-popup';
-  const replyBtn = document.createElement('button'); replyBtn.textContent = '返信'; replyBtn.addEventListener('click', () => { setReplyTo(msg); closeMessageMenu(); }); popup.appendChild(replyBtn);
-  if (isMine) {
-    if (msg.content && msg.type !== 'sticker') {
-      const editBtn = document.createElement('button'); editBtn.textContent = '編集';
-      editBtn.addEventListener('click', () => { editingMsgKey = msg.key; document.getElementById('editMsgInput').value = msg.content; document.getElementById('editMsgModal').classList.remove('hidden'); closeMessageMenu(); });
-      popup.appendChild(editBtn);
-    }
-    const delBtn = document.createElement('button'); delBtn.className = 'danger'; delBtn.textContent = '削除';
-    delBtn.addEventListener('click', async () => { await remove(ref(db, `chatMessages/${currentChatId}/${msg.key}`)); closeMessageMenu(); });
-    popup.appendChild(delBtn);
-  }
+  popup.innerHTML = `<button data-act="reply">↩ 返信</button>${isMine && msg.content ? '<button data-act="edit">✏ 編集</button>' : ''}${isMine ? '<button class="danger" data-act="delete">🗑 削除</button>' : ''}`;
+  popup.querySelector('[data-act="reply"]').addEventListener('click', () => { setReplyTo(msg); closeOpenMenus(); });
+  const editBtn = popup.querySelector('[data-act="edit"]');
+  if (editBtn) editBtn.addEventListener('click', () => { editingMsgKey = msg.key; document.getElementById('editMsgInput').value = msg.content || ''; document.getElementById('editMsgModal').classList.remove('hidden'); closeOpenMenus(); });
+  const delBtn = popup.querySelector('[data-act="delete"]');
+  if (delBtn) delBtn.addEventListener('click', async () => { await remove(ref(db, `chatMessages/${currentChatId}/${msg.key}`)).catch(() => {}); closeOpenMenus(); });
   document.body.appendChild(popup);
-  const rect = e.currentTarget.getBoundingClientRect();
-  popup.style.top = Math.min(window.innerHeight - popup.offsetHeight - 10, rect.bottom + 4) + 'px';
-  popup.style.left = Math.max(10, Math.min(window.innerWidth - popup.offsetWidth - 10, rect.left - popup.offsetWidth / 2)) + 'px';
+  const rect = e.target.getBoundingClientRect();
+  popup.style.top = Math.min(window.innerHeight - 140, rect.bottom + 4) + 'px'; popup.style.left = Math.min(window.innerWidth - 190, Math.max(10, rect.left - 140)) + 'px';
   openMenuEl = popup;
 }
-function closeMessageMenu() { if (openMenuEl) { openMenuEl.remove(); openMenuEl = null; } }
-document.addEventListener('click', closeMessageMenu);
+function closeOpenMenus() { if (openMenuEl) { openMenuEl.remove(); openMenuEl = null; } }
+document.addEventListener('click', closeOpenMenus);
 
 document.getElementById('editMsgCancelBtn').addEventListener('click', () => { editingMsgKey = null; document.getElementById('editMsgModal').classList.add('hidden'); });
 document.getElementById('editMsgSaveBtn').addEventListener('click', async () => {
-  const newText = document.getElementById('editMsgInput').value.trim();
-  if (!newText || !editingMsgKey || !currentChatId) return;
+  const newText = document.getElementById('editMsgInput').value.trim(); if (!newText || !editingMsgKey || !currentChatId) return;
   await update(ref(db, `chatMessages/${currentChatId}/${editingMsgKey}`), { content: newText, edited: true, editedAt: Date.now() });
   editingMsgKey = null; document.getElementById('editMsgModal').classList.add('hidden');
 });
 
-/* ============================================================
-   送信処理＆エンターキー制御（IME漢字変換確定での誤送信を完全防止）
-   ============================================================ */
-async function sendChatMessage() {
-  if (!currentUser || !currentChatId) return;
-  const input = document.getElementById('messageInput');
-  const text = input.value.trim();
-  if (!text && !pendingFileData) return;
+const msgInput = document.getElementById('messageInput');
+let isComposing = false;
+msgInput.addEventListener('compositionstart', () => { isComposing = true; });
+msgInput.addEventListener('compositionend', () => {
+  setTimeout(() => { isComposing = false; }, 0);
+});
 
-  const now = Date.now();
-  const payload = { authorUid: currentUser.uid, content: text || '', createdAt: now };
-  if (pendingFileData) payload.file = pendingFileData;
-  if (replyingTo) payload.replyTo = replyingTo;
+msgInput.addEventListener('input', () => {
+  msgInput.style.height = 'auto';
+  msgInput.style.height = Math.min(140, msgInput.scrollHeight) + 'px';
+  setTypingState(true);
+  if (typingTimeout) clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => setTypingState(false), TYPING_TIMEOUT_MS);
+});
 
-  const sendBtn = document.getElementById('sendBtn');
-  sendBtn.disabled = true;
-  try {
-    await push(ref(db, `chatMessages/${currentChatId}`), payload);
-    const lastMsgSummary = text || '画像を送信しました';
-    const memberUids = Object.keys(chatsCache[currentChatId]?.members || {});
-    for (const uid of memberUids) {
-      await update(ref(db, `userChats/${uid}/${currentChatId}`), {
-        lastMessage: lastMsgSummary,
-        lastMessageAt: now,
-        lastSenderUid: currentUser.uid
-      });
-    }
-    input.value = '';
-    input.style.height = 'auto';
-    pendingFileData = null;
-    document.getElementById('messagePreviewBox').classList.remove('show');
-    clearReply();
-    setTypingState(false);
-    markChatAsRead(currentChatId, now);
-  } finally {
-    sendBtn.disabled = false;
+msgInput.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  if (isComposing || e.isComposing || e.keyCode === 229) {
+    return;
   }
-}
+  if (e.shiftKey) {
+    return;
+  }
+  e.preventDefault();
+  document.getElementById('messageForm').dispatchEvent(new Event('submit', { cancelable: true }));
+});
 
 document.getElementById('messageForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  await sendChatMessage();
+  e.preventDefault(); if (!currentUser || !currentChatId) return;
+  const text = msgInput.value.trim(); if (!text && !pendingFileData) return;
+  setTypingState(false); const now = Date.now();
+  const payload = { authorUid: currentUser.uid, content: text || '', createdAt: now };
+  if (replyingTo) payload.replyTo = replyingTo; if (pendingFileData) payload.file = pendingFileData;
+  msgInput.value = ''; msgInput.style.height = 'auto'; pendingFileData = null; document.getElementById('messagePreviewBox').classList.remove('show'); clearReply();
+  await push(ref(db, `chatMessages/${currentChatId}`), payload);
+  const preview = text || '画像を送信しました'; const chat = chatsCache[currentChatId];
+  if (chat) for (const uid of Object.keys(chat.members || {})) await update(ref(db, `userChats/${uid}/${currentChatId}`), { lastMessage: preview, lastMessageAt: now, lastSenderUid: currentUser.uid });
 });
 
-const messageInputEl = document.getElementById('messageInput');
-let isComposingInput = false;
-
-messageInputEl.addEventListener('compositionstart', () => {
-  isComposingInput = true;
-});
-
-messageInputEl.addEventListener('compositionend', () => {
-  isComposingInput = false;
-});
-
-messageInputEl.addEventListener('input', () => {
-  messageInputEl.style.height = 'auto';
-  messageInputEl.style.height = Math.min(140, messageInputEl.scrollHeight) + 'px';
-  if (messageInputEl.value.trim().length > 0) {
-    setTypingState(true);
-    clearTimeout(typingTimeout);
-    typingTimeout = setTimeout(() => setTypingState(false), TYPING_TIMEOUT_MS);
-  } else {
-    setTypingState(false);
-  }
-});
-
-// Enterキーでは送信せず改行（漢字変換確定時の誤送信防止）、Shift+Enterでも改行、送信ボタンクリック時のみ送信
-messageInputEl.addEventListener('keydown', (e) => {
-  if (isComposingInput || e.isComposing || e.keyCode === 229) {
-    return;
-  }
-  if (e.key === 'Enter' && !e.shiftKey) {
-    // 1回のEnterでは送信せず通常の改行にする
-    return;
-  }
-});
-
-/* スタンプ機能 */
+/* スタンプ・新規チャット・プロフィール・ストーリー・アーカイブ */
 function listenMyStickers() {
   if (!currentUser) return;
   if (unsubs.myStickers) unsubs.myStickers();
-  unsubs.myStickers = onValue(ref(db, `stickers/${currentUser.uid}`), (snap) => { myStickers = snap.val() || {}; renderStickerPicker(); if (!document.getElementById('stickerManageModal').classList.contains('hidden')) renderStickerManageGrid(); }, () => {});
+  unsubs.myStickers = onValue(ref(db, `stickers/${currentUser.uid}`), (snap) => { myStickers = snap.val() || {}; renderStickerManageGrid(); if (stickerPickerOpen) renderStickerPicker(); }, () => {});
 }
 document.getElementById('stickerManageBtn').addEventListener('click', () => { renderStickerManageGrid(); document.getElementById('stickerManageModal').classList.remove('hidden'); });
 document.getElementById('stickerManageCloseBtn').addEventListener('click', () => document.getElementById('stickerManageModal').classList.add('hidden'));
 document.getElementById('stickerUploadInput').addEventListener('change', (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  const msgEl = document.getElementById('stickerUploadMsg');
-  if (file.size > 600 * 1024) { msgEl.style.color = '#dc2626'; msgEl.textContent = '600KB以下の画像を選択してください'; e.target.value = ''; return; }
+  const file = e.target.files[0]; if (!file || !currentUser) return;
+  if (file.size > 1024 * 1024) { document.getElementById('stickerUploadMsg').textContent = '1MB以下にしてください'; e.target.value = ''; return; }
   const reader = new FileReader();
-  reader.onload = async (ev) => {
-    await push(ref(db, `stickers/${currentUser.uid}`), { name: file.name, dataUrl: ev.target.result, createdAt: Date.now() });
-    msgEl.style.color = '#16a34a'; msgEl.textContent = '追加しました';
-  };
+  reader.onload = async (ev) => { const id = 'stk_' + Date.now(); await set(ref(db, `stickers/${currentUser.uid}/${id}`), { dataUrl: ev.target.result, name: file.name, createdAt: Date.now() }); document.getElementById('stickerUploadMsg').textContent = 'スタンプを追加しました'; };
   reader.readAsDataURL(file); e.target.value = '';
 });
 function renderStickerManageGrid() {
-  const grid = document.getElementById('stickerManageGrid'); if (!grid) return; grid.innerHTML = '';
-  Object.entries(myStickers).forEach(([key, st]) => {
-    const item = document.createElement('div'); item.style.cssText = 'position:relative;border:1px solid #bae6fd;border-radius:8px;padding:6px;background:#f0f9ff;display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;';
-    item.innerHTML = `<img src="${escapeHtml(st.dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;"><button style="position:absolute;top:2px;right:2px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;">×</button>`;
-    item.querySelector('button').addEventListener('click', async () => { await remove(ref(db, `stickers/${currentUser.uid}/${key}`)); });
-    grid.appendChild(item);
+  const grid = document.getElementById('stickerManageGrid'); if (!grid) return;
+  const entries = Object.entries(myStickers).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+  if (entries.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#9ca3af;padding:24px;font-size:12px;">スタンプがありません</div>'; return; }
+  grid.innerHTML = '';
+  entries.forEach(([id, stk]) => {
+    const div = document.createElement('div'); div.style.cssText = 'position:relative;border:1px solid #bae6fd;border-radius:10px;padding:6px;background:#f0f9ff;display:flex;align-items:center;justify-content:center;aspect-ratio:1;';
+    div.innerHTML = `<img src="${escapeHtml(stk.dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;"><button style="position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:#dc2626;color:#fff;border:none;font-size:11px;cursor:pointer;">×</button>`;
+    div.querySelector('button').addEventListener('click', async (ev) => { ev.stopPropagation(); await remove(ref(db, `stickers/${currentUser.uid}/${id}`)); });
+    grid.appendChild(div);
   });
 }
-const stickerPicker = document.getElementById('stickerPicker');
 document.getElementById('stickerOpenBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  if (stickerPickerOpen) { stickerPicker.style.display = 'none'; stickerPickerOpen = false; return; }
-  renderStickerPicker(); stickerPicker.style.display = 'block'; stickerPickerOpen = true;
-  const rect = e.currentTarget.getBoundingClientRect();
-  stickerPicker.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
-  stickerPicker.style.right = Math.max(12, window.innerWidth - rect.right) + 'px';
+  e.stopPropagation(); const picker = document.getElementById('stickerPicker');
+  if (stickerPickerOpen) { picker.style.display = 'none'; stickerPickerOpen = false; return; }
+  renderStickerPicker(); const rect = e.currentTarget.getBoundingClientRect();
+  picker.style.display = 'block'; picker.style.bottom = (window.innerHeight - rect.top + 8) + 'px'; picker.style.left = Math.min(window.innerWidth - 260, Math.max(12, rect.left - 120)) + 'px'; stickerPickerOpen = true;
 });
-document.getElementById('stickerPickerManageBtn').addEventListener('click', () => { stickerPicker.style.display = 'none'; stickerPickerOpen = false; renderStickerManageGrid(); document.getElementById('stickerManageModal').classList.remove('hidden'); });
-document.addEventListener('click', (e) => { if (stickerPickerOpen && !stickerPicker.contains(e.target) && e.target.id !== 'stickerOpenBtn') { stickerPicker.style.display = 'none'; stickerPickerOpen = false; } });
+document.getElementById('stickerPickerManageBtn').addEventListener('click', () => { document.getElementById('stickerPicker').style.display = 'none'; stickerPickerOpen = false; renderStickerManageGrid(); document.getElementById('stickerManageModal').classList.remove('hidden'); });
+document.addEventListener('click', (e) => { if (stickerPickerOpen && !document.getElementById('stickerPicker').contains(e.target) && e.target.id !== 'stickerOpenBtn') { document.getElementById('stickerPicker').style.display = 'none'; stickerPickerOpen = false; } });
 function renderStickerPicker() {
-  const grid = document.getElementById('stickerPickerGrid'); const empty = document.getElementById('stickerPickerEmpty'); if (!grid || !empty) return; grid.innerHTML = '';
-  const entries = Object.entries(myStickers);
-  if (entries.length === 0) { empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  entries.forEach(([key, st]) => {
-    const btn = document.createElement('button'); btn.type = 'button'; btn.style.cssText = 'background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:4px;cursor:pointer;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;';
-    btn.innerHTML = `<img src="${escapeHtml(st.dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;">`;
+  const grid = document.getElementById('stickerPickerGrid'); const empty = document.getElementById('stickerPickerEmpty');
+  const entries = Object.entries(myStickers).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+  if (entries.length === 0) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none'; grid.innerHTML = '';
+  entries.forEach(([id, stk]) => {
+    const btn = document.createElement('button'); btn.type = 'button'; btn.style.cssText = 'border:1px solid transparent;border-radius:8px;padding:4px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;aspect-ratio:1;';
+    btn.innerHTML = `<img src="${escapeHtml(stk.dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;">`;
     btn.addEventListener('click', async () => {
-      if (!currentUser || !currentChatId) return;
-      const now = Date.now();
-      await push(ref(db, `chatMessages/${currentChatId}`), { authorUid: currentUser.uid, type: 'sticker', stickerUrl: st.dataUrl, createdAt: now });
-      for (const uid of Object.keys(chatsCache[currentChatId]?.members || {})) {
-        await update(ref(db, `userChats/${uid}/${currentChatId}`), { lastMessage: 'スタンプを送信しました', lastMessageAt: now, lastSenderUid: currentUser.uid });
-      }
-      stickerPicker.style.display = 'none'; stickerPickerOpen = false;
+      document.getElementById('stickerPicker').style.display = 'none'; stickerPickerOpen = false;
+      if (!currentChatId || !currentUser) return;
+      const now = Date.now(); const payload = { authorUid: currentUser.uid, type: 'sticker', stickerUrl: stk.dataUrl, createdAt: now };
+      if (replyingTo) payload.replyTo = replyingTo; clearReply();
+      await push(ref(db, `chatMessages/${currentChatId}`), payload);
+      const chat = chatsCache[currentChatId];
+      if (chat) for (const uid of Object.keys(chat.members || {})) await update(ref(db, `userChats/${uid}/${currentChatId}`), { lastMessage: 'スタンプを送信しました', lastMessageAt: now, lastSenderUid: currentUser.uid });
     });
     grid.appendChild(btn);
   });
 }
 
-/* 新規チャット */
-document.getElementById('newChatBtn').addEventListener('click', () => { pendingMembers = []; document.getElementById('memberEmailInput').value = ''; document.getElementById('groupNameInput').value = ''; document.getElementById('memberSearchMsg').textContent = ''; renderSelectedMembers(); document.getElementById('newChatModal').classList.remove('hidden'); });
+document.getElementById('newChatBtn').addEventListener('click', () => { pendingMembers = []; document.getElementById('memberEmailInput').value = ''; document.getElementById('memberSearchMsg').textContent = ''; document.getElementById('groupNameInput').value = ''; renderPendingMembers(); document.getElementById('newChatModal').classList.remove('hidden'); });
 document.getElementById('newChatCancelBtn').addEventListener('click', () => document.getElementById('newChatModal').classList.add('hidden'));
 document.getElementById('addMemberBtn').addEventListener('click', async () => {
   const email = document.getElementById('memberEmailInput').value.trim().toLowerCase(); const msgEl = document.getElementById('memberSearchMsg');
   if (!email) { msgEl.style.color = '#dc2626'; msgEl.textContent = 'メールアドレスを入力してください'; return; }
   if (email === (currentUser.email || '').toLowerCase()) { msgEl.style.color = '#dc2626'; msgEl.textContent = '自分のメールアドレスは追加できません'; return; }
   if (pendingMembers.some(m => m.email === email)) { msgEl.style.color = '#dc2626'; msgEl.textContent = 'すでに追加されています'; return; }
-  const profSnap = await get(ref(db, 'chatProfiles')).catch(() => null);
-  let foundUser = null;
-  if (profSnap && profSnap.exists()) {
-    Object.entries(profSnap.val()).forEach(([uid, p]) => { if (p && p.email && p.email.toLowerCase() === email) foundUser = { uid, email, nickname: p.nickname || email.split('@')[0], avatar: p.avatar || DEFAULT_AVATAR }; });
-  }
-  if (!foundUser) { msgEl.style.color = '#dc2626'; msgEl.textContent = '該当するユーザーが見つかりません'; return; }
-  pendingMembers.push(foundUser); document.getElementById('memberEmailInput').value = ''; msgEl.style.color = '#16a34a'; msgEl.textContent = `${foundUser.nickname} を追加しました`; renderSelectedMembers();
+  msgEl.style.color = '#0369a1'; msgEl.innerHTML = '<span class="loading-spinner"></span>検索中...';
+  const snap = await get(ref(db, 'chatProfiles')).catch(() => null);
+  let found = null;
+  if (snap && snap.exists()) snap.forEach((child) => { const p = child.val(); if (p && p.email && p.email.toLowerCase() === email) found = { uid: child.key, email: p.email.toLowerCase(), nickname: p.nickname || email.split('@')[0], avatar: p.avatar || DEFAULT_AVATAR }; });
+  if (!found) { msgEl.style.color = '#dc2626'; msgEl.textContent = '該当ユーザーが見つかりません（相手も一度ログインする必要があります）'; return; }
+  pendingMembers.push(found); profilesCache[found.uid] = found; document.getElementById('memberEmailInput').value = ''; msgEl.style.color = '#16a34a'; msgEl.textContent = `${found.nickname} を追加しました`; renderPendingMembers();
 });
-function renderSelectedMembers() {
+function renderPendingMembers() {
   const box = document.getElementById('selectedMembersBox');
   if (pendingMembers.length === 0) { box.innerHTML = '<span style="font-size:11px;color:#94a3b8;">まだ相手が追加されていません</span>'; return; }
   box.innerHTML = '';
-  pendingMembers.forEach((m, idx) => {
-    const chip = document.createElement('span'); chip.className = 'member-chip';
-    chip.innerHTML = `<img src="${escapeHtml(m.avatar)}" alt=""><span>${escapeHtml(m.nickname)}</span><span class="remove-x">×</span>`;
-    chip.querySelector('.remove-x').addEventListener('click', () => { pendingMembers.splice(idx, 1); renderSelectedMembers(); });
-    box.appendChild(chip);
-  });
+  pendingMembers.forEach((m, idx) => { const chip = document.createElement('span'); chip.className = 'member-chip'; chip.innerHTML = `<img src="${escapeHtml(m.avatar)}" alt=""><span>${escapeHtml(m.nickname)}</span><span class="remove-x">×</span>`; chip.querySelector('.remove-x').addEventListener('click', () => { pendingMembers.splice(idx, 1); renderPendingMembers(); }); box.appendChild(chip); });
 }
 document.getElementById('newChatCreateBtn').addEventListener('click', async () => {
-  if (pendingMembers.length === 0) { showBanner('相手を追加してください'); return; }
-  const isGroup = pendingMembers.length > 1;
-  const groupName = document.getElementById('groupNameInput').value.trim();
-  const allUids = [currentUser.uid, ...pendingMembers.map(m => m.uid)];
-  const membersMap = {}; allUids.forEach(u => { membersMap[u] = true; });
-  const chatId = 'chat_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-  const now = Date.now();
-  const chatData = { id: chatId, type: isGroup ? 'group' : 'direct', name: isGroup ? (groupName || pendingMembers.map(m => m.nickname).join('、')) : '', members: membersMap, createdBy: currentUser.uid, createdAt: now, lastMessage: 'チャットが作成されました', lastMessageAt: now };
-  for (const uid of allUids) await set(ref(db, `userChats/${uid}/${chatId}`), chatData);
-  await push(ref(db, `chatMessages/${chatId}`), { authorUid: currentUser.uid, content: `${myProfile.nickname} がチャットを作成しました`, system: true, createdAt: now });
-  document.getElementById('newChatModal').classList.add('hidden');
-  setTimeout(() => openChat(chatId), 300);
+  if (pendingMembers.length === 0) return showBanner('相手を1人以上追加してください');
+  const isGroup = pendingMembers.length >= 2;
+  const groupName = document.getElementById('groupNameInput').value.trim() || (isGroup ? pendingMembers.map(m => m.nickname).slice(0, 3).join('、') : '');
+  const chatId = 'chat_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const members = { [currentUser.uid]: true }; pendingMembers.forEach(m => { members[m.uid] = true; });
+  const now = Date.now(); const chatData = { id: chatId, type: isGroup ? 'group' : 'direct', name: groupName, members, createdBy: currentUser.uid, createdAt: now, lastMessage: isGroup ? 'グループが作成されました' : 'チャットが開始されました', lastMessageAt: now };
+  for (const uid of Object.keys(members)) await set(ref(db, `userChats/${uid}/${chatId}`), chatData);
+  await set(ref(db, `chatMeta/${chatId}`), { type: chatData.type, name: chatData.name, members, createdAt: now });
+  document.getElementById('newChatModal').classList.add('hidden'); chatsCache[chatId] = chatData; openChat(chatId);
 });
 
-/* プロフィール */
 document.getElementById('profileBtn').addEventListener('click', () => {
   selectedAvatar = myProfile.avatar || DEFAULT_AVATAR; uploadedAvatarDataUrl = null;
-  document.getElementById('profileAvatarPreview').src = selectedAvatar; document.getElementById('nicknameInput').value = myProfile.nickname || ''; document.getElementById('profileUploadMsg').textContent = '';
-  const row = document.getElementById('presetAvatarRow'); row.innerHTML = '';
-  PRESET_AVATARS.forEach((av) => {
-    const img = document.createElement('img'); img.src = av; img.className = 'preset-avatar' + (av === selectedAvatar ? ' selected' : '');
-    img.addEventListener('click', () => { selectedAvatar = av; uploadedAvatarDataUrl = null; document.getElementById('profileAvatarPreview').src = av; row.querySelectorAll('img').forEach(i => i.classList.remove('selected')); img.classList.add('selected'); });
-    row.appendChild(img);
-  });
-  document.getElementById('profileModal').classList.remove('hidden');
+  document.getElementById('profileAvatarPreview').src = selectedAvatar; document.getElementById('nicknameInput').value = myProfile.nickname || '';
+  document.getElementById('profileUploadMsg').textContent = ''; renderPresetAvatars(); document.getElementById('profileModal').classList.remove('hidden');
 });
+function renderPresetAvatars() {
+  const row = document.getElementById('presetAvatarRow'); row.innerHTML = '';
+  PRESET_AVATARS.forEach((url) => { const img = document.createElement('img'); img.className = 'preset-avatar' + (url === selectedAvatar ? ' selected' : ''); img.src = url; img.addEventListener('click', () => { selectedAvatar = url; uploadedAvatarDataUrl = null; document.getElementById('profileAvatarPreview').src = url; renderPresetAvatars(); }); row.appendChild(img); });
+}
 document.getElementById('profileAvatarFileInput').addEventListener('change', (e) => {
   const file = e.target.files[0]; if (!file) return;
-  if (file.size > 600 * 1024) { document.getElementById('profileUploadMsg').style.color = '#dc2626'; document.getElementById('profileUploadMsg').textContent = '600KB以下の画像を選択してください'; return; }
-  const reader = new FileReader(); reader.onload = (ev) => { uploadedAvatarDataUrl = ev.target.result; selectedAvatar = ev.target.result; document.getElementById('profileAvatarPreview').src = ev.target.result; };
-  reader.readAsDataURL(file);
+  if (file.size > 1024 * 1024) { document.getElementById('profileUploadMsg').textContent = '1MB以下にしてください'; e.target.value = ''; return; }
+  const reader = new FileReader(); reader.onload = (ev) => { uploadedAvatarDataUrl = ev.target.result; selectedAvatar = uploadedAvatarDataUrl; document.getElementById('profileAvatarPreview').src = uploadedAvatarDataUrl; renderPresetAvatars(); }; reader.readAsDataURL(file); e.target.value = '';
 });
 document.getElementById('profileCancelBtn').addEventListener('click', () => document.getElementById('profileModal').classList.add('hidden'));
 document.getElementById('profileSaveBtn').addEventListener('click', async () => {
-  const nick = document.getElementById('nicknameInput').value.trim(); if (!nick) { showBanner('ニックネームを入力してください'); return; }
-  const finalAvatar = uploadedAvatarDataUrl || selectedAvatar || DEFAULT_AVATAR;
-  myProfile = { ...myProfile, nickname: nick, avatar: finalAvatar };
+  const nick = document.getElementById('nicknameInput').value.trim(); if (!nick) return showBanner('ニックネームを入力してください');
+  const avatarToSave = uploadedAvatarDataUrl || selectedAvatar || DEFAULT_AVATAR;
+  myProfile = { nickname: nick, avatar: avatarToSave, email: (currentUser.email || '').toLowerCase() };
   profilesCache[currentUser.uid] = { ...myProfile, uid: currentUser.uid };
-  await update(ref(db, `chatProfiles/${currentUser.uid}`), { nickname: nick, avatar: finalAvatar, email: (currentUser.email || '').toLowerCase(), updatedAt: Date.now() });
-  document.getElementById('myName').textContent = nick; document.getElementById('myAvatar').src = finalAvatar;
+  await update(ref(db, `chatProfiles/${currentUser.uid}`), { nickname: nick, avatar: avatarToSave, email: (currentUser.email || '').toLowerCase(), updatedAt: Date.now() });
+  document.getElementById('myName').textContent = nick; document.getElementById('myAvatar').src = avatarToSave;
   document.getElementById('profileModal').classList.add('hidden'); showBanner('プロフィールを保存しました');
 });
 
-/* ストーリー・アーカイブ・その他 */
 function listenStories() {
+  if (!currentUser) return;
   if (unsubs.stories) unsubs.stories();
-  unsubs.stories = onValue(ref(db, 'stories'), (snap) => { storiesCache = snap.val() || {}; renderStoriesStrip(); }, () => {});
-  if (currentUser) {
-    if (unsubs.myArchive) unsubs.myArchive();
-    unsubs.myArchive = onValue(ref(db, `storyArchive/${currentUser.uid}`), (snap) => { myArchivedStories = snap.val() || {}; }, () => {});
-  }
+  unsubs.stories = onValue(ref(db, 'stories'), (snap) => {
+    const raw = snap.val() || {}; const now = Date.now(); const cleaned = {};
+    Object.entries(raw).forEach(([uid, userStories]) => {
+      if (!userStories || typeof userStories !== 'object') return;
+      const valid = {};
+      Object.entries(userStories).forEach(([sid, st]) => {
+        if (!st) return;
+        if (now - (st.createdAt || 0) < 86400000) valid[sid] = st;
+        else { set(ref(db, `storyArchive/${uid}/${sid}`), st).catch(() => {}); remove(ref(db, `stories/${uid}/${sid}`)).catch(() => {}); }
+      });
+      if (Object.keys(valid).length > 0) cleaned[uid] = valid;
+    });
+    storiesCache = cleaned; Object.keys(storiesCache).forEach(uid => ensureProfileListener(uid)); renderStoriesStrip();
+  }, () => {});
 }
 function renderStoriesStrip() {
   const strip = document.getElementById('storiesStrip'); if (!strip || !currentUser) return;
   const addBtn = document.getElementById('storyAddBtn'); strip.innerHTML = ''; if (addBtn) strip.appendChild(addBtn);
-  const now = Date.now(); const dayMs = 86400000; const userGroups = [];
-  Object.entries(storiesCache).forEach(([uid, userStories]) => {
-    if (!userStories || typeof userStories !== 'object') return;
-    const valid = Object.entries(userStories).map(([sid, s]) => ({ id: sid, ...s })).filter(s => (now - (s.createdAt || 0)) < dayMs).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-    if (valid.length === 0) return;
-    const isMine = uid === currentUser.uid;
-    const allSeen = valid.every(s => !!mySeenStories[s.id]);
-    userGroups.push({ uid, stories: valid, isMine, allSeen, latestAt: valid[valid.length - 1].createdAt || 0 });
-  });
-  userGroups.sort((a, b) => (a.isMine ? -1 : b.isMine ? 1 : b.latestAt - a.latestAt));
-  userGroups.forEach((grp) => {
-    const p = profilesCache[grp.uid] || {};
+  const mySt = storiesCache[currentUser.uid];
+  if (mySt && Object.keys(mySt).length > 0) {
     const bubble = document.createElement('div'); bubble.className = 'story-bubble';
-    bubble.innerHTML = `<div class="story-ring ${grp.isMine ? 'mine' : (grp.allSeen ? 'seen' : '')}"><img src="${escapeHtml(p.avatar || DEFAULT_AVATAR)}" alt=""></div><div class="story-name">${grp.isMine ? 'あなた' : escapeHtml(p.nickname || 'ユーザー')}</div>`;
-    bubble.addEventListener('click', () => openStoryViewer(grp.uid, grp.stories, false));
-    strip.appendChild(bubble);
+    bubble.innerHTML = `<div class="story-ring mine"><img src="${escapeHtml(myProfile.avatar || DEFAULT_AVATAR)}" alt=""></div><span class="story-name">あなたの投稿</span>`;
+    bubble.addEventListener('click', () => openStoryViewer(currentUser.uid, false)); strip.appendChild(bubble);
+  }
+  Object.entries(storiesCache).forEach(([uid, userStories]) => {
+    if (uid === currentUser.uid) return;
+    const list = Object.values(userStories).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); if (list.length === 0) return;
+    const allSeen = list.every(s => mySeenStories[s.id]); const prof = profilesCache[uid] || {};
+    const bubble = document.createElement('div'); bubble.className = 'story-bubble';
+    bubble.innerHTML = `<div class="story-ring ${allSeen ? 'seen' : ''}"><img src="${escapeHtml(prof.avatar || DEFAULT_AVATAR)}" alt=""></div><span class="story-name">${escapeHtml(prof.nickname || '相手')}</span>`;
+    bubble.addEventListener('click', () => openStoryViewer(uid, false)); strip.appendChild(bubble);
   });
 }
 document.getElementById('storyAddBtn').addEventListener('click', () => {
   pendingStoryFile = null; pendingStoryAudio = null; pendingStoryVideo = null;
-  document.getElementById('storyTextInput').value = ''; document.getElementById('storyUploadPreview').style.display = 'none';
-  document.getElementById('storyAudioPreview').style.display = 'none'; document.getElementById('storyVideoPreview').style.display = 'none';
+  document.getElementById('storyTextInput').value = ''; document.getElementById('storyFileInput').value = ''; document.getElementById('storyAudioInput').value = ''; document.getElementById('storyVideoInput').value = '';
+  document.getElementById('storyUploadPreview').style.display = 'none'; document.getElementById('storyAudioPreview').style.display = 'none'; document.getElementById('storyVideoPreview').style.display = 'none';
   document.getElementById('storyPostModal').classList.remove('hidden');
 });
 document.getElementById('storyPostCancelBtn').addEventListener('click', () => document.getElementById('storyPostModal').classList.add('hidden'));
 document.getElementById('storyFileInput').addEventListener('change', (e) => {
   const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader(); reader.onload = (ev) => { pendingStoryFile = ev.target.result; const prev = document.getElementById('storyUploadPreview'); prev.innerHTML = `<img src="${ev.target.result}" style="max-height:120px;border-radius:8px;margin:0 auto;">`; prev.style.display = 'block'; };
-  reader.readAsDataURL(file); e.target.value = '';
+  if (file.size > 1024 * 1024) { showBanner('画像は1MB以下にしてください'); e.target.value = ''; return; }
+  const reader = new FileReader(); reader.onload = (ev) => { pendingStoryFile = ev.target.result; const prev = document.getElementById('storyUploadPreview'); prev.style.display = 'block'; prev.innerHTML = `<img src="${ev.target.result}" style="max-height:140px;border-radius:8px;display:inline-block;">`; }; reader.readAsDataURL(file); e.target.value = '';
 });
 document.getElementById('storyAudioInput').addEventListener('change', (e) => {
   const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader(); reader.onload = (ev) => { pendingStoryAudio = ev.target.result; const prev = document.getElementById('storyAudioPreview'); prev.innerHTML = `<div style="font-size:12px;color:#0284c7;">音声選択済み: ${escapeHtml(file.name)}</div>`; prev.style.display = 'block'; };
-  reader.readAsDataURL(file); e.target.value = '';
+  if (file.size > 2 * 1024 * 1024) { showBanner('音声は2MB以下にしてください'); e.target.value = ''; return; }
+  const reader = new FileReader(); reader.onload = (ev) => { pendingStoryAudio = { dataUrl: ev.target.result, name: file.name }; const prev = document.getElementById('storyAudioPreview'); prev.style.display = 'block'; prev.innerHTML = `🎵 ${escapeHtml(file.name)}`; }; reader.readAsDataURL(file); e.target.value = '';
 });
 document.getElementById('storyVideoInput').addEventListener('change', (e) => {
   const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader(); reader.onload = (ev) => { pendingStoryVideo = ev.target.result; const prev = document.getElementById('storyVideoPreview'); prev.innerHTML = `<div style="font-size:12px;color:#0284c7;">動画選択済み: ${escapeHtml(file.name)}</div>`; prev.style.display = 'block'; };
-  reader.readAsDataURL(file); e.target.value = '';
+  if (file.size > 2 * 1024 * 1024) { showBanner('動画は2MB以下にしてください'); e.target.value = ''; return; }
+  const reader = new FileReader(); reader.onload = (ev) => { pendingStoryVideo = { dataUrl: ev.target.result, name: file.name }; const prev = document.getElementById('storyVideoPreview'); prev.style.display = 'block'; prev.innerHTML = `🎬 ${escapeHtml(file.name)}`; }; reader.readAsDataURL(file); e.target.value = '';
 });
 document.getElementById('storyPostBtn').addEventListener('click', async () => {
+  if (!currentUser) return;
   const text = document.getElementById('storyTextInput').value.trim();
-  if (!text && !pendingStoryFile && !pendingStoryAudio && !pendingStoryVideo) { showBanner('内容を入力またはメディアを選択してください'); return; }
-  const now = Date.now(); const storyId = 'story_' + now + '_' + Math.random().toString(36).slice(2, 6);
-  const storyData = { id: storyId, authorUid: currentUser.uid, text, mediaUrl: pendingStoryFile || null, audioUrl: pendingStoryAudio || null, videoUrl: pendingStoryVideo || null, createdAt: now };
-  await set(ref(db, `stories/${currentUser.uid}/${storyId}`), storyData);
-  await set(ref(db, `storyArchive/${currentUser.uid}/${storyId}`), storyData);
+  if (!text && !pendingStoryFile && !pendingStoryAudio && !pendingStoryVideo) return showBanner('テキストまたはメディアを入力・選択してください');
+  const sid = 'story_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  const storyObj = { id: sid, authorUid: currentUser.uid, text, createdAt: Date.now() };
+  if (pendingStoryVideo) storyObj.videoUrl = pendingStoryVideo.dataUrl;
+  else if (pendingStoryAudio && pendingStoryFile) { storyObj.mediaUrl = pendingStoryFile; storyObj.audioUrl = pendingStoryAudio.dataUrl; }
+  else if (pendingStoryAudio) storyObj.audioUrl = pendingStoryAudio.dataUrl;
+  else if (pendingStoryFile) storyObj.mediaUrl = pendingStoryFile;
+  await set(ref(db, `stories/${currentUser.uid}/${sid}`), storyObj);
   document.getElementById('storyPostModal').classList.add('hidden'); showBanner('ストーリーを投稿しました');
 });
 
-function openStoryViewer(userId, list, isArchive) {
-  currentStoryUserId = userId; currentStoryList = list; currentStoryIndex = 0; currentStoryIsArchive = isArchive;
-  document.getElementById('storyViewer').classList.add('show'); showStoryAtIndex(0);
+function openStoryViewer(userId, isArchive = false) {
+  currentStoryUserId = userId; currentStoryIsArchive = isArchive;
+  const source = isArchive ? myArchivedStories[userId] : storiesCache[userId]; if (!source) return;
+  currentStoryList = Object.values(source).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); if (currentStoryList.length === 0) return;
+  currentStoryIndex = 0; document.getElementById('storyViewer').classList.add('show'); showStorySegment(0);
 }
-function showStoryAtIndex(idx) {
-  if (storyTimer) { clearTimeout(storyTimer); storyTimer = null; }
+function showStorySegment(idx) {
   if (idx < 0 || idx >= currentStoryList.length) { closeStoryViewer(); return; }
-  currentStoryIndex = idx; const story = currentStoryList[idx]; const p = profilesCache[currentStoryUserId] || {};
-  document.getElementById('storyHeaderAvatar').src = p.avatar || DEFAULT_AVATAR;
-  document.getElementById('storyHeaderName').textContent = p.nickname || 'ユーザー';
-  document.getElementById('storyHeaderTime').textContent = formatShortTime(story.createdAt);
-  mySeenStories[story.id] = true; saveJson(SEEN_STORIES_KEY, mySeenStories); renderStoriesStrip();
+  currentStoryIndex = idx; const st = currentStoryList[idx]; const prof = profilesCache[currentStoryUserId] || {};
+  document.getElementById('storyHeaderAvatar').src = prof.avatar || DEFAULT_AVATAR; document.getElementById('storyHeaderName').textContent = prof.nickname || 'ユーザー'; document.getElementById('storyHeaderTime').textContent = formatTime(st.createdAt);
+  if (!currentStoryIsArchive && st.id) { mySeenStories[st.id] = true; saveJson(SEEN_STORIES_KEY, mySeenStories); renderStoriesStrip(); }
   const bar = document.getElementById('storyProgressBar'); bar.innerHTML = '';
-  currentStoryList.forEach((_, i) => { const seg = document.createElement('div'); seg.className = 'story-segment'; seg.innerHTML = `<div style="width:${i < idx ? '100%' : (i === idx ? '100%' : '0%')}"></div>`; bar.appendChild(seg); });
+  currentStoryList.forEach((_, i) => { const seg = document.createElement('div'); seg.className = 'story-segment'; const fill = document.createElement('div'); fill.style.width = i < idx ? '100%' : '0%'; seg.appendChild(fill); bar.appendChild(seg); });
   const stage = document.getElementById('storyStageContent'); stage.innerHTML = '';
-  if (story.videoUrl) stage.innerHTML = `<div class="story-video-wrap"><video src="${story.videoUrl}" autoplay playsinline></video></div>`;
-  else if (story.mediaUrl && story.audioUrl) stage.innerHTML = `<div class="story-image-audio-wrap"><img src="${story.mediaUrl}" alt=""><audio src="${story.audioUrl}" autoplay></audio></div>`;
-  else if (story.mediaUrl) stage.innerHTML = `<img src="${story.mediaUrl}" alt="">`;
-  else if (story.audioUrl) stage.innerHTML = `<div class="story-audio-wrap"><div class="story-audio-label">${escapeHtml(story.text || '音声ストーリー')}</div><audio src="${story.audioUrl}" autoplay></audio></div>`;
-  else stage.innerHTML = `<div class="story-text-content">${escapeHtml(story.text || '')}</div>`;
-  storyTimer = setTimeout(() => showStoryAtIndex(idx + 1), 6000);
+  if (st.videoUrl) stage.innerHTML = `<div class="story-video-wrap"><video src="${st.videoUrl}" autoplay playsinline></video></div>`;
+  else if (st.mediaUrl && st.audioUrl) stage.innerHTML = `<div class="story-image-audio-wrap"><img src="${st.mediaUrl}" alt=""><audio src="${st.audioUrl}" autoplay></audio></div>`;
+  else if (st.audioUrl) stage.innerHTML = `<div class="story-audio-wrap"><div class="story-audio-label">${escapeHtml(st.text || '🎵 音声ストーリー')}</div><audio src="${st.audioUrl}" autoplay></audio></div>`;
+  else if (st.mediaUrl) stage.innerHTML = `<img src="${st.mediaUrl}" alt="">`;
+  else stage.innerHTML = `<div class="story-text-content">${escapeHtml(st.text || '')}</div>`;
+  if (storyTimer) clearTimeout(storyTimer); storyTimer = setTimeout(() => showStorySegment(currentStoryIndex + 1), 6000);
 }
 function closeStoryViewer() { if (storyTimer) { clearTimeout(storyTimer); storyTimer = null; } document.getElementById('storyViewer').classList.remove('show'); }
 document.getElementById('storyCloseBtn').addEventListener('click', closeStoryViewer);
-document.getElementById('storyNavLeft').addEventListener('click', () => showStoryAtIndex(currentStoryIndex - 1));
-document.getElementById('storyNavRight').addEventListener('click', () => showStoryAtIndex(currentStoryIndex + 1));
-
-document.getElementById('myArchiveBtn').addEventListener('click', () => {
-  const listEl = document.getElementById('archiveList'); listEl.innerHTML = '';
-  const entries = Object.values(myArchivedStories).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  if (entries.length === 0) listEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:20px;">アーカイブはありません</div>';
-  entries.forEach((st) => {
-    const div = document.createElement('div'); div.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;';
-    div.innerHTML = `<div style="font-size:12px;">${escapeHtml(st.text || 'メディア')} (${formatShortTime(st.createdAt)})</div><button class="primary-btn" style="padding:5px 10px;font-size:11px;">表示</button>`;
-    div.querySelector('button').addEventListener('click', () => { document.getElementById('archiveModal').classList.add('hidden'); openStoryViewer(currentUser.uid, [st], true); });
-    listEl.appendChild(div);
-  });
+document.getElementById('storyNavLeft').addEventListener('click', () => showStorySegment(currentStoryIndex - 1));
+document.getElementById('storyNavRight').addEventListener('click', () => showStorySegment(currentStoryIndex + 1));
+document.getElementById('storyReplyInput').addEventListener('keydown', async (e) => {
+  if (e.key !== 'Enter' || e.isComposing) return;
+  const text = e.target.value.trim(); if (!text || !currentUser || !currentStoryUserId) return;
+  e.target.value = ''; const st = currentStoryList[currentStoryIndex];
+  const chatId = [currentUser.uid, currentStoryUserId].sort().join('_'); const now = Date.now();
+  await set(ref(db, `userChats/${currentUser.uid}/${chatId}`), { id: chatId, type: 'direct', members: { [currentUser.uid]: true, [currentStoryUserId]: true }, lastMessage: text, lastMessageAt: now });
+  await set(ref(db, `userChats/${currentStoryUserId}/${chatId}`), { id: chatId, type: 'direct', members: { [currentUser.uid]: true, [currentStoryUserId]: true }, lastMessage: text, lastMessageAt: now });
+  await push(ref(db, `chatMessages/${chatId}`), { authorUid: currentUser.uid, content: text, storyReply: { storyId: st?.id || '', text: st?.text || '', mediaUrl: st?.mediaUrl || '' }, createdAt: now });
+  closeStoryViewer(); showBanner('ストーリーに返信しました');
+});
+document.getElementById('myArchiveBtn').addEventListener('click', async () => {
+  if (!currentUser) return; const snap = await get(ref(db, `storyArchive/${currentUser.uid}`)).catch(() => null);
+  myArchivedStories[currentUser.uid] = snap && snap.exists() ? snap.val() : {};
+  const listEl = document.getElementById('archiveList'); const entries = Object.values(myArchivedStories[currentUser.uid]).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  listEl.innerHTML = entries.length === 0 ? '<div style="text-align:center;color:#9ca3af;padding:24px;">アーカイブはありません</div>' : '';
+  entries.forEach((st) => { const div = document.createElement('div'); div.style.cssText = 'padding:10px;border:1px solid #bae6fd;border-radius:10px;margin-bottom:8px;background:#f0f9ff;font-size:12px;'; div.textContent = `${formatTime(st.createdAt)} - ${st.text || 'メディア'}`; listEl.appendChild(div); });
   document.getElementById('archiveModal').classList.remove('hidden');
 });
 document.getElementById('archiveCloseBtn').addEventListener('click', () => document.getElementById('archiveModal').classList.add('hidden'));
-
 document.getElementById('adminStoryDeleteBtn').addEventListener('click', () => { document.getElementById('storyDeleteEmailInput').value = ''; document.getElementById('storyDeleteSearchMsg').textContent = ''; document.getElementById('adminStoryDeletePanel').classList.remove('hidden'); });
 document.getElementById('storyDeleteCancelBtn').addEventListener('click', () => document.getElementById('adminStoryDeletePanel').classList.add('hidden'));
 document.getElementById('storyDeleteExecuteBtn').addEventListener('click', async () => {
   const email = document.getElementById('storyDeleteEmailInput').value.trim().toLowerCase(); const msgEl = document.getElementById('storyDeleteSearchMsg');
-  if (!email) { msgEl.style.color = '#dc2626'; msgEl.textContent = 'メールアドレスを入力してください'; return; }
-  const profSnap = await get(ref(db, 'chatProfiles')).catch(() => null); let targetUid = null;
-  if (profSnap && profSnap.exists()) Object.entries(profSnap.val()).forEach(([uid, p]) => { if (p && p.email && p.email.toLowerCase() === email) targetUid = uid; });
-  if (!targetUid) { msgEl.style.color = '#dc2626'; msgEl.textContent = 'ユーザーが見つかりません'; return; }
-  await remove(ref(db, `stories/${targetUid}`)); msgEl.style.color = '#16a34a'; msgEl.textContent = 'ストーリーを削除しました';
+  if (!email) return; const snap = await get(ref(db, 'chatProfiles')).catch(() => null); let uid = null;
+  if (snap && snap.exists()) snap.forEach((child) => { if ((child.val()?.email || '').toLowerCase() === email) uid = child.key; });
+  if (!uid) { msgEl.style.color = '#dc2626'; msgEl.textContent = '見つかりません'; return; }
+  await remove(ref(db, `stories/${uid}`)); msgEl.style.color = '#16a34a'; msgEl.textContent = '削除しました';
 });
 
-function openLightbox(src) { document.getElementById('lightboxImg').src = src; document.getElementById('lightbox').classList.add('show'); }
-document.getElementById('lightbox').addEventListener('click', () => document.getElementById('lightbox').classList.remove('show'));
-document.getElementById('lightboxClose').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('lightbox').classList.remove('show'); });
-document.getElementById('switchAccountBtn').addEventListener('click', async () => { intentionalSignOut = true; await signOut(auth).catch(() => {}); stopBanEnforcement(); showLoginScreen(); });
-
-let bannerTimer = null;
-function showBanner(text, color = '#0284c7') {
-  const el = document.getElementById('statusBanner'); if (!el) return;
-  el.textContent = text; el.style.background = color; el.classList.add('show');
-  if (bannerTimer) clearTimeout(bannerTimer);
-  bannerTimer = setTimeout(() => el.classList.remove('show'), 3000);
-}
-function escapeHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function encodeEmailKey(email) { return (email || '').trim().toLowerCase().replace(/\./g, ',').replace(/[@#$[\]]/g, '_'); }
+function escapeHtml(s) { if (!s) return ''; return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function linkifyText(text) {
-  const esc = escapeHtml(text);
-  return esc.replace(/(https?:\/\/[^\s<]+)/g, (m) => `<a href="${escapeHtml(m)}" target="_blank" rel="noopener noreferrer">${escapeHtml(m)}</a>`);
+  const urlRe = /(https?:\/\/[^\s<]+)/g; let last = 0, out = '', m;
+  while ((m = urlRe.exec(text)) !== null) { out += escapeHtml(text.slice(last, m.index)); const u = m[0]; out += `<a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u)}</a>`; last = m.index + u.length; }
+  out += escapeHtml(text.slice(last)); return out;
 }
 function formatTime(ts) { if (!ts) return ''; const d = new Date(ts); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
-function formatShortTime(ts) {
-  if (!ts) return ''; const d = new Date(ts); const now = new Date();
-  if (d.toDateString() === now.toDateString()) return formatTime(ts);
-  return `${d.getMonth() + 1}/${d.getDate()}`;
-}
-function encodeEmailKey(email) { return String(email || '').trim().toLowerCase().replace(/\./g, ',').replace(/[@#$[\]]/g, '_'); }
+function formatShortTime(ts) { if (!ts) return ''; const d = new Date(ts); const now = new Date(); if (d.toDateString() === now.toDateString()) return formatTime(ts); return `${d.getMonth() + 1}/${d.getDate()}`; }
+function showBanner(msg, bg = '#0284c7') { const el = document.getElementById('statusBanner'); el.textContent = msg; el.style.backgroundColor = bg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2500); }
+function openLightbox(url) { document.getElementById('lightboxImg').src = url; document.getElementById('lightbox').classList.add('show'); }
+document.getElementById('lightboxClose').addEventListener('click', () => document.getElementById('lightbox').classList.remove('show'));
+document.getElementById('lightbox').addEventListener('click', (e) => { if (e.target.id === 'lightbox') document.getElementById('lightbox').classList.remove('show'); });
 </script>
 </body>
 </html>
