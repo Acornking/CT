@@ -1421,7 +1421,7 @@ let stickerPickerOpen = false;
 let notifiedGroupCallSessions = new Set();
 
 /* ============================================================
-   ★ 天候エフェクトエンジン（管理者のみ変更可能・全ユーザー反映）
+   天候エフェクトエンジン（管理者のみ変更可能・全ユーザー反映）
    ============================================================ */
 let currentWeatherType = 'none';
 const weatherCanvas = document.getElementById('weatherCanvas');
@@ -1638,7 +1638,6 @@ function initWeatherListener() {
   }, () => {});
 }
 
-// 天候設定は管理者のみ操作可能
 document.getElementById('weatherBtn').addEventListener('click', () => {
   if (!currentUser || !isAdmin(currentUser.email)) {
     showBanner('天候の変更は管理者のみ可能です', true);
@@ -1661,7 +1660,6 @@ document.querySelectorAll('.weather-option-btn').forEach(btn => {
     }
     const type = String(btn.dataset.weather || 'none');
     try {
-      // まずUIを即時反映してからDBに安全に書き込む（rulesの全フィールド型チェックに完全準拠）
       applyWeatherEffect(type);
       const payload = {
         type: type,
@@ -1679,7 +1677,7 @@ document.querySelectorAll('.weather-option-btn').forEach(btn => {
 });
 
 /* ============================================================
-   ★ グループメンバー一覧表示（表示名・メールアドレス）
+   グループメンバー一覧表示（表示名・メールアドレス）
    ============================================================ */
 async function openGroupMembersModal() {
   if (!currentChatId || !chatsCache[currentChatId]) return;
@@ -1789,7 +1787,6 @@ const notificationAudioCtx = {
   }
 };
 
-// 初回操作時に自動で通知権限とAudioContextをアンロック
 ['click', 'keydown', 'touchstart'].forEach(evt => {
   document.addEventListener(evt, () => {
     notificationAudioCtx.init();
@@ -1860,7 +1857,7 @@ function fireNotification(chatId, senderName, messageText) {
 }
 
 /* ============================================================
-   音声通話（1対1 ＆ LINE風グループ通話メッシュWebRTC）
+   音声通話（1対1 ＆ グループ通話メッシュWebRTC）
    ============================================================ */
 let callState = {
   active: false, mode: 'direct', role: null, chatId: null, peerUid: null, sessionId: null,
@@ -1890,10 +1887,9 @@ const ICE_SERVERS = {
   ]
 };
 
-// マイク取得ヘルパー（許可済みなのにエラー誤判定される問題を解消）
 async function acquireMicrophoneStream() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    throw new Error('このブラウザまたは接続環境（HTTP等）ではマイク機能を利用できません。HTTPSでアクセスしてください。');
+    throw new Error('このブラウザまたは接続環境ではマイク機能を利用できません。HTTPSでアクセスしてください。');
   }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -1911,7 +1907,6 @@ async function acquireMicrophoneStream() {
     tracks.forEach(t => { t.enabled = true; });
     return stream;
   } catch (err) {
-    // 制約付きで失敗した場合、シンプルな { audio: true } で再試行
     try {
       const fallbackStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       fallbackStream.getAudioTracks().forEach(t => { t.enabled = true; });
@@ -2082,7 +2077,6 @@ function handleNewLatest(chatId, data) {
     return;
   }
 
-  // 別タブを見ている（document.hidden === true）か、別チャットを開いているときは必ず通知＆未読カウント
   const tabVisible = !document.hidden;
   if (chatId === currentChatId && tabVisible) {
     markChatAsRead(chatId);
@@ -2116,7 +2110,6 @@ function initChatLatestListeners() {
     });
     chatLatestListeners[chatId] = unsub;
 
-    // グループチャットの場合、別タブや別画面でも通話開始を検知して通知を送る
     if (chat && chat.type === 'group') {
       const gcUnsub = onValue(ref(db, `groupCalls/${chatId}`), (snap) => {
         if (!snap.exists()) return;
@@ -2830,437 +2823,326 @@ function renderSelectedMembers() {
   pendingMembers.forEach((m, idx) => {
     const chip = document.createElement('span'); chip.className = 'member-chip';
     chip.innerHTML = `<img src="${escapeHtml(m.avatar)}"><span>${escapeHtml(m.nickname)}</span><span class="remove-x">×</span>`;
-    chip.querySelector('.remove-x').onclick = () => { pendingMembers.splice(idx, 1); renderSelectedMembers(); };
+    chip.querySelector('.remove-x').onclick = () => { pendingMembers.splice(idx,1); renderSelectedMembers(); };
     box.appendChild(chip);
   });
 }
 async function findProfileByEmail(email) {
-  if (!email) return null;
-  const target = email.trim().toLowerCase();
-  for (const [uid, p] of Object.entries(profilesCache)) {
-    if (p && p.email && p.email.toLowerCase() === target) {
-      return { uid, nickname: p.nickname || '名無しさん', avatar: p.avatar || DEFAULT_AVATAR, email: p.email };
-    }
-  }
+  const targetEmail = email.trim().toLowerCase(); if (!targetEmail) return null;
   try {
     const snap = await get(ref(db, 'chatProfiles'));
-    if (snap.exists()) {
-      let found = null;
-      snap.forEach((child) => {
-        const val = child.val();
-        if (val && val.email && val.email.toLowerCase() === target) {
-          profilesCache[child.key] = val;
-          found = { uid: child.key, nickname: val.nickname || '名無しさん', avatar: val.avatar || DEFAULT_AVATAR, email: val.email };
-        }
-      });
-      if (found) return found;
-    }
-  } catch (e) {}
-  return null;
+    if (!snap.exists()) return null;
+    let found = null;
+    snap.forEach((child) => {
+      const val = child.val();
+      if (val && val.email && val.email.toLowerCase() === targetEmail) found = { uid: child.key, nickname: val.nickname || val.email.split('@')[0] || '名無しさん', avatar: val.avatar || DEFAULT_AVATAR, email: val.email };
+    });
+    return found;
+  } catch(e) { return null; }
 }
-
 document.getElementById('addMemberBtn').addEventListener('click', async () => {
-  const email = document.getElementById('memberEmailInput').value.trim().toLowerCase();
-  const msg = document.getElementById('memberSearchMsg');
+  const input = document.getElementById('memberEmailInput'); const msg = document.getElementById('memberSearchMsg');
+  const email = input.value.trim().toLowerCase();
   if (!email) { msg.textContent = 'メールアドレスを入力してください'; msg.style.color = '#ef4444'; return; }
-  if (currentUser && currentUser.email && email === currentUser.email.toLowerCase()) { msg.textContent = '自分自身は追加できません'; msg.style.color = '#ef4444'; return; }
-  if (pendingMembers.some(m => m.email.toLowerCase() === email)) { msg.textContent = 'すでに対象に含まれています'; msg.style.color = '#ef4444'; return; }
+  if (currentUser && email === currentUser.email.toLowerCase()) { msg.textContent = '自分のメールアドレスは追加できません'; msg.style.color = '#ef4444'; return; }
+  if (pendingMembers.some(m => m.email.toLowerCase() === email)) { msg.textContent = 'すでに追加されています'; msg.style.color = '#ef4444'; return; }
   msg.innerHTML = '<span class="loading-spinner"></span>検索中...'; msg.style.color = '#0284c7';
   const found = await findProfileByEmail(email);
   if (!found) { msg.textContent = '該当するユーザーが見つかりません'; msg.style.color = '#ef4444'; return; }
-  pendingMembers.push(found); renderSelectedMembers();
-  document.getElementById('memberEmailInput').value = ''; msg.textContent = '';
+  profilesCache[found.uid] = found; pendingMembers.push(found); renderSelectedMembers();
+  input.value = ''; msg.textContent = `${found.nickname} を追加しました`; msg.style.color = '#16a34a';
 });
 document.getElementById('newChatCreateBtn').addEventListener('click', async () => {
-  if (pendingMembers.length === 0) { showBanner('相手を追加してください'); return; }
-  const isGroup = pendingMembers.length >= 2;
-  const membersObj = { [currentUser.uid]: true };
-  pendingMembers.forEach(m => { membersObj[m.uid] = true; });
+  const msg = document.getElementById('memberSearchMsg');
+  if (pendingMembers.length === 0) { msg.textContent = '相手を1人以上追加してください'; msg.style.color = '#ef4444'; return; }
+  const isGroup = pendingMembers.length > 1;
+  const groupNameInput = document.getElementById('groupNameInput').value.trim();
+  const groupName = isGroup ? (groupNameInput || pendingMembers.map(m => m.nickname).join(', ').slice(0,30)) : null;
+  const membersMap = { [currentUser.uid]: true };
+  pendingMembers.forEach(m => { membersMap[m.uid] = true; });
   if (!isGroup) {
-    const targetUid = pendingMembers[0].uid;
-    for (const [cid, chat] of Object.entries(chatsCache)) {
-      if (chat && chat.type === 'direct' && chat.members && chat.members[targetUid] && Object.keys(chat.members).length === 2) {
-        document.getElementById('newChatModal').classList.add('hidden');
-        openChat(cid);
-        return;
-      }
-    }
+    const otherUid = pendingMembers[0].uid;
+    const existing = Object.entries(chatsCache||{}).find(([id,c]) => c.type !== 'group' && c.members && c.members[currentUser.uid] && c.members[otherUid] && Object.keys(c.members).length === 2);
+    if (existing) { document.getElementById('newChatModal').classList.add('hidden'); openChat(existing[0]); return; }
   }
-  const groupName = document.getElementById('groupNameInput').value.trim();
-  const finalGroupName = isGroup ? (groupName || pendingMembers.map(m => m.nickname).join(', ').slice(0,30)) : '';
+  const chatId = 'chat_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
   const now = Date.now();
-  const newChatRef = push(ref(db, 'chatMeta'));
-  const chatId = newChatRef.key;
-  const chatMeta = {
-    members: membersObj,
-    type: isGroup ? 'group' : 'direct',
-    name: finalGroupName,
-    createdAt: now,
-    createdBy: currentUser.uid
-  };
+  const chatData = { members: membersMap, type: isGroup ? 'group' : 'direct', name: groupName, createdAt: now, createdBy: currentUser.uid, lastMessage: '', lastMessageAt: now, lastSenderUid: currentUser.uid };
   try {
-    await set(newChatRef, chatMeta);
-    for (const uid of Object.keys(membersObj)) {
-      await set(ref(db, `userChats/${uid}/${chatId}`), {
-        ...chatMeta,
-        lastMessage: isGroup ? 'グループが作成されました' : 'チャットが開始されました',
-        lastMessageAt: now,
-        lastSenderUid: currentUser.uid
-      });
-    }
-    if (isGroup) {
-      await push(ref(db, `chatMessages/${chatId}`), {
-        authorUid: currentUser.uid,
-        content: `${myProfile.nickname || 'ユーザー'} がグループ「${finalGroupName}」を作成しました`,
-        system: true,
-        createdAt: now
-      });
-    }
+    await set(ref(db, `chatMeta/${chatId}`), { members: membersMap, type: isGroup ? 'group' : 'direct', name: groupName, createdAt: now, createdBy: currentUser.uid });
+    for (const uid of Object.keys(membersMap)) await set(ref(db, `userChats/${uid}/${chatId}`), chatData);
+    chatsCache[chatId] = chatData;
     document.getElementById('newChatModal').classList.add('hidden');
     openChat(chatId);
-  } catch(e) { showBanner('チャット作成に失敗しました'); }
+  } catch(e) { msg.textContent = '作成に失敗しました'; msg.style.color = '#ef4444'; }
 });
 
-function renderPresetAvatars() {
-  const row = document.getElementById('presetAvatarRow');
-  row.innerHTML = '';
-  PRESET_AVATARS.forEach((src) => {
-    const img = document.createElement('img');
-    img.src = src; img.className = 'preset-avatar' + (selectedAvatar === src ? ' selected' : '');
-    img.onclick = () => { uploadedAvatarDataUrl = null; selectedAvatar = src; document.getElementById('profileAvatarPreview').src = src; renderPresetAvatars(); };
-    row.appendChild(img);
-  });
-}
-document.getElementById('profileBtn').addEventListener('click', () => {
-  selectedAvatar = myProfile.avatar || DEFAULT_AVATAR;
-  uploadedAvatarDataUrl = null;
-  document.getElementById('profileAvatarPreview').src = selectedAvatar;
-  document.getElementById('nicknameInput').value = myProfile.nickname || '';
-  document.getElementById('profileUploadMsg').textContent = '';
-  renderPresetAvatars();
-  document.getElementById('profileModal').classList.remove('hidden');
-});
-document.getElementById('profileCancelBtn').addEventListener('click', () => { document.getElementById('profileModal').classList.add('hidden'); });
-document.getElementById('profileAvatarFileInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
-  if (!file.type.startsWith('image/')) { showBanner('画像を選択してください'); return; }
-  const msg = document.getElementById('profileUploadMsg');
-  msg.textContent = '画像を処理中...';
-  try {
-    const compressed = await compressImage(file, 256, 0.85);
-    uploadedAvatarDataUrl = compressed.dataUrl;
-    selectedAvatar = compressed.dataUrl;
-    document.getElementById('profileAvatarPreview').src = selectedAvatar;
-    renderPresetAvatars();
-    msg.textContent = '画像を読み込みました';
-  } catch (err) { msg.textContent = '画像の読み込みに失敗しました'; }
-});
-document.getElementById('profileSaveBtn').addEventListener('click', async () => {
+/* ============================================================
+   スタンプ機能
+   ============================================================ */
+function initStickersListener() {
   if (!currentUser) return;
-  const nick = document.getElementById('nicknameInput').value.trim() || '名無しさん';
-  const av = uploadedAvatarDataUrl || selectedAvatar || DEFAULT_AVATAR;
-  try {
-    await update(ref(db, `chatProfiles/${currentUser.uid}`), {
-      nickname: nick,
-      avatar: av,
-      email: currentUser.email || '',
-      updatedAt: Date.now()
-    });
-    myProfile.nickname = nick;
-    myProfile.avatar = av;
-    updateMyProfileUI();
-    document.getElementById('profileModal').classList.add('hidden');
-    showBanner('プロフィールを保存しました', false);
-  } catch (e) { showBanner('保存に失敗しました'); }
+  if (unsubs.myStickers) unsubs.myStickers();
+  unsubs.myStickers = onValue(ref(db, `userStickers/${currentUser.uid}`), (snap) => {
+    myStickers = snap.exists() ? snap.val() : {};
+    renderStickerManageGrid();
+    if (stickerPickerOpen) renderStickerPickerGrid();
+  }, () => {});
+}
+document.getElementById('stickerManageBtn').addEventListener('click', () => { renderStickerManageGrid(); document.getElementById('stickerUploadMsg').textContent = ''; document.getElementById('stickerManageModal').classList.remove('hidden'); });
+document.getElementById('stickerManageCloseBtn').addEventListener('click', () => { document.getElementById('stickerManageModal').classList.add('hidden'); });
+document.getElementById('stickerUploadInput').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  const msgEl = document.getElementById('stickerUploadMsg');
+  if (!file) return;
+  if (file.size > 1024 * 1024) { msgEl.textContent = 'ファイルサイズは1MB以下にしてください'; msgEl.style.color = '#dc2626'; e.target.value = ''; return; }
+  msgEl.innerHTML = '<span class="loading-spinner"></span>保存中...'; msgEl.style.color = '#0284c7';
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const dataUrl = ev.target.result;
+    if (!currentUser) return;
+    try {
+      const stickerId = 'st_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+      await set(ref(db, `userStickers/${currentUser.uid}/${stickerId}`), { dataUrl, name: file.name || 'sticker', createdAt: Date.now() });
+      msgEl.textContent = 'スタンプを追加しました'; msgEl.style.color = '#16a34a';
+    } catch(err) { msgEl.textContent = '保存に失敗しました'; msgEl.style.color = '#dc2626'; }
+    e.target.value = '';
+  };
+  reader.readAsDataURL(file);
 });
-
-let pendingFile = null;
-function compressImage(file, maxDim = 1024, quality = 0.8) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        let w = img.width, h = img.height;
-        if (w > maxDim || h > maxDim) {
-          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-          else { w = Math.round(w * maxDim / h); h = maxDim; }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        resolve({ dataUrl, width: w, height: h, type: 'image/jpeg', name: file.name, size: dataUrl.length });
-      };
-      img.onerror = reject;
-      img.src = ev.target.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+function renderStickerManageGrid() {
+  const grid = document.getElementById('stickerManageGrid'); grid.innerHTML = '';
+  const entries = Object.entries(myStickers || {});
+  if (entries.length === 0) { grid.innerHTML = '<div style="grid-column:span 4;text-align:center;color:#94a3b8;font-size:12px;padding:24px;">スタンプがありません</div>'; return; }
+  entries.sort((a,b) => (b[1].createdAt||0) - (a[1].createdAt||0));
+  entries.forEach(([id, st]) => {
+    const card = document.createElement('div'); card.style.cssText = 'position:relative;border:1px solid #bae6fd;border-radius:10px;padding:6px;background:#f0f9ff;display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;';
+    card.innerHTML = `<img src="${escapeHtml(st.dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;">`;
+    const delBtn = document.createElement('button'); delBtn.type = 'button'; delBtn.title = '削除';
+    delBtn.style.cssText = 'position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(220,38,38,0.85);color:#fff;border:none;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+    delBtn.textContent = '×';
+    delBtn.onclick = async (ev) => { ev.stopPropagation(); if (!confirm('このスタンプを削除しますか？')) return; try { await remove(ref(db, `userStickers/${currentUser.uid}/${id}`)); showBanner('削除しました', false); } catch(err) { showBanner('削除に失敗しました'); } };
+    card.appendChild(delBtn); grid.appendChild(card);
   });
 }
-
-document.getElementById('messageFileInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
-  if (!file.type.startsWith('image/')) { showBanner('画像ファイルのみ対応しています'); return; }
+function openStickerPicker(anchorBtn) {
+  const picker = document.getElementById('stickerPicker');
+  closeAllMenus(); closeReactionPicker(); closeChatHeaderMenu();
+  renderStickerPickerGrid();
+  picker.style.display = 'block'; stickerPickerOpen = true;
+  const rect = anchorBtn.getBoundingClientRect();
+  const pw = picker.offsetWidth || 280, ph = picker.offsetHeight || 220;
+  let left = rect.left + rect.width/2 - pw/2;
+  if (left < 8) left = 8;
+  if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+  let top = rect.top - ph - 8;
+  if (top < 8) top = rect.bottom + 8;
+  picker.style.left = left + 'px'; picker.style.top = top + 'px';
+}
+function closeStickerPicker() { const p = document.getElementById('stickerPicker'); if (p) { p.style.display = 'none'; stickerPickerOpen = false; } }
+function renderStickerPickerGrid() {
+  const grid = document.getElementById('stickerPickerGrid'); const empty = document.getElementById('stickerPickerEmpty');
+  grid.innerHTML = ''; const entries = Object.entries(myStickers || {});
+  if (entries.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  entries.sort((a,b) => (b[1].createdAt||0) - (a[1].createdAt||0));
+  entries.forEach(([id, st]) => {
+    const btn = document.createElement('button'); btn.type = 'button';
+    btn.style.cssText = 'border:1px solid transparent;border-radius:8px;padding:4px;background:#f8fafc;cursor:pointer;display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;overflow:hidden;';
+    btn.innerHTML = `<img src="${escapeHtml(st.dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;">`;
+    btn.onclick = async (ev) => { ev.stopPropagation(); closeStickerPicker(); await sendStickerMessage(st.dataUrl); };
+    grid.appendChild(btn);
+  });
+}
+async function sendStickerMessage(dataUrl) {
+  if (!currentUser || !currentChatId || !dataUrl) return;
+  const chat = chatsCache[currentChatId]; if (!chat) return;
+  const now = Date.now();
+  const msgData = { authorUid: currentUser.uid, content: '', sticker: { dataUrl }, createdAt: now };
+  if (replyingTo) { msgData.replyTo = replyingTo; replyingTo = null; document.getElementById('replyPreviewBox').classList.remove('show'); }
   try {
-    const compressed = await compressImage(file, 1024, 0.82);
-    if (compressed.dataUrl.length > 1450000) { showBanner('画像サイズが大きすぎます'); return; }
-    pendingFile = compressed;
-    document.getElementById('messagePreviewImg').src = compressed.dataUrl;
-    document.getElementById('messagePreviewInfo').textContent = file.name;
-    document.getElementById('messagePreviewBox').classList.add('show');
-  } catch (err) { showBanner('画像の読み込みに失敗しました'); }
-});
-document.getElementById('msgPreviewRemoveBtn').addEventListener('click', () => { pendingFile = null; document.getElementById('messagePreviewBox').classList.remove('show'); });
+    await push(ref(db, `chatMessages/${currentChatId}`), msgData);
+    await set(ref(db, `chatReads/${currentChatId}/${currentUser.uid}`), now);
+    const lastText = '[スタンプ]';
+    await set(ref(db, `userChats/${currentUser.uid}/${currentChatId}/lastMessage`), lastText);
+    await set(ref(db, `userChats/${currentUser.uid}/${currentChatId}/lastMessageAt`), now);
+    await set(ref(db, `userChats/${currentUser.uid}/${currentChatId}/lastSenderUid`), currentUser.uid);
+    for (const uid of Object.keys(chat.members||{})) {
+      if (uid !== currentUser.uid) {
+        await set(ref(db, `userChats/${uid}/${currentChatId}/lastMessage`), lastText);
+        await set(ref(db, `userChats/${uid}/${currentChatId}/lastMessageAt`), now);
+        await set(ref(db, `userChats/${uid}/${currentChatId}/lastSenderUid`), currentUser.uid);
+      }
+    }
+    isNearBottom = true; chatMessagesWrap.scrollTop = chatMessagesWrap.scrollHeight;
+  } catch(e) { showBanner('スタンプの送信に失敗しました'); }
+}
+document.getElementById('stickerOpenBtn').addEventListener('click', (e) => { e.stopPropagation(); if (stickerPickerOpen) closeStickerPicker(); else openStickerPicker(e.currentTarget); });
+document.getElementById('stickerPickerManageBtn').addEventListener('click', () => { closeStickerPicker(); renderStickerManageGrid(); document.getElementById('stickerManageModal').classList.remove('hidden'); });
 
+/* ============================================================
+   メッセージ送信・画像アップロード
+   ============================================================ */
+let pendingFileData = null;
 const messageInput = document.getElementById('messageInput');
+const messageFileInput = document.getElementById('messageFileInput');
+const sendBtn = document.getElementById('sendBtn');
+
 messageInput.addEventListener('input', () => {
   messageInput.style.height = 'auto';
   messageInput.style.height = Math.min(messageInput.scrollHeight, 140) + 'px';
   handleTypingInput();
 });
 messageInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+  if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
-    document.getElementById('messageForm').requestSubmit();
+    if (!sendBtn.disabled) document.getElementById('messageForm').dispatchEvent(new Event('submit', { cancelable: true }));
   }
+});
+messageFileInput.addEventListener('change', (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (file.size > 1.5 * 1024 * 1024) { showBanner('画像は1.5MB以下にしてください'); messageFileInput.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    pendingFileData = { dataUrl: ev.target.result, name: file.name, type: file.type, size: file.size };
+    document.getElementById('messagePreviewImg').src = pendingFileData.dataUrl;
+    document.getElementById('messagePreviewInfo').textContent = `${pendingFileData.name} (${Math.round(pendingFileData.size/1024)}KB)`;
+    document.getElementById('messagePreviewBox').classList.add('show');
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('msgPreviewRemoveBtn').addEventListener('click', () => {
+  pendingFileData = null; messageFileInput.value = '';
+  document.getElementById('messagePreviewBox').classList.remove('show');
 });
 
 document.getElementById('messageForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!currentUser || !currentChatId) return;
   const text = messageInput.value.trim();
-  if (!text && !pendingFile) return;
-  const chat = chatsCache[currentChatId];
-  if (!chat) return;
-
-  const sendBtn = document.getElementById('sendBtn');
-  sendBtn.disabled = true;
+  if (!text && !pendingFileData) return;
+  sendBtn.disabled = true; setMyTypingState(false); clearTimeout(typingTimeout);
   const now = Date.now();
-  const payload = {
-    authorUid: currentUser.uid,
-    authorName: myProfile.nickname || '名無しさん',
-    authorAvatar: myProfile.avatar || DEFAULT_AVATAR,
-    createdAt: now
-  };
-  if (text) payload.content = text;
-  if (pendingFile) payload.file = pendingFile;
-  if (replyingTo) payload.replyTo = replyingTo;
-
-  const lastMsgLabel = text ? text.slice(0, 60) : (pendingFile ? '[画像]' : '');
-  const savedFile = pendingFile;
-  const savedReply = replyingTo;
-
-  messageInput.value = '';
-  messageInput.style.height = 'auto';
-  pendingFile = null;
-  replyingTo = null;
-  document.getElementById('messagePreviewBox').classList.remove('show');
-  document.getElementById('replyPreviewBox').classList.remove('show');
-  setMyTypingState(false);
-
+  const msgData = { authorUid: currentUser.uid, content: text || '', createdAt: now };
+  if (pendingFileData) msgData.file = pendingFileData;
+  if (replyingTo) { msgData.replyTo = replyingTo; replyingTo = null; document.getElementById('replyPreviewBox').classList.remove('show'); }
   try {
-    await push(ref(db, `chatMessages/${currentChatId}`), payload);
-    const memberUids = Object.keys(chat.members || {});
-    for (const uid of memberUids) {
-      await update(ref(db, `userChats/${uid}/${currentChatId}`), {
-        lastMessage: lastMsgLabel,
-        lastMessageAt: now,
-        lastSenderUid: currentUser.uid
-      }).catch(() => {});
+    await push(ref(db, `chatMessages/${currentChatId}`), msgData);
+    await set(ref(db, `chatReads/${currentChatId}/${currentUser.uid}`), now);
+    const lastText = text || '[画像]';
+    const chat = chatsCache[currentChatId];
+    await set(ref(db, `userChats/${currentUser.uid}/${currentChatId}/lastMessage`), lastText);
+    await set(ref(db, `userChats/${currentUser.uid}/${currentChatId}/lastMessageAt`), now);
+    await set(ref(db, `userChats/${currentUser.uid}/${currentChatId}/lastSenderUid`), currentUser.uid);
+    for (const uid of Object.keys(chat?.members||{})) {
+      if (uid !== currentUser.uid) {
+        await set(ref(db, `userChats/${uid}/${currentChatId}/lastMessage`), lastText);
+        await set(ref(db, `userChats/${uid}/${currentChatId}/lastMessageAt`), now);
+        await set(ref(db, `userChats/${uid}/${currentChatId}/lastSenderUid`), currentUser.uid);
+      }
     }
-    markChatAsRead(currentChatId);
-  } catch (err) {
-    showBanner('送信に失敗しました');
-    if (text) messageInput.value = text;
-    if (savedFile) { pendingFile = savedFile; document.getElementById('messagePreviewBox').classList.add('show'); }
-    if (savedReply) { replyingTo = savedReply; document.getElementById('replyPreviewBox').classList.add('show'); }
-  } finally {
-    sendBtn.disabled = false;
-  }
+    messageInput.value = ''; messageInput.style.height = 'auto';
+    pendingFileData = null; messageFileInput.value = '';
+    document.getElementById('messagePreviewBox').classList.remove('show');
+    isNearBottom = true; chatMessagesWrap.scrollTop = chatMessagesWrap.scrollHeight;
+  } catch(err) { showBanner('送信に失敗しました'); }
+  finally { sendBtn.disabled = false; messageInput.focus(); }
 });
-
-function initMyStickersListener() {
-  if (!currentUser) return;
-  if (unsubs.myStickers) unsubs.myStickers();
-  unsubs.myStickers = onValue(ref(db, `stickers/${currentUser.uid}`), (snap) => {
-    myStickers = snap.exists() ? snap.val() : {};
-    renderStickerManageGrid();
-    renderStickerPickerGrid();
-  }, () => {});
-}
-function renderStickerManageGrid() {
-  const grid = document.getElementById('stickerManageGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  const entries = Object.entries(myStickers || {});
-  if (entries.length === 0) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#94a3b8;font-size:12px;padding:24px;">スタンプがありません</div>';
-    return;
-  }
-  entries.sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-  entries.forEach(([sid, st]) => {
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'position:relative;border:1px solid #bae6fd;border-radius:10px;padding:6px;background:#f0f9ff;display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;';
-    wrap.innerHTML = `<img src="${escapeHtml(st.dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;"><button type="button" style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#dc2626;color:#fff;border:none;font-size:11px;cursor:pointer;">×</button>`;
-    wrap.querySelector('button').onclick = async () => {
-      if (!confirm('このスタンプを削除しますか？')) return;
-      try { await remove(ref(db, `stickers/${currentUser.uid}/${sid}`)); } catch (e) {}
-    };
-    grid.appendChild(wrap);
-  });
-}
-function renderStickerPickerGrid() {
-  const grid = document.getElementById('stickerPickerGrid');
-  const empty = document.getElementById('stickerPickerEmpty');
-  if (!grid || !empty) return;
-  grid.innerHTML = '';
-  const entries = Object.entries(myStickers || {});
-  if (entries.length === 0) { empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  entries.sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-  entries.forEach(([sid, st]) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:4px;cursor:pointer;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;';
-    btn.innerHTML = `<img src="${escapeHtml(st.dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;">`;
-    btn.onclick = (e) => { e.stopPropagation(); closeStickerPicker(); sendStickerMessage(st); };
-    grid.appendChild(btn);
-  });
-}
-async function sendStickerMessage(sticker) {
-  if (!currentUser || !currentChatId || !sticker || !sticker.dataUrl) return;
-  const chat = chatsCache[currentChatId]; if (!chat) return;
-  const now = Date.now();
-  const payload = {
-    authorUid: currentUser.uid,
-    authorName: myProfile.nickname || '名無しさん',
-    authorAvatar: myProfile.avatar || DEFAULT_AVATAR,
-    createdAt: now,
-    sticker: { dataUrl: sticker.dataUrl, type: sticker.type || 'image' }
-  };
-  if (replyingTo) { payload.replyTo = replyingTo; replyingTo = null; document.getElementById('replyPreviewBox').classList.remove('show'); }
-  try {
-    await push(ref(db, `chatMessages/${currentChatId}`), payload);
-    for (const uid of Object.keys(chat.members || {})) {
-      await update(ref(db, `userChats/${uid}/${currentChatId}`), {
-        lastMessage: '[スタンプ]',
-        lastMessageAt: now,
-        lastSenderUid: currentUser.uid
-      }).catch(() => {});
-    }
-    markChatAsRead(currentChatId);
-  } catch (e) { showBanner('スタンプの送信に失敗しました'); }
-}
-document.getElementById('stickerManageBtn').addEventListener('click', () => { document.getElementById('stickerManageModal').classList.remove('hidden'); });
-document.getElementById('stickerManageCloseBtn').addEventListener('click', () => { document.getElementById('stickerManageModal').classList.add('hidden'); });
-document.getElementById('stickerPickerManageBtn').addEventListener('click', () => { closeStickerPicker(); document.getElementById('stickerManageModal').classList.remove('hidden'); });
-document.getElementById('stickerUploadInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
-  const msg = document.getElementById('stickerUploadMsg');
-  if (file.size > 1000000) { msg.textContent = '1MB以下の画像を選択してください'; msg.style.color = '#dc2626'; return; }
-  msg.textContent = 'アップロード中...'; msg.style.color = '#0284c7';
-  const isGif = file.type === 'image/gif';
-  if (isGif) {
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      try {
-        await push(ref(db, `stickers/${currentUser.uid}`), { dataUrl: ev.target.result, type: 'gif', createdAt: Date.now() });
-        msg.textContent = 'GIFスタンプを追加しました！'; msg.style.color = '#16a34a';
-      } catch (err) { msg.textContent = '追加に失敗しました'; msg.style.color = '#dc2626'; }
-    };
-    reader.readAsDataURL(file);
-  } else {
-    try {
-      const comp = await compressImage(file, 320, 0.85);
-      await push(ref(db, `stickers/${currentUser.uid}`), { dataUrl: comp.dataUrl, type: 'image', createdAt: Date.now() });
-      msg.textContent = 'スタンプを追加しました！'; msg.style.color = '#16a34a';
-    } catch (err) { msg.textContent = '追加に失敗しました'; msg.style.color = '#dc2626'; }
-  }
-});
-document.getElementById('stickerOpenBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  const picker = document.getElementById('stickerPicker');
-  if (stickerPickerOpen) { closeStickerPicker(); return; }
-  closeAllMenus(); closeReactionPicker(); closeChatHeaderMenu();
-  renderStickerPickerGrid();
-  picker.style.display = 'block';
-  stickerPickerOpen = true;
-  const rect = e.currentTarget.getBoundingClientRect();
-  const pw = picker.offsetWidth || 280, ph = picker.offsetHeight || 220;
-  let left = rect.right - pw;
-  if (left < 8) left = 8;
-  let top = rect.top - ph - 8;
-  if (top < 8) top = 8;
-  picker.style.left = left + 'px'; picker.style.top = top + 'px';
-});
-function closeStickerPicker() { document.getElementById('stickerPicker').style.display = 'none'; stickerPickerOpen = false; }
-
-function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('show'); }
-document.getElementById('lightboxClose').addEventListener('click', () => lightbox.classList.remove('show'));
-lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.classList.remove('show'); });
 
 chatMessagesWrap.addEventListener('scroll', () => {
-  const dist = chatMessagesWrap.scrollHeight - chatMessagesWrap.scrollTop - chatMessagesWrap.clientHeight;
-  isNearBottom = dist < 80;
-  if (isNearBottom) { unreadInChat = 0; if (currentChatId && !document.hidden) markChatAsRead(currentChatId); }
+  const { scrollTop, scrollHeight, clientHeight } = chatMessagesWrap;
+  isNearBottom = (scrollHeight - scrollTop - clientHeight) < 80;
+  if (isNearBottom) unreadInChat = 0;
   updateScrollButton();
 });
-scrollToBottomBtn.addEventListener('click', () => { chatMessagesWrap.scrollTop = chatMessagesWrap.scrollHeight; isNearBottom = true; unreadInChat = 0; updateScrollButton(); });
-document.getElementById('backToChatListBtn').addEventListener('click', backToChatList);
+scrollToBottomBtn.addEventListener('click', () => {
+  chatMessagesWrap.scrollTop = chatMessagesWrap.scrollHeight;
+  isNearBottom = true; unreadInChat = 0; updateScrollButton();
+  if (currentChatId) markChatAsRead(currentChatId);
+});
+
+function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('show'); }
+document.getElementById('lightboxClose').addEventListener('click', (e) => { e.stopPropagation(); lightbox.classList.remove('show'); });
+lightbox.addEventListener('click', () => { lightbox.classList.remove('show'); });
+
+/* ============================================================
+   プロフィール設定
+   ============================================================ */
+function initProfileModalPresets() {
+  const row = document.getElementById('presetAvatarRow'); row.innerHTML = '';
+  PRESET_AVATARS.forEach((url, idx) => {
+    const img = document.createElement('img'); img.src = url; img.className = 'preset-avatar'; img.alt = `プリセット${idx+1}`;
+    img.onclick = () => {
+      document.querySelectorAll('.preset-avatar').forEach(a => a.classList.remove('selected'));
+      img.classList.add('selected');
+      selectedAvatar = url; uploadedAvatarDataUrl = null;
+      document.getElementById('profileAvatarPreview').src = url;
+      document.getElementById('profileUploadMsg').textContent = '';
+    };
+    row.appendChild(img);
+  });
+}
+document.getElementById('profileBtn').addEventListener('click', () => {
+  initProfileModalPresets();
+  document.getElementById('nicknameInput').value = myProfile.nickname || '';
+  selectedAvatar = myProfile.avatar || DEFAULT_AVATAR; uploadedAvatarDataUrl = null;
+  document.getElementById('profileAvatarPreview').src = selectedAvatar;
+  document.getElementById('profileUploadMsg').textContent = '';
+  document.querySelectorAll('.preset-avatar').forEach(a => { if (a.src === selectedAvatar) a.classList.add('selected'); });
+  document.getElementById('profileModal').classList.remove('hidden');
+});
+document.getElementById('profileCancelBtn').addEventListener('click', () => { document.getElementById('profileModal').classList.add('hidden'); });
+document.getElementById('profileAvatarFileInput').addEventListener('change', (e) => {
+  const file = e.target.files?.[0];
+  const msgEl = document.getElementById('profileUploadMsg');
+  if (!file) return;
+  if (file.size > 1024 * 1024) { msgEl.textContent = 'ファイルサイズは1MB以下にしてください'; msgEl.style.color = '#dc2626'; e.target.value = ''; return; }
+  msgEl.innerHTML = '<span class="loading-spinner"></span>読み込み中...'; msgEl.style.color = '#0284c7';
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    uploadedAvatarDataUrl = ev.target.result;
+    document.getElementById('profileAvatarPreview').src = uploadedAvatarDataUrl;
+    document.querySelectorAll('.preset-avatar').forEach(a => a.classList.remove('selected'));
+    msgEl.textContent = '画像を読み込みました'; msgEl.style.color = '#16a34a';
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('profileSaveBtn').addEventListener('click', async () => {
+  if (!currentUser) return;
+  const nick = document.getElementById('nicknameInput').value.trim();
+  const finalAvatar = uploadedAvatarDataUrl || selectedAvatar || DEFAULT_AVATAR;
+  myProfile = { nickname: nick || currentUser.email.split('@')[0] || '名無しさん', avatar: finalAvatar, email: currentUser.email || '' };
+  updateMyProfileUI();
+  document.getElementById('profileModal').classList.add('hidden');
+  try {
+    await set(ref(db, `chatProfiles/${currentUser.uid}`), { nickname: myProfile.nickname, avatar: myProfile.avatar, email: currentUser.email || '', updatedAt: Date.now() });
+    showBanner('プロフィールを保存しました', false);
+    if (currentChatId) updateChatHeader();
+    renderChatList(); renderStories();
+  } catch(e) { showBanner('保存に失敗しました'); }
+});
 
 /* ============================================================
    ストーリー機能
    ============================================================ */
-function initStoriesListener() {
-  if (unsubs.stories) unsubs.stories();
-  unsubs.stories = onValue(ref(db, 'stories'), (snap) => {
-    storiesCache = snap.exists() ? snap.val() : {};
-    renderStories();
-  }, () => {});
-  if (currentUser) {
-    if (unsubs.myArchive) unsubs.myArchive();
-    unsubs.myArchive = onValue(ref(db, `storyArchive/${currentUser.uid}`), (snap) => {
-      myArchivedStories = snap.exists() ? snap.val() : {};
-    }, () => {});
-  }
-}
-
-function getValidStoriesForUser(uid) {
-  const userStories = storiesCache[uid];
-  if (!userStories) return [];
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  return Object.entries(userStories)
-    .map(([id, s]) => ({ id, ...s }))
-    .filter(s => s && (s.createdAt || 0) > cutoff)
-    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-}
-
+function getActiveStories() { const now = Date.now(); const cutoff = now - 86400000; const result = {}; Object.entries(storiesCache||{}).forEach(([uid,userStories]) => { if (!userStories) return; const valid = Object.entries(userStories).filter(([id,s]) => s && s.createdAt && s.createdAt > cutoff).map(([id,s]) => ({ id, ...s })).sort((a,b) => a.createdAt - b.createdAt); if (valid.length > 0) result[uid] = valid; }); return result; }
+function hasUnseenStories(uid, userStories) { if (!userStories || userStories.length === 0) return false; if (!currentUser || uid === currentUser.uid) return false; return userStories.some(s => !mySeenStories[s.id]); }
 function renderStories() {
   const strip = document.getElementById('storiesStrip');
   const addBtn = document.getElementById('storyAddBtn');
-  strip.innerHTML = '';
-  strip.appendChild(addBtn);
-
-  const uids = new Set();
-  if (currentUser && getValidStoriesForUser(currentUser.uid).length > 0) uids.add(currentUser.uid);
-  getChatPartnerUids().forEach(uid => { if (getValidStoriesForUser(uid).length > 0) uids.add(uid); });
-  if (currentUser && isAdmin(currentUser.email)) {
-    Object.keys(storiesCache || {}).forEach(uid => { if (getValidStoriesForUser(uid).length > 0) uids.add(uid); });
-  }
-
-  uids.forEach(uid => {
-    const valid = getValidStoriesForUser(uid);
-    if (valid.length === 0) return;
-    const p = getProfileForUid(uid);
-    const isMine = currentUser && uid === currentUser.uid;
-    const allSeen = valid.every(s => !!mySeenStories[s.id]);
-    const bubble = document.createElement('div');
-    bubble.className = 'story-bubble';
-    bubble.innerHTML = `<div class="story-ring ${isMine ? 'mine' : (allSeen ? 'seen' : '')}"><img src="${escapeHtml(p.avatar)}"></div><span class="story-name">${isMine ? 'マイストーリー' : escapeHtml(p.nickname)}</span>`;
-    bubble.onclick = () => openStoryViewer(uid, false);
+  strip.innerHTML = ''; if (addBtn) strip.appendChild(addBtn);
+  const activeByUser = getActiveStories(); const userIds = Object.keys(activeByUser);
+  if (userIds.length === 0) { const empty = document.createElement('div'); empty.className = 'stories-empty'; empty.innerHTML = 'まだストーリーがありません。<br>上の「＋」から最初のストーリーを投稿しよう！'; strip.appendChild(empty); return; }
+  const sorted = userIds.sort((a,b) => { if (a === currentUser?.uid) return -1; if (b === currentUser?.uid) return 1; return (activeByUser[b].slice(-1)[0]?.createdAt||0) - (activeByUser[a].slice(-1)[0]?.createdAt||0); });
+  sorted.forEach((uid) => {
+    const list = activeByUser[uid]; const isMine = currentUser && uid === currentUser.uid;
+    const unseen = hasUnseenStories(uid, list);
+    const p = isMine ? myProfile : getProfileForUid(uid);
+    const bubble = document.createElement('div'); bubble.className = 'story-bubble';
+    bubble.onclick = () => openStoryViewer(uid, list, false);
+    let ringClass = 'story-ring'; if (isMine) ringClass += ' mine'; else if (!unseen) ringClass += ' seen';
+    bubble.innerHTML = `<div class="${ringClass}"><img src="${escapeHtml(p.avatar)}" alt="${escapeHtml(p.nickname)}"></div><span class="story-name">${isMine ? 'あなた' : escapeHtml(p.nickname)}</span>`;
     strip.appendChild(bubble);
   });
 }
@@ -3274,42 +3156,44 @@ document.getElementById('storyAddBtn').addEventListener('click', () => {
   document.getElementById('storyUploadPreview').style.display = 'none';
   document.getElementById('storyAudioPreview').style.display = 'none';
   document.getElementById('storyVideoPreview').style.display = 'none';
+  document.getElementById('storyUploadInfo').textContent = '';
   document.getElementById('storyPostMsg').textContent = '';
   document.getElementById('storyPostModal').classList.remove('hidden');
 });
 document.getElementById('storyPostCancelBtn').addEventListener('click', () => { document.getElementById('storyPostModal').classList.add('hidden'); });
-
-document.getElementById('storyFileInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  try {
-    const comp = await compressImage(file, 1080, 0.85);
-    pendingStoryFile = comp.dataUrl;
-    const prev = document.getElementById('storyUploadPreview');
-    prev.innerHTML = `<img src="${comp.dataUrl}" style="max-height:140px;border-radius:8px;margin:0 auto;">`;
-    prev.style.display = 'block';
-  } catch (err) { showBanner('画像読み込み失敗'); }
-});
-document.getElementById('storyAudioInput').addEventListener('change', (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  if (file.size > 3500000) { showBanner('音声は3.5MB以下にしてください'); e.target.value = ''; return; }
+document.getElementById('storyFileInput').addEventListener('change', (e) => {
+  const file = e.target.files?.[0];
+  if (!file) { pendingStoryFile = null; document.getElementById('storyUploadPreview').style.display = 'none'; return; }
+  if (file.size > 2 * 1024 * 1024) { showBanner('画像は2MB以下にしてください'); e.target.value = ''; return; }
   const reader = new FileReader();
   reader.onload = (ev) => {
-    pendingStoryAudio = { url: ev.target.result, name: file.name };
-    const prev = document.getElementById('storyAudioPreview');
-    prev.innerHTML = `<div style="font-size:12px;color:#0369a1;">🎵 ${escapeHtml(file.name)}</div>`;
-    prev.style.display = 'block';
+    pendingStoryFile = { type: 'image', dataUrl: ev.target.result, name: file.name, size: file.size };
+    document.getElementById('storyUploadPreview').innerHTML = `<img src="${pendingStoryFile.dataUrl}" style="max-height:140px;border-radius:8px;">`;
+    document.getElementById('storyUploadPreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('storyAudioInput').addEventListener('change', (e) => {
+  const file = e.target.files?.[0];
+  if (!file) { pendingStoryAudio = null; document.getElementById('storyAudioPreview').style.display = 'none'; return; }
+  if (file.size > 4 * 1024 * 1024) { showBanner('音声は4MB以下にしてください'); e.target.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    pendingStoryAudio = { type: 'audio', dataUrl: ev.target.result, name: file.name, size: file.size };
+    document.getElementById('storyAudioPreview').innerHTML = `<span style="font-size:12px;color:#0369a1;font-weight:700;">🎵 ${escapeHtml(file.name)} (${Math.round(file.size/1024)}KB)</span>`;
+    document.getElementById('storyAudioPreview').style.display = 'block';
   };
   reader.readAsDataURL(file);
 });
 document.getElementById('storyVideoInput').addEventListener('change', (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  if (file.size > 5000000) { showBanner('動画は5MB以下にしてください'); e.target.value = ''; return; }
+  const file = e.target.files?.[0];
+  if (!file) { pendingStoryVideo = null; document.getElementById('storyVideoPreview').style.display = 'none'; return; }
+  if (file.size > 6 * 1024 * 1024) { showBanner('動画は6MB以下にしてください'); e.target.value = ''; return; }
   const reader = new FileReader();
   reader.onload = (ev) => {
-    pendingStoryVideo = ev.target.result;
-    const prev = document.getElementById('storyVideoPreview');
-    prev.innerHTML = `<video src="${ev.target.result}" style="max-height:140px;border-radius:8px;margin:0 auto;" muted controls></video>`;
-    prev.style.display = 'block';
+    pendingStoryVideo = { type: 'video', dataUrl: ev.target.result, name: file.name, size: file.size };
+    document.getElementById('storyVideoPreview').innerHTML = `<span style="font-size:12px;color:#0369a1;font-weight:700;">🎬 ${escapeHtml(file.name)} (${Math.round(file.size/1024)}KB)</span>`;
+    document.getElementById('storyVideoPreview').style.display = 'block';
   };
   reader.readAsDataURL(file);
 });
@@ -3317,187 +3201,403 @@ document.getElementById('storyVideoInput').addEventListener('change', (e) => {
 document.getElementById('storyPostBtn').addEventListener('click', async () => {
   if (!currentUser) return;
   const text = document.getElementById('storyTextInput').value.trim();
-  if (!text && !pendingStoryFile && !pendingStoryAudio && !pendingStoryVideo) {
-    document.getElementById('storyPostMsg').textContent = 'テキスト、画像、音声、または動画を入力してください';
-    document.getElementById('storyPostMsg').style.color = '#dc2626';
-    return;
-  }
-  const btn = document.getElementById('storyPostBtn');
-  btn.disabled = true;
+  const msgEl = document.getElementById('storyPostMsg');
+  if (!text && !pendingStoryFile && !pendingStoryAudio && !pendingStoryVideo) { msgEl.textContent = 'テキスト、画像、音声、動画のいずれかを入力・選択してください'; msgEl.style.color = '#dc2626'; return; }
+  const postBtn = document.getElementById('storyPostBtn'); postBtn.disabled = true;
+  msgEl.innerHTML = '<span class="loading-spinner"></span>投稿中...'; msgEl.style.color = '#0284c7';
   const now = Date.now();
-  let type = 'text', content = text;
-  if (pendingStoryVideo) { type = 'video'; content = pendingStoryVideo; }
-  else if (pendingStoryFile) { type = 'image'; content = pendingStoryFile; }
-  else if (pendingStoryAudio) { type = 'audio'; content = text || pendingStoryAudio.name; }
-
-  const storyData = {
-    type,
-    content,
-    caption: text,
-    durationMs: type === 'video' ? 15000 : 6000,
-    authorUid: currentUser.uid,
-    authorName: myProfile.nickname || '名無しさん',
-    authorAvatar: myProfile.avatar || DEFAULT_AVATAR,
-    createdAt: now
-  };
-  if (pendingStoryAudio) {
-    storyData.audioUrl = pendingStoryAudio.url;
-    storyData.audioName = pendingStoryAudio.name;
-  }
+  const storyData = { authorUid: currentUser.uid, text: text || '', createdAt: now };
+  if (pendingStoryVideo) { storyData.mediaType = 'video'; storyData.mediaDataUrl = pendingStoryVideo.dataUrl; storyData.mediaName = pendingStoryVideo.name; }
+  else if (pendingStoryFile && pendingStoryAudio) { storyData.mediaType = 'image_audio'; storyData.imageDataUrl = pendingStoryFile.dataUrl; storyData.audioDataUrl = pendingStoryAudio.dataUrl; storyData.audioName = pendingStoryAudio.name; }
+  else if (pendingStoryFile) { storyData.mediaType = 'image'; storyData.mediaDataUrl = pendingStoryFile.dataUrl; }
+  else if (pendingStoryAudio) { storyData.mediaType = 'audio'; storyData.mediaDataUrl = pendingStoryAudio.dataUrl; storyData.audioName = pendingStoryAudio.name; }
+  else { storyData.mediaType = 'text'; }
   try {
-    const newRef = push(ref(db, `stories/${currentUser.uid}`));
-    await set(newRef, storyData);
-    await set(ref(db, `storyArchive/${currentUser.uid}/${newRef.key}`), storyData).catch(() => {});
+    const storyRef = await push(ref(db, `stories/${currentUser.uid}`), storyData);
+    await set(ref(db, `storyArchives/${currentUser.uid}/${storyRef.key}`), storyData);
     document.getElementById('storyPostModal').classList.add('hidden');
-    showBanner('ストーリーを投稿しました！', false);
-  } catch (e) {
-    showBanner('投稿に失敗しました');
-  } finally {
-    btn.disabled = false;
-  }
+    showBanner('ストーリーを投稿しました', false);
+  } catch(e) { msgEl.textContent = '投稿に失敗しました（容量オーバーの可能性があります）'; msgEl.style.color = '#dc2626'; }
+  finally { postBtn.disabled = false; }
 });
 
-function openStoryViewer(uid, isArchive = false) {
-  currentStoryUserId = uid;
-  currentStoryIsArchive = isArchive;
-  currentStoryList = isArchive
-    ? Object.entries(myArchivedStories || {}).map(([id, s]) => ({ id, ...s })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
-    : getValidStoriesForUser(uid);
-  if (currentStoryList.length === 0) return;
-  currentStoryIndex = 0;
+function cleanupStoryMedia() {
+  if (currentStoryAudioEl) { try { currentStoryAudioEl.pause(); currentStoryAudioEl.src = ''; } catch(e) {} currentStoryAudioEl = null; }
+  if (currentStoryVideoEl) { try { currentStoryVideoEl.pause(); currentStoryVideoEl.src = ''; } catch(e) {} currentStoryVideoEl = null; }
+}
+function openStoryViewer(userId, list, isArchive = false) {
+  if (!list || list.length === 0) return;
+  currentStoryUserId = userId; currentStoryList = list; currentStoryIndex = 0; currentStoryIsArchive = isArchive;
   document.getElementById('storyViewer').classList.add('show');
   showStoryAtIndex(0);
 }
 function closeStoryViewer() {
-  clearTimeout(storyTimer);
-  cancelAnimationFrame(storyProgressRAF);
-  if (currentStoryAudioEl) { try { currentStoryAudioEl.pause(); } catch (e) {} currentStoryAudioEl = null; }
-  if (currentStoryVideoEl) { try { currentStoryVideoEl.pause(); } catch (e) {} currentStoryVideoEl = null; }
+  cleanupStoryMedia(); clearTimeout(storyTimer); if (storyProgressRAF) cancelAnimationFrame(storyProgressRAF);
   document.getElementById('storyViewer').classList.remove('show');
-  currentStoryUserId = null;
+  currentStoryUserId = null; currentStoryList = []; currentStoryIndex = 0; currentStoryIsArchive = false;
+  if (unsubs.storyLikes) { unsubs.storyLikes(); unsubs.storyLikes = null; }
+  if (unsubs.storyViews) { unsubs.storyViews(); unsubs.storyViews = null; }
 }
-function showStoryAtIndex(idx) {
-  if (idx < 0 || idx >= currentStoryList.length) { closeStoryViewer(); return; }
-  currentStoryIndex = idx;
-  const story = currentStoryList[idx];
-  const p = getProfileForUid(story.authorUid);
+function initStoryStatsListeners(story) {
+  if (unsubs.storyLikes) { unsubs.storyLikes(); unsubs.storyLikes = null; }
+  if (unsubs.storyViews) { unsubs.storyViews(); unsubs.storyViews = null; }
+  currentStoryLikes = {}; currentStoryViews = {};
+  if (!story || !story.id || currentStoryIsArchive) return;
+  const authorUid = story.authorUid || currentStoryUserId;
+  unsubs.storyLikes = onValue(ref(db, `storyLikes/${authorUid}/${story.id}`), (snap) => { currentStoryLikes = snap.exists() ? snap.val() : {}; updateStoryStatsUI(); });
+  unsubs.storyViews = onValue(ref(db, `storyViews/${authorUid}/${story.id}`), (snap) => { currentStoryViews = snap.exists() ? snap.val() : {}; updateStoryStatsUI(); });
+  if (currentUser) set(ref(db, `storyViews/${authorUid}/${story.id}/${currentUser.uid}`), true).catch(()=>{});
+}
+function updateStoryStatsUI() {
+  const story = currentStoryList[currentStoryIndex]; if (!story) return;
+  const isMine = currentUser && (story.authorUid || currentStoryUserId) === currentUser.uid;
+  const statsOverlay = document.getElementById('storyStatsOverlay');
+  const likeBtn = document.getElementById('storyLikeBtn'); const likePath = document.getElementById('storyLikePath');
+  const likedByMe = !!(currentUser && currentStoryLikes && currentStoryLikes[currentUser.uid]);
+  likeBtn.classList.toggle('liked', likedByMe);
+  if (likePath) likePath.setAttribute('fill', likedByMe ? '#dc2626' : 'none');
+  if (isMine && !currentStoryIsArchive) {
+    statsOverlay.style.display = 'flex';
+    const vCount = Object.keys(currentStoryViews||{}).length;
+    const lCount = Object.keys(currentStoryLikes||{}).length;
+    document.getElementById('storyViewCount').innerHTML = `${iconEye(14, '#fff')} ${vCount}`;
+    document.getElementById('storyLikeCount').innerHTML = `${iconHeart(14, '#dc2626', true)} ${lCount}`;
+  } else { statsOverlay.style.display = 'none'; }
+}
+function showStoryAtIndex(index) {
+  cleanupStoryMedia(); clearTimeout(storyTimer); if (storyProgressRAF) cancelAnimationFrame(storyProgressRAF);
+  if (index < 0) index = 0;
+  if (index >= currentStoryList.length) { closeStoryViewer(); return; }
+  currentStoryIndex = index;
+  const story = currentStoryList[index];
+  if (!currentStoryIsArchive && story.id) { mySeenStories[story.id] = Date.now(); saveJson(SEEN_STORIES_KEY, mySeenStories); renderStories(); }
+  const isMine = currentUser && (story.authorUid || currentStoryUserId) === currentUser.uid;
+  const p = isMine ? myProfile : getProfileForUid(story.authorUid || currentStoryUserId);
   document.getElementById('storyHeaderAvatar').src = p.avatar;
-  document.getElementById('storyHeaderName').textContent = p.nickname;
+  document.getElementById('storyHeaderName').textContent = isMine ? 'あなた' : p.nickname;
   document.getElementById('storyHeaderTime').textContent = formatTime(story.createdAt);
 
-  const bar = document.getElementById('storyProgressBar');
-  bar.innerHTML = currentStoryList.map((_, i) => `<div class="story-segment"><div style="width:${i < idx ? '100%' : '0%'};"></div></div>`).join('');
+  const pb = document.getElementById('storyProgressBar'); pb.innerHTML = '';
+  for (let i = 0; i < currentStoryList.length; i++) {
+    const seg = document.createElement('div'); seg.className = 'story-segment';
+    const inner = document.createElement('div');
+    if (i < index) inner.style.width = '100%';
+    seg.appendChild(inner); pb.appendChild(seg);
+  }
+  const activeSeg = pb.children[index]?.querySelector('div');
+  const stageContent = document.getElementById('storyStageContent'); stageContent.innerHTML = '';
+  storyDuration = 5000;
 
-  if (currentStoryAudioEl) { try { currentStoryAudioEl.pause(); } catch (e) {} currentStoryAudioEl = null; }
-  if (currentStoryVideoEl) { try { currentStoryVideoEl.pause(); } catch (e) {} currentStoryVideoEl = null; }
-
-  const stage = document.getElementById('storyStageContent');
-  stage.innerHTML = '';
-  if (story.type === 'image') {
-    stage.innerHTML = `<div class="story-image-audio-wrap"><img src="${escapeHtml(story.content)}">${story.caption ? `<div style="position:absolute;bottom:85px;left:16px;right:16px;background:rgba(0,0,0,0.6);color:#fff;padding:8px 12px;border-radius:10px;font-size:14px;text-align:center;">${escapeHtml(story.caption)}</div>` : ''}</div>`;
-    if (story.audioUrl) {
-      const au = new Audio(story.audioUrl); au.play().catch(() => {}); currentStoryAudioEl = au;
-    }
-  } else if (story.type === 'video') {
+  if (story.mediaType === 'image') {
+    const wrap = document.createElement('div'); wrap.style.cssText = 'position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;';
+    const img = document.createElement('img'); img.src = story.mediaDataUrl; wrap.appendChild(img);
+    if (story.text) { const cap = document.createElement('div'); cap.style.cssText = 'position:absolute;bottom:130px;left:20px;right:20px;text-align:center;color:#fff;font-size:18px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,0.8);'; cap.textContent = story.text; wrap.appendChild(cap); }
+    stageContent.appendChild(wrap);
+  } else if (story.mediaType === 'audio') {
+    const wrap = document.createElement('div'); wrap.className = 'story-audio-wrap';
+    wrap.innerHTML = `<div style="font-size:56px;">🎵</div><div class="story-audio-label">${escapeHtml(story.text || story.audioName || '音声ストーリー')}</div>`;
+    const audio = document.createElement('audio'); audio.src = story.mediaDataUrl; audio.autoplay = true;
+    currentStoryAudioEl = audio;
+    audio.onloadedmetadata = () => { if (audio.duration && isFinite(audio.duration)) { storyDuration = Math.min(Math.max(audio.duration * 1000, 3000), 60000); startStoryTimer(activeSeg); } };
+    audio.onended = () => { showStoryAtIndex(currentStoryIndex + 1); };
+    wrap.appendChild(audio); stageContent.appendChild(wrap);
+  } else if (story.mediaType === 'image_audio') {
+    const wrap = document.createElement('div'); wrap.className = 'story-image-audio-wrap';
+    const img = document.createElement('img'); img.src = story.imageDataUrl; wrap.appendChild(img);
+    if (story.text) { const cap = document.createElement('div'); cap.style.cssText = 'position:absolute;bottom:130px;left:20px;right:20px;text-align:center;color:#fff;font-size:18px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,0.8);'; cap.textContent = story.text; wrap.appendChild(cap); }
+    const audio = document.createElement('audio'); audio.src = story.audioDataUrl; audio.autoplay = true;
+    currentStoryAudioEl = audio;
+    audio.onloadedmetadata = () => { if (audio.duration && isFinite(audio.duration)) { storyDuration = Math.min(Math.max(audio.duration * 1000, 3000), 60000); startStoryTimer(activeSeg); } };
+    audio.onended = () => { showStoryAtIndex(currentStoryIndex + 1); };
+    wrap.appendChild(audio); stageContent.appendChild(wrap);
+  } else if (story.mediaType === 'video') {
     const wrap = document.createElement('div'); wrap.className = 'story-video-wrap';
-    const vid = document.createElement('video'); vid.src = story.content; vid.playsInline = true; vid.autoplay = true;
-    wrap.appendChild(vid); stage.appendChild(wrap);
-    currentStoryVideoEl = vid;
-    vid.play().catch(() => {});
-  } else if (story.type === 'audio') {
-    stage.innerHTML = `<div class="story-audio-wrap"><div style="font-size:48px;">🎵</div><div class="story-audio-label">${escapeHtml(story.content || '音声ストーリー')}</div></div>`;
-    if (story.audioUrl) {
-      const au = new Audio(story.audioUrl); au.play().catch(() => {}); currentStoryAudioEl = au;
-    }
+    const video = document.createElement('video'); video.src = story.mediaDataUrl; video.autoplay = true; video.playsInline = true;
+    currentStoryVideoEl = video;
+    video.onloadedmetadata = () => { if (video.duration && isFinite(video.duration)) { storyDuration = Math.min(Math.max(video.duration * 1000, 3000), 60000); startStoryTimer(activeSeg); } };
+    video.onended = () => { showStoryAtIndex(currentStoryIndex + 1); };
+    wrap.appendChild(video); stageContent.appendChild(wrap);
   } else {
-    stage.innerHTML = `<div class="story-text-content" style="background:linear-gradient(135deg,#0284c7,#dc2626,#16a34a);">${escapeHtml(story.content)}</div>`;
+    const div = document.createElement('div'); div.className = 'story-text-content'; div.textContent = story.text || ''; stageContent.appendChild(div);
   }
-
-  if (currentUser) {
-    mySeenStories[story.id] = Date.now();
-    saveJson(SEEN_STORIES_KEY, mySeenStories);
-    renderStories();
-    set(ref(db, `storyViews/${story.id}/${currentUser.uid}`), Date.now()).catch(() => {});
-  }
-
-  const statsEl = document.getElementById('storyStatsOverlay');
-  if (currentUser && story.authorUid === currentUser.uid) {
-    statsEl.style.display = 'flex';
-    Promise.all([get(ref(db, `storyViews/${story.id}`)), get(ref(db, `storyLikes/${story.id}`))]).then(([vSnap, lSnap]) => {
-      const vc = vSnap.exists() ? Object.keys(vSnap.val()).length : 0;
-      const lc = lSnap.exists() ? Object.keys(lSnap.val()).length : 0;
-      document.getElementById('storyViewCount').innerHTML = `${iconEye(14, '#fff')} ${vc}`;
-      document.getElementById('storyLikeCount').innerHTML = `${iconHeart(14, '#dc2626', true)} ${lc}`;
-    }).catch(() => {});
-  } else {
-    statsEl.style.display = 'none';
-  }
-
-  storyDuration = story.durationMs || 6000;
-  storyStartTime = performance.now();
-  clearTimeout(storyTimer);
-  cancelAnimationFrame(storyProgressRAF);
-
-  const segFill = bar.children[idx]?.firstElementChild;
-  const tick = (now) => {
-    const pct = Math.min(100, ((now - storyStartTime) / storyDuration) * 100);
-    if (segFill) segFill.style.width = pct + '%';
-    if (pct < 100) storyProgressRAF = requestAnimationFrame(tick);
+  initStoryStatsListeners(story);
+  startStoryTimer(activeSeg);
+}
+function startStoryTimer(activeSeg) {
+  clearTimeout(storyTimer); if (storyProgressRAF) cancelAnimationFrame(storyProgressRAF);
+  storyStartTime = Date.now(); storyRemainingMs = storyDuration; storyPaused = false;
+  const tick = () => {
+    if (storyPaused) return;
+    const elapsed = Date.now() - storyStartTime;
+    const pct = Math.min((elapsed / storyDuration) * 100, 100);
+    if (activeSeg) activeSeg.style.width = pct + '%';
+    if (elapsed < storyDuration) storyProgressRAF = requestAnimationFrame(tick);
   };
   storyProgressRAF = requestAnimationFrame(tick);
   storyTimer = setTimeout(() => { showStoryAtIndex(currentStoryIndex + 1); }, storyDuration);
 }
-
 document.getElementById('storyCloseBtn').addEventListener('click', closeStoryViewer);
-document.getElementById('storyNavLeft').addEventListener('click', () => showStoryAtIndex(currentStoryIndex - 1));
-document.getElementById('storyNavRight').addEventListener('click', () => showStoryAtIndex(currentStoryIndex + 1));
+document.getElementById('storyNavLeft').addEventListener('click', () => { showStoryAtIndex(currentStoryIndex - 1); });
+document.getElementById('storyNavRight').addEventListener('click', () => { showStoryAtIndex(currentStoryIndex + 1); });
 document.getElementById('storyLikeBtn').addEventListener('click', async () => {
-  if (!currentUser || !currentStoryList[currentStoryIndex]) return;
-  const st = currentStoryList[currentStoryIndex];
-  await set(ref(db, `storyLikes/${st.id}/${currentUser.uid}`), Date.now()).catch(() => {});
-  const h = document.createElement('div'); h.className = 'heart-float'; h.style.left = '50%'; h.style.bottom = '80px'; h.innerHTML = iconHeart(36, '#dc2626', true);
-  document.body.appendChild(h); setTimeout(() => h.remove(), 950);
+  if (!currentUser) return;
+  const story = currentStoryList[currentStoryIndex]; if (!story || !story.id || currentStoryIsArchive) return;
+  const authorUid = story.authorUid || currentStoryUserId;
+  const likeRef = ref(db, `storyLikes/${authorUid}/${story.id}/${currentUser.uid}`);
+  const liked = !!(currentStoryLikes && currentStoryLikes[currentUser.uid]);
+  try {
+    if (liked) await remove(likeRef);
+    else { await set(likeRef, true); spawnFloatingHeart(window.innerWidth/2, window.innerHeight/2); }
+  } catch(e) {}
 });
-document.getElementById('myArchiveBtn').addEventListener('click', () => {
-  const list = document.getElementById('archiveList');
-  list.innerHTML = '';
-  const entries = Object.entries(myArchivedStories || {}).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-  if (entries.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:12px;">アーカイブはまだありません</div>';
-  } else {
-    entries.forEach(([id, s], idx) => {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px;border:1px solid #bae6fd;border-radius:10px;margin-bottom:8px;background:#f0f9ff;';
-      row.innerHTML = `<div><div style="font-size:13px;font-weight:700;color:#0369a1;">${escapeHtml(s.caption || s.type)}</div><div style="font-size:11px;color:#64748b;">${formatTime(s.createdAt)}</div></div><button type="button" class="primary-btn" style="padding:6px 12px;font-size:11px;">再生</button>`;
-      row.querySelector('button').onclick = () => {
-        document.getElementById('archiveModal').classList.add('hidden');
-        openStoryViewer(currentUser.uid, true);
-        showStoryAtIndex(idx);
-      };
-      list.appendChild(row);
-    });
+function spawnFloatingHeart(x, y) { const h = document.createElement('div'); h.className = 'heart-float'; h.innerHTML = iconHeart(40, '#dc2626', true); h.style.left = x + 'px'; h.style.top = y + 'px'; document.body.appendChild(h); setTimeout(() => h.remove(), 900); }
+document.getElementById('storyReplyInput').addEventListener('keydown', async (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const text = e.target.value.trim();
+    const story = currentStoryList[currentStoryIndex];
+    if (!text || !story || !currentUser) return;
+    const targetUid = story.authorUid || currentStoryUserId;
+    if (targetUid === currentUser.uid) { showBanner('自分のストーリーには返信できません'); return; }
+    try {
+      const existing = Object.entries(chatsCache||{}).find(([id,c]) => c.type !== 'group' && c.members && c.members[currentUser.uid] && c.members[targetUid] && Object.keys(c.members).length === 2);
+      let chatId = existing ? existing[0] : null; const now = Date.now();
+      if (!chatId) {
+        chatId = 'chat_' + now + '_' + Math.random().toString(36).slice(2,6);
+        const membersMap = { [currentUser.uid]: true, [targetUid]: true };
+        const chatData = { members: membersMap, type: 'direct', name: null, createdAt: now, createdBy: currentUser.uid, lastMessage: text, lastMessageAt: now, lastSenderUid: currentUser.uid };
+        await set(ref(db, `chatMeta/${chatId}`), { members: membersMap, type: 'direct', name: null, createdAt: now, createdBy: currentUser.uid });
+        await set(ref(db, `userChats/${currentUser.uid}/${chatId}`), chatData);
+        await set(ref(db, `userChats/${targetUid}/${chatId}`), chatData);
+      }
+      const storyCtx = { storyId: story.id, authorUid: targetUid, previewType: story.mediaType, previewText: story.text || '', previewDataUrl: story.mediaDataUrl || story.imageDataUrl || null };
+      await push(ref(db, `chatMessages/${chatId}`), { authorUid: currentUser.uid, content: text, storyReplyTo: storyCtx, createdAt: now });
+      await set(ref(db, `userChats/${currentUser.uid}/${chatId}/lastMessage`), text);
+      await set(ref(db, `userChats/${currentUser.uid}/${chatId}/lastMessageAt`), now);
+      await set(ref(db, `userChats/${currentUser.uid}/${chatId}/lastSenderUid`), currentUser.uid);
+      await set(ref(db, `userChats/${targetUid}/${chatId}/lastMessage`), text);
+      await set(ref(db, `userChats/${targetUid}/${chatId}/lastMessageAt`), now);
+      await set(ref(db, `userChats/${targetUid}/${chatId}/lastSenderUid`), currentUser.uid);
+      e.target.value = ''; closeStoryViewer(); openChat(chatId); showBanner('返信を送信しました', false);
+    } catch(err) { showBanner('返信に失敗しました'); }
   }
-  document.getElementById('archiveModal').classList.remove('hidden');
 });
+document.getElementById('myArchiveBtn').addEventListener('click', () => { renderArchiveList(); document.getElementById('archiveModal').classList.remove('hidden'); });
 document.getElementById('archiveCloseBtn').addEventListener('click', () => { document.getElementById('archiveModal').classList.add('hidden'); });
+function renderArchiveList() {
+  const list = document.getElementById('archiveList'); list.innerHTML = '';
+  const entries = Object.entries(myArchivedStories||{}).sort((a,b) => (b[1].createdAt||0) - (a[1].createdAt||0));
+  if (entries.length === 0) { list.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px;font-size:13px;">アーカイブされたストーリーはありません</div>'; return; }
+  const items = entries.map(([id,s]) => ({ id, ...s }));
+  items.forEach((st, idx) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #bae6fd;border-radius:10px;margin-bottom:8px;background:#f0f9ff;';
+    const label = st.text ? st.text.slice(0,30) : (st.mediaType==='video'?'動画':st.mediaType==='audio'?'音声':'画像');
+    const info = document.createElement('div'); info.style.cssText = 'flex:1;min-width:0;cursor:pointer;';
+    info.innerHTML = `<div style="font-size:13px;font-weight:700;color:#0369a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(label)}</div><div style="font-size:10px;color:#64748b;">${formatTime(st.createdAt)}</div>`;
+    info.onclick = () => { document.getElementById('archiveModal').classList.add('hidden'); openStoryViewer(currentUser.uid, items, true); showStoryAtIndex(idx); };
+    const delBtn = document.createElement('button'); delBtn.style.cssText = 'background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;';
+    delBtn.textContent = '削除';
+    delBtn.onclick = async () => { if (!confirm('アーカイブから削除しますか？')) return; await remove(ref(db, `storyArchives/${currentUser.uid}/${st.id}`)); showBanner('削除しました', false); };
+    row.appendChild(info); row.appendChild(delBtn); list.appendChild(row);
+  });
+}
 
 /* ============================================================
-   通話ボタン処理（1対1 / グループ自動判定 + マイク許可エラー修正）
+   1対1 音声通話（WebRTC）
    ============================================================ */
-document.getElementById('chatCallBtn').addEventListener('click', () => {
-  if (!currentChatId || !chatsCache[currentChatId]) return;
-  const chat = chatsCache[currentChatId];
-  if (chat.type === 'group') {
-    joinOrStartGroupCall(currentChatId, activeGroupCallInfo ? activeGroupCallInfo.sessionId : null);
-  } else {
-    startOutgoingCall();
+function cleanupDirectCall() {
+  if (callState.unsub) { try { callState.unsub(); } catch(e) {} callState.unsub = null; }
+  if (callState.pc) { try { callState.pc.close(); } catch(e) {} callState.pc = null; }
+  if (callState.localStream) { try { callState.localStream.getTracks().forEach(t => t.stop()); } catch(e) {} callState.localStream = null; }
+  callState.active = false; callState.role = null; callState.chatId = null; callState.peerUid = null;
+  callState.sessionId = null; callState.pendingCandidates = []; callState.callDocRef = null;
+  callState.connected = false; callState.remoteDescSet = false;
+  document.getElementById('incomingCallOverlay').classList.remove('show');
+  if (!groupCallState.active) {
+    document.getElementById('callPanel').classList.remove('show');
+    document.getElementById('callPanel').classList.remove('minimized');
   }
-});
-document.getElementById('groupCallBannerJoinBtn').addEventListener('click', () => {
-  if (!currentChatId) return;
-  joinOrStartGroupCall(currentChatId, activeGroupCallInfo ? activeGroupCallInfo.sessionId : null);
+  updateChatHeader();
+}
+
+function createDirectPeerConnection(sessionId, peerUid) {
+  const pc = new RTCPeerConnection(ICE_SERVERS);
+  callState.pc = pc;
+  if (callState.localStream) {
+    callState.localStream.getTracks().forEach(track => pc.addTrack(track, callState.localStream));
+  }
+  pc.ontrack = (event) => {
+    const audioEl = new Audio();
+    audioEl.autoplay = true;
+    audioEl.playsInline = true;
+    audioEl.srcObject = event.streams[0];
+    audioEl.play().catch(()=>{});
+    callState.connected = true;
+    document.getElementById('cpAvatarWrap').classList.remove('ringing');
+    document.getElementById('cpStatus').textContent = '通話中';
+    document.getElementById('cpStatusBar').textContent = '音声接続済み';
+  };
+  pc.onicecandidate = (event) => {
+    if (event.candidate && currentUser) {
+      const targetRole = callState.role === 'caller' ? 'callerCandidates' : 'calleeCandidates';
+      push(ref(db, `calls/${sessionId}/${targetRole}`), event.candidate.toJSON()).catch(()=>{});
+    }
+  };
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState === 'connected') {
+      callState.connected = true;
+      document.getElementById('cpAvatarWrap').classList.remove('ringing');
+      document.getElementById('cpStatus').textContent = '通話中';
+      document.getElementById('cpStatusBar').textContent = '音声接続済み';
+    } else if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+      document.getElementById('cpStatusBar').textContent = '接続が不安定です';
+    }
+  };
+  return pc;
+}
+
+async function startDirectCall(chatId, peerUid) {
+  if (!currentUser || callState.active || groupCallState.active) return;
+  notificationAudioCtx.init();
+  try {
+    callState.localStream = await acquireMicrophoneStream();
+  } catch (err) {
+    showBanner(err.message || 'マイクの許可が必要です');
+    return;
+  }
+  const sessionId = 'call_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  callState.active = true; callState.mode = 'direct'; callState.role = 'caller';
+  callState.chatId = chatId; callState.peerUid = peerUid; callState.sessionId = sessionId;
+  callState.micEnabled = true;
+  document.getElementById('cpMicBtn').classList.remove('off');
+  document.getElementById('cpMicBtn').innerHTML = iconMic(22, '#fff');
+  document.getElementById('cpGroupMembers').style.display = 'none';
+  document.getElementById('cpAvatarWrap').style.display = 'block';
+  document.getElementById('cpName').style.display = 'block';
+
+  const peerProfile = getProfileForUid(peerUid);
+  document.getElementById('cpTitle').textContent = '音声通話';
+  document.getElementById('cpName').textContent = peerProfile.nickname;
+  document.getElementById('cpAvatarImg').src = peerProfile.avatar;
+  document.getElementById('cpAvatarWrap').classList.add('ringing');
+  document.getElementById('cpStatus').textContent = '発信中...';
+  document.getElementById('cpStatusBar').textContent = '応答を待っています...';
+  document.getElementById('callPanel').classList.add('show');
+  updateChatHeader();
+
+  const callRef = ref(db, `calls/${sessionId}`);
+  callState.callDocRef = callRef;
+  const pc = createDirectPeerConnection(sessionId, peerUid);
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  await set(callRef, {
+    callerUid: currentUser.uid, callerEmail: currentUser.email || '',
+    callerName: myProfile.nickname || '名無しさん', callerAvatar: myProfile.avatar || DEFAULT_AVATAR,
+    calleeUid: peerUid, chatId, status: 'ringing',
+    offer: { type: offer.type, sdp: offer.sdp }, createdAt: Date.now()
+  });
+
+  callState.unsub = onValue(callRef, async (snap) => {
+    if (!snap.exists()) { if (callState.active) { cleanupDirectCall(); showBanner('通話が終了しました', false); } return; }
+    const val = snap.val();
+    if (val.status === 'rejected') { cleanupDirectCall(); showBanner('通話が拒否されました'); return; }
+    if (val.status === 'ended') { cleanupDirectCall(); showBanner('通話が終了しました', false); return; }
+    if (val.answer && !callState.remoteDescSet && callState.pc) {
+      await callState.pc.setRemoteDescription(new RTCSessionDescription(val.answer));
+      callState.remoteDescSet = true;
+      for (const c of callState.pendingCandidates) await callState.pc.addIceCandidate(new RTCIceCandidate(c)).catch(()=>{});
+      callState.pendingCandidates = [];
+      document.getElementById('cpStatusBar').textContent = '接続確立中...';
+    }
+    if (val.calleeCandidates && callState.pc) {
+      for (const c of Object.values(val.calleeCandidates)) {
+        if (callState.remoteDescSet) await callState.pc.addIceCandidate(new RTCIceCandidate(c)).catch(()=>{});
+        else callState.pendingCandidates.push(c);
+      }
+    }
+  });
+}
+
+function setupIncomingDirectCallListener() {
+  if (!currentUser) return;
+  onValue(ref(db, 'calls'), (snap) => {
+    if (!snap.exists() || callState.active || groupCallState.active) return;
+    snap.forEach((child) => {
+      const val = child.val();
+      if (!val || val.calleeUid !== currentUser.uid || val.status !== 'ringing') return;
+      if ((Date.now() - (val.createdAt||0)) > 60000) return;
+      callState.sessionId = child.key; callState.peerUid = val.callerUid; callState.chatId = val.chatId;
+      document.getElementById('icAvatar').src = val.callerAvatar || DEFAULT_AVATAR;
+      document.getElementById('icName').textContent = val.callerName || 'ユーザー';
+      document.getElementById('icStatus').textContent = '音声通話の着信...';
+      document.getElementById('incomingCallOverlay').classList.add('show');
+      notificationAudioCtx.playRingtone();
+      showDesktopNotification(`📞 ${val.callerName || 'ユーザー'} から着信中`, 'クリックして通話画面を開きます', `69ct-call-incoming-${child.key}`, () => {
+        try { window.focus(); } catch (e) {}
+      });
+    });
+  });
+}
+
+document.getElementById('icAcceptBtn').addEventListener('click', async () => {
+  if (!callState.sessionId) return;
+  notificationAudioCtx.init();
+  const sessionId = callState.sessionId;
+  const callRef = ref(db, `calls/${sessionId}`);
+  const snap = await get(callRef);
+  if (!snap.exists()) { cleanupDirectCall(); return; }
+  const val = snap.val();
+  try {
+    callState.localStream = await acquireMicrophoneStream();
+  } catch (err) {
+    showBanner(err.message || 'マイクの許可が必要です');
+    return;
+  }
+  document.getElementById('incomingCallOverlay').classList.remove('show');
+  callState.active = true; callState.mode = 'direct'; callState.role = 'callee';
+  callState.callDocRef = callRef; callState.micEnabled = true;
+  document.getElementById('cpMicBtn').classList.remove('off');
+  document.getElementById('cpMicBtn').innerHTML = iconMic(22, '#fff');
+  document.getElementById('cpGroupMembers').style.display = 'none';
+  document.getElementById('cpAvatarWrap').style.display = 'block';
+  document.getElementById('cpName').style.display = 'block';
+
+  document.getElementById('cpTitle').textContent = '音声通話';
+  document.getElementById('cpName').textContent = val.callerName || 'ユーザー';
+  document.getElementById('cpAvatarImg').src = val.callerAvatar || DEFAULT_AVATAR;
+  document.getElementById('cpAvatarWrap').classList.remove('ringing');
+  document.getElementById('cpStatus').textContent = '接続中...';
+  document.getElementById('cpStatusBar').textContent = '音声接続中...';
+  document.getElementById('callPanel').classList.add('show');
+  updateChatHeader();
+
+  const pc = createDirectPeerConnection(sessionId, val.callerUid);
+  await pc.setRemoteDescription(new RTCSessionDescription(val.offer));
+  callState.remoteDescSet = true;
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  await update(callRef, { status: 'connected', answer: { type: answer.type, sdp: answer.sdp } });
+
+  callState.unsub = onValue(callRef, async (s) => {
+    if (!s.exists()) { if (callState.active) { cleanupDirectCall(); showBanner('通話が終了しました', false); } return; }
+    const v = s.val();
+    if (v.status === 'ended') { cleanupDirectCall(); showBanner('通話が終了しました', false); return; }
+    if (v.callerCandidates && callState.pc) {
+      for (const c of Object.values(v.callerCandidates)) await callState.pc.addIceCandidate(new RTCIceCandidate(c)).catch(()=>{});
+    }
+  });
 });
 
+document.getElementById('icRejectBtn').addEventListener('click', async () => {
+  if (!callState.sessionId) return;
+  try { await update(ref(db, `calls/${callState.sessionId}`), { status: 'rejected' }); } catch(e) {}
+  cleanupDirectCall();
+});
+
+/* ============================================================
+   グループ音声通話（メッシュWebRTC・複数人同時通話）
+   ============================================================ */
 function watchGroupCallForChat(chatId) {
   if (unsubs.groupCallWatch) { unsubs.groupCallWatch(); unsubs.groupCallWatch = null; }
   activeGroupCallInfo = null;
@@ -3510,7 +3610,9 @@ function watchGroupCallForChat(chatId) {
     if (snap.exists()) {
       snap.forEach((child) => {
         const val = child.val();
-        if (val && !val.ended && val.participants && Object.keys(val.participants).length > 0) {
+        if (!val || val.ended) return;
+        const parts = val.participants || {};
+        if (Object.keys(parts).length > 0) {
           foundSession = { sessionId: child.key, ...val };
         }
       });
@@ -3529,1079 +3631,697 @@ function watchGroupCallForChat(chatId) {
   }, () => {});
 }
 
-async function joinOrStartGroupCall(chatId, existingSessionId = null) {
-  if (!currentUser || !chatId) return;
-  if (callState.active || groupCallState.active) { showBanner('すでに通話中です'); return; }
-  const chat = chatsCache[chatId];
-  if (!chat || chat.type !== 'group') return;
-
-  let localStream;
-  try {
-    localStream = await acquireMicrophoneStream();
-  } catch (err) {
-    showBanner(err.message || 'マイクの許可がオフになっています');
-    return;
-  }
-
-  let sessionId = existingSessionId;
-  const now = Date.now();
-  try {
-    if (!sessionId) {
-      const snap = await get(ref(db, `groupCalls/${chatId}`));
-      if (snap.exists()) {
-        snap.forEach((child) => {
-          const val = child.val();
-          if (val && !val.ended && val.participants && Object.keys(val.participants).length > 0) {
-            sessionId = child.key;
-          }
-        });
-      }
-    }
-    if (!sessionId) {
-      const newRef = push(ref(db, `groupCalls/${chatId}`));
-      sessionId = newRef.key;
-      await set(newRef, {
-        chatId,
-        startedBy: currentUser.uid,
-        startedByName: myProfile.nickname || '名無しさん',
-        createdAt: now,
-        ended: false,
-        participants: {
-          [currentUser.uid]: {
-            joinedAt: now,
-            nickname: myProfile.nickname || '名無しさん',
-            avatar: myProfile.avatar || DEFAULT_AVATAR,
-            muted: false
-          }
-        }
-      });
-      await push(ref(db, `chatMessages/${chatId}`), {
-        authorUid: currentUser.uid,
-        content: `📞 ${myProfile.nickname || 'ユーザー'} がグループ通話を開始しました`,
-        system: true,
-        callSystem: true,
-        callSessionId: sessionId,
-        createdAt: now
-      }).catch(() => {});
-    } else {
-      await set(ref(db, `groupCalls/${chatId}/${sessionId}/participants/${currentUser.uid}`), {
-        joinedAt: now,
-        nickname: myProfile.nickname || '名無しさん',
-        avatar: myProfile.avatar || DEFAULT_AVATAR,
-        muted: false
-      });
-    }
-  } catch (e) {
-    localStream.getTracks().forEach(t => t.stop());
-    showBanner('グループ通話の開始に失敗しました');
-    return;
-  }
-
-  groupCallState = {
-    active: true,
-    chatId,
-    sessionId,
-    localStream,
-    peers: {},
-    participants: {},
-    micEnabled: true,
-    isMinimized: false,
-    processedSignalIds: new Set()
-  };
-
-  onDisconnect(ref(db, `groupCalls/${chatId}/${sessionId}/participants/${currentUser.uid}`)).remove().catch(() => {});
-
-  const panel = document.getElementById('callPanel');
-  document.getElementById('cpTitle').textContent = `📞 ${chat.name || 'グループ通話'}`;
-  document.getElementById('cpName').textContent = chat.name || 'グループ通話';
-  document.getElementById('cpAvatarImg').src = myProfile.avatar || DEFAULT_AVATAR;
-  document.getElementById('cpStatus').textContent = 'グループ通話に接続中...';
-  document.getElementById('cpStatusBar').textContent = 'マイク: オン';
-  document.getElementById('cpGroupMembers').style.display = 'flex';
-  document.getElementById('cpMicBtn').classList.remove('off');
-  document.getElementById('cpMicBtn').innerHTML = iconMic(22, '#fff');
-  document.getElementById('groupCallBanner').classList.remove('show');
-  panel.classList.remove('minimized');
-  panel.classList.add('show');
-  updateChatHeader();
-
-  if (unsubs.groupCallSession) unsubs.groupCallSession();
-  unsubs.groupCallSession = onValue(ref(db, `groupCalls/${chatId}/${sessionId}`), (snap) => {
-    if (!groupCallState.active || groupCallState.sessionId !== sessionId) return;
-    if (!snap.exists()) { leaveGroupCall(); return; }
-    const val = snap.val();
-    if (val.ended) { leaveGroupCall(); return; }
-    const parts = val.participants || {};
-    groupCallState.participants = parts;
-    renderGroupCallMembers(parts);
-
-    const activeUids = Object.keys(parts);
-    document.getElementById('cpStatus').textContent = `通話中（${activeUids.length}人参加）`;
-
-    activeUids.forEach(uid => {
-      if (uid === currentUser.uid) return;
-      if (!groupCallState.peers[uid]) {
-        const shouldInitiate = currentUser.uid < uid;
-        createGroupPeerConnection(uid, shouldInitiate);
-      }
-    });
-
-    Object.keys(groupCallState.peers).forEach(uid => {
-      if (!parts[uid]) cleanupGroupPeer(uid);
-    });
-  });
-
-  if (unsubs.groupCallSignals) unsubs.groupCallSignals();
-  unsubs.groupCallSignals = onValue(ref(db, `groupCalls/${chatId}/${sessionId}/signals/${currentUser.uid}`), (snap) => {
-    if (!groupCallState.active || !snap.exists()) return;
-    snap.forEach((fromSnap) => {
-      const fromUid = fromSnap.key;
-      fromSnap.forEach((sigSnap) => {
-        const sigId = sigSnap.key;
-        if (groupCallState.processedSignalIds.has(sigId)) return;
-        groupCallState.processedSignalIds.add(sigId);
-        const sig = sigSnap.val();
-        remove(ref(db, `groupCalls/${chatId}/${sessionId}/signals/${currentUser.uid}/${fromUid}/${sigId}`)).catch(() => {});
-        handleIncomingGroupSignal(fromUid, sig);
-      });
-    });
-  });
-}
-
-function renderGroupCallMembers(parts) {
-  const box = document.getElementById('cpGroupMembers');
-  if (!box) return;
-  box.innerHTML = '';
-  Object.entries(parts || {}).forEach(([uid, info]) => {
-    const p = getProfileForUid(uid);
+function renderGroupCallParticipants() {
+  const container = document.getElementById('cpGroupMembers');
+  container.innerHTML = '';
+  const entries = Object.entries(groupCallState.participants || {});
+  document.getElementById('cpStatusBar').textContent = `参加者: ${entries.length}人`;
+  entries.forEach(([uid, info]) => {
+    const p = uid === currentUser?.uid ? myProfile : getProfileForUid(uid);
     const chip = document.createElement('div');
     chip.className = 'cp-member-chip';
-    chip.innerHTML = `<img src="${escapeHtml(info.avatar || p.avatar)}"><span>${escapeHtml(info.nickname || p.nickname)}${info.muted ? ' 🔇' : ''}</span>`;
-    box.appendChild(chip);
+    chip.innerHTML = `
+      <img src="${escapeHtml(info.avatar || p.avatar)}" alt="">
+      <span>${uid === currentUser?.uid ? 'あなた' : escapeHtml(info.nickname || p.nickname)}</span>
+    `;
+    container.appendChild(chip);
   });
 }
 
-async function sendGroupSignal(toUid, payload) {
-  if (!groupCallState.active || !currentUser) return;
-  const { chatId, sessionId } = groupCallState;
-  await push(ref(db, `groupCalls/${chatId}/${sessionId}/signals/${toUid}/${currentUser.uid}`), {
-    ...payload,
-    at: Date.now()
-  }).catch(() => {});
-}
-
-async function createGroupPeerConnection(remoteUid, isInitiator) {
-  if (groupCallState.peers[remoteUid]) return groupCallState.peers[remoteUid];
+function createGroupPeerConnection(targetUid, sessionId, isInitiator) {
+  if (groupCallState.peers[targetUid]) return groupCallState.peers[targetUid];
   const pc = new RTCPeerConnection(ICE_SERVERS);
-  const audioEl = new Audio();
-  audioEl.autoplay = true;
-  audioEl.playsInline = true;
-
-  const peerObj = { pc, audioEl, pendingCandidates: [], remoteDescSet: false };
-  groupCallState.peers[remoteUid] = peerObj;
+  groupCallState.peers[targetUid] = pc;
 
   if (groupCallState.localStream) {
     groupCallState.localStream.getTracks().forEach(track => pc.addTrack(track, groupCallState.localStream));
   }
 
   pc.ontrack = (event) => {
-    const stream = event.streams[0];
-    if (stream) {
-      audioEl.srcObject = stream;
-      audioEl.play().catch(() => {});
-    }
+    const audioEl = new Audio();
+    audioEl.autoplay = true;
+    audioEl.playsInline = true;
+    audioEl.srcObject = event.streams[0];
+    audioEl.play().catch(()=>{});
   };
 
   pc.onicecandidate = (event) => {
-    if (event.candidate) {
-      sendGroupSignal(remoteUid, { type: 'candidate', candidate: event.candidate.toJSON() });
+    if (event.candidate && currentUser) {
+      push(ref(db, `groupCallSignals/${sessionId}/${targetUid}`), {
+        fromUid: currentUser.uid,
+        type: 'candidate',
+        candidate: event.candidate.toJSON(),
+        createdAt: Date.now()
+      }).catch(()=>{});
     }
   };
 
   if (isInitiator) {
-    try {
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      await sendGroupSignal(remoteUid, { type: 'offer', sdp: { type: offer.type, sdp: offer.sdp } });
-    } catch (e) {}
-  }
-  return peerObj;
-}
-
-async function handleIncomingGroupSignal(fromUid, sig) {
-  if (!sig || !groupCallState.active) return;
-  let peerObj = groupCallState.peers[fromUid];
-  if (!peerObj) peerObj = await createGroupPeerConnection(fromUid, false);
-  const { pc } = peerObj;
-
-  try {
-    if (sig.type === 'offer' && sig.sdp) {
-      await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
-      peerObj.remoteDescSet = true;
-      for (const c of peerObj.pendingCandidates) await pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
-      peerObj.pendingCandidates = [];
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      await sendGroupSignal(fromUid, { type: 'answer', sdp: { type: answer.type, sdp: answer.sdp } });
-    } else if (sig.type === 'answer' && sig.sdp) {
-      await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
-      peerObj.remoteDescSet = true;
-      for (const c of peerObj.pendingCandidates) await pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
-      peerObj.pendingCandidates = [];
-    } else if (sig.type === 'candidate' && sig.candidate) {
-      if (peerObj.remoteDescSet) await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)).catch(() => {});
-      else peerObj.pendingCandidates.push(sig.candidate);
-    }
-  } catch (e) {}
-}
-
-function cleanupGroupPeer(uid) {
-  const peerObj = groupCallState.peers[uid];
-  if (!peerObj) return;
-  try { peerObj.pc.close(); } catch (e) {}
-  try { peerObj.audioEl.srcObject = null; } catch (e) {}
-  delete groupCallState.peers[uid];
-}
-
-async function leaveGroupCall() {
-  if (!groupCallState.active) return;
-  const { chatId, sessionId, localStream } = groupCallState;
-  groupCallState.active = false;
-
-  if (unsubs.groupCallSession) { unsubs.groupCallSession(); unsubs.groupCallSession = null; }
-  if (unsubs.groupCallSignals) { unsubs.groupCallSignals(); unsubs.groupCallSignals = null; }
-
-  Object.keys(groupCallState.peers).forEach(uid => cleanupGroupPeer(uid));
-  if (localStream) localStream.getTracks().forEach(t => t.stop());
-
-  document.getElementById('callPanel').classList.remove('show');
-  document.getElementById('cpGroupMembers').style.display = 'none';
-
-  if (currentUser && chatId && sessionId) {
-    try {
-      await remove(ref(db, `groupCalls/${chatId}/${sessionId}/participants/${currentUser.uid}`));
-      const snap = await get(ref(db, `groupCalls/${chatId}/${sessionId}/participants`));
-      if (!snap.exists() || snap.numChildren() === 0) {
-        await update(ref(db, `groupCalls/${chatId}/${sessionId}`), { ended: true, endedAt: Date.now() });
-        await push(ref(db, `chatMessages/${chatId}`), {
-          authorUid: currentUser.uid,
-          content: '📞 グループ通話が終了しました',
-          system: true,
-          callSystem: true,
-          callSessionId: sessionId,
+    pc.onnegotiationneeded = async () => {
+      try {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await push(ref(db, `groupCallSignals/${sessionId}/${targetUid}`), {
+          fromUid: currentUser.uid,
+          type: 'offer',
+          sdp: { type: offer.type, sdp: offer.sdp },
           createdAt: Date.now()
-        }).catch(() => {});
-      }
-    } catch (e) {}
+        });
+      } catch (e) {}
+    };
   }
-  updateChatHeader();
+  return pc;
 }
 
-/* ============================================================
-   1対1音声通話（着信時に別タブ通知対応）
-   ============================================================ */
-let incomingCallData = null;
-let incomingRingtoneTimer = null;
+async function joinOrStartGroupCall(chatId, existingSessionId = null) {
+  if (!currentUser || callState.active || groupCallState.active) return;
+  const chat = chatsCache[chatId];
+  if (!chat || chat.type !== 'group') return;
+  notificationAudioCtx.init();
 
-function initCalls1to1Listener() {
-  if (!currentUser) return;
-  onValue(ref(db, `calls1to1/${currentUser.uid}`), (snap) => {
-    if (!snap.exists()) return;
-    snap.forEach((child) => {
-      const val = child.val();
-      const sessionId = child.key;
-      if (!val) return;
-      if (val.status === 'ringing' && !callState.active && !groupCallState.active && !incomingCallData) {
-        if ((Date.now() - (val.createdAt || 0)) > 60000) return;
-        incomingCallData = { sessionId, ...val };
-        document.getElementById('icAvatar').src = val.fromAvatar || DEFAULT_AVATAR;
-        document.getElementById('icName').textContent = val.fromName || '着信';
-        document.getElementById('icStatus').textContent = '音声通話の着信中...';
-        document.getElementById('incomingCallOverlay').classList.add('show');
-
-        notificationAudioCtx.playRingtone();
-        clearInterval(incomingRingtoneTimer);
-        incomingRingtoneTimer = setInterval(() => {
-          if (incomingCallData) notificationAudioCtx.playRingtone();
-          else clearInterval(incomingRingtoneTimer);
-        }, 2200);
-
-        // 別タブにいる時でもデスクトップ着信通知を送信
-        showDesktopNotification(
-          `📞 ${val.fromName || 'ユーザー'} から音声通話の着信`,
-          'クリックして通話画面を開く',
-          `69ct-call-1to1-${sessionId}`
-        );
-      } else if (incomingCallData && incomingCallData.sessionId === sessionId && val.status !== 'ringing') {
-        dismissIncomingOverlay();
-      }
-    });
-  }, () => {});
-}
-
-function dismissIncomingOverlay() {
-  incomingCallData = null;
-  clearInterval(incomingRingtoneTimer);
-  document.getElementById('incomingCallOverlay').classList.remove('show');
-}
-
-document.getElementById('icRejectBtn').addEventListener('click', async () => {
-  if (!incomingCallData || !currentUser) return;
-  const { sessionId } = incomingCallData;
-  dismissIncomingOverlay();
-  await update(ref(db, `calls1to1/${currentUser.uid}/${sessionId}`), { status: 'rejected', endedAt: Date.now() }).catch(() => {});
-});
-
-document.getElementById('icAcceptBtn').addEventListener('click', async () => {
-  if (!incomingCallData || !currentUser) return;
-  const data = incomingCallData;
-  dismissIncomingOverlay();
-
-  let localStream;
   try {
-    localStream = await acquireMicrophoneStream();
+    groupCallState.localStream = await acquireMicrophoneStream();
   } catch (err) {
-    showBanner(err.message || 'マイクの許可がオフになっています');
-    await update(ref(db, `calls1to1/${currentUser.uid}/${data.sessionId}`), { status: 'rejected', endedAt: Date.now() }).catch(() => {});
+    showBanner(err.message || 'マイクの許可が必要です');
     return;
   }
 
-  const pc = new RTCPeerConnection(ICE_SERVERS);
-  const remoteAudio = new Audio(); remoteAudio.autoplay = true;
-  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+  const sessionId = existingSessionId || ('gcall_' + Date.now() + '_' + Math.random().toString(36).slice(2,8));
+  groupCallState.active = true;
+  groupCallState.chatId = chatId;
+  groupCallState.sessionId = sessionId;
+  groupCallState.peers = {};
+  groupCallState.participants = {};
+  groupCallState.micEnabled = true;
+  groupCallState.processedSignalIds = new Set();
 
-  const callRef = ref(db, `calls1to1/${currentUser.uid}/${data.sessionId}`);
-  callState = {
-    active: true, mode: 'direct', role: 'callee', chatId: data.chatId, peerUid: data.fromUid,
-    sessionId: data.sessionId, pc, localStream, remoteStream: remoteAudio,
-    micEnabled: true, pendingCandidates: [], callDocRef: callRef, unsub: null, isMinimized: false, connected: false, remoteDescSet: false
-  };
-
-  pc.ontrack = (ev) => { if (ev.streams[0]) { remoteAudio.srcObject = ev.streams[0]; remoteAudio.play().catch(() => {}); } };
-  pc.onicecandidate = (ev) => { if (ev.candidate) push(ref(db, `calls1to1/${currentUser.uid}/${data.sessionId}/calleeCandidates`), ev.candidate.toJSON()).catch(() => {}); };
-
-  try {
-    await pc.setRemoteDescription(new RTCSessionDescription(data.callerDescription));
-    callState.remoteDescSet = true;
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    await update(callRef, { status: 'connected', calleeDescription: { type: answer.type, sdp: answer.sdp } });
-  } catch (e) { endDirectCall(); return; }
-
-  showDirectCallUI(data.fromName, data.fromAvatar, '通話中');
-  watchDirectCallSession(callRef, 'callerCandidates');
-});
-
-async function startOutgoingCall() {
-  if (!currentChatId || !chatsCache[currentChatId]) return;
-  if (callState.active || groupCallState.active) { showBanner('すでに通話中です'); return; }
-  const chat = chatsCache[currentChatId];
-  const peerUid = Object.keys(chat.members || {}).find(uid => uid !== currentUser.uid);
-  if (!peerUid) return;
-  const peerProfile = getProfileForUid(peerUid);
-
-  let localStream;
-  try {
-    localStream = await acquireMicrophoneStream();
-  } catch (err) {
-    showBanner(err.message || 'マイクの許可がオフになっています');
-    return;
-  }
-
-  const pc = new RTCPeerConnection(ICE_SERVERS);
-  const remoteAudio = new Audio(); remoteAudio.autoplay = true;
-  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-
-  const newCallRef = push(ref(db, `calls1to1/${peerUid}`));
-  const sessionId = newCallRef.key;
-
-  callState = {
-    active: true, mode: 'direct', role: 'caller', chatId: currentChatId, peerUid,
-    sessionId, pc, localStream, remoteStream: remoteAudio,
-    micEnabled: true, pendingCandidates: [], callDocRef: newCallRef, unsub: null, isMinimized: false, connected: false, remoteDescSet: false
-  };
-
-  pc.ontrack = (ev) => { if (ev.streams[0]) { remoteAudio.srcObject = ev.streams[0]; remoteAudio.play().catch(() => {}); } };
-  pc.onicecandidate = (ev) => { if (ev.candidate) push(ref(db, `calls1to1/${peerUid}/${sessionId}/callerCandidates`), ev.candidate.toJSON()).catch(() => {}); };
-
-  try {
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await set(newCallRef, {
-      fromUid: currentUser.uid,
-      fromName: myProfile.nickname || '名無しさん',
-      fromAvatar: myProfile.avatar || DEFAULT_AVATAR,
-      toUid: peerUid,
-      chatId: currentChatId,
-      status: 'ringing',
-      createdAt: Date.now(),
-      callerDescription: { type: offer.type, sdp: offer.sdp }
-    });
-  } catch (e) { endDirectCall(); return; }
-
-  showDirectCallUI(peerProfile.nickname, peerProfile.avatar, '呼び出し中...');
-  watchDirectCallSession(newCallRef, 'calleeCandidates');
-}
-
-function showDirectCallUI(name, avatar, statusText) {
-  document.getElementById('cpTitle').textContent = '音声通話';
-  document.getElementById('cpName').textContent = name || '通話相手';
-  document.getElementById('cpAvatarImg').src = avatar || DEFAULT_AVATAR;
-  document.getElementById('cpStatus').textContent = statusText;
-  document.getElementById('cpStatusBar').textContent = 'マイク: オン';
-  document.getElementById('cpGroupMembers').style.display = 'none';
   document.getElementById('cpMicBtn').classList.remove('off');
   document.getElementById('cpMicBtn').innerHTML = iconMic(22, '#fff');
-  const panel = document.getElementById('callPanel');
-  panel.classList.remove('minimized');
-  panel.classList.add('show');
+  document.getElementById('cpAvatarWrap').style.display = 'none';
+  document.getElementById('cpName').style.display = 'none';
+  document.getElementById('cpGroupMembers').style.display = 'flex';
+  document.getElementById('cpTitle').textContent = `グループ通話: ${chat.name || 'グループ'}`;
+  document.getElementById('cpStatus').textContent = '通話中';
+  document.getElementById('callPanel').classList.add('show');
+  document.getElementById('groupCallBanner').classList.remove('show');
   updateChatHeader();
-}
 
-function watchDirectCallSession(callRef, remoteCandidateField) {
-  const addedCandKeys = new Set();
-  if (callState.unsub) callState.unsub();
-  callState.unsub = onValue(callRef, async (snap) => {
-    if (!callState.active) return;
-    if (!snap.exists()) { endDirectCall(); return; }
+  const sessionRef = ref(db, `groupCalls/${chatId}/${sessionId}`);
+  const myPartRef = ref(db, `groupCalls/${chatId}/${sessionId}/participants/${currentUser.uid}`);
+  const myPartData = {
+    nickname: myProfile.nickname || '名無しさん',
+    avatar: myProfile.avatar || DEFAULT_AVATAR,
+    joinedAt: Date.now()
+  };
+
+  if (!existingSessionId) {
+    await set(sessionRef, {
+      chatId,
+      startedBy: currentUser.uid,
+      startedByName: myProfile.nickname || '名無しさん',
+      ended: false,
+      createdAt: Date.now(),
+      participants: { [currentUser.uid]: myPartData }
+    });
+  } else {
+    await set(myPartRef, myPartData);
+  }
+  try { onDisconnect(myPartRef).remove(); } catch (e) {}
+
+  if (unsubs.groupCallSession) unsubs.groupCallSession();
+  unsubs.groupCallSession = onValue(sessionRef, (snap) => {
+    if (!groupCallState.active) return;
+    if (!snap.exists()) { cleanupGroupCall(); showBanner('グループ通話が終了しました', false); return; }
     const val = snap.val();
-    if (val.status === 'rejected' || val.status === 'ended') { endDirectCall(); return; }
-    if (val.status === 'connected') {
-      document.getElementById('cpStatus').textContent = '通話中';
-      if (callState.role === 'caller' && val.calleeDescription && !callState.remoteDescSet) {
-        try {
-          await callState.pc.setRemoteDescription(new RTCSessionDescription(val.calleeDescription));
-          callState.remoteDescSet = true;
-        } catch (e) {}
+    if (val.ended) { cleanupGroupCall(); showBanner('グループ通話が終了しました', false); return; }
+    const parts = val.participants || {};
+    groupCallState.participants = parts;
+    renderGroupCallParticipants();
+
+    Object.keys(parts).forEach((uid) => {
+      if (uid === currentUser.uid) return;
+      if (!groupCallState.peers[uid]) {
+        const shouldInitiate = currentUser.uid < uid;
+        createGroupPeerConnection(uid, sessionId, shouldInitiate);
       }
-    }
-    const cands = val[remoteCandidateField];
-    if (cands && callState.remoteDescSet) {
-      for (const [k, c] of Object.entries(cands)) {
-        if (addedCandKeys.has(k)) continue;
-        addedCandKeys.add(k);
-        await callState.pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
+    });
+    Object.keys(groupCallState.peers).forEach((uid) => {
+      if (!parts[uid]) {
+        try { groupCallState.peers[uid].close(); } catch(e) {}
+        delete groupCallState.peers[uid];
       }
+    });
+  });
+
+  if (unsubs.groupCallSignals) unsubs.groupCallSignals();
+  unsubs.groupCallSignals = onValue(ref(db, `groupCallSignals/${sessionId}/${currentUser.uid}`), async (snap) => {
+    if (!snap.exists() || !groupCallState.active) return;
+    for (const child of Object.entries(snap.val())) {
+      const [sigId, sig] = child;
+      if (groupCallState.processedSignalIds.has(sigId)) continue;
+      groupCallState.processedSignalIds.add(sigId);
+      if (!sig || !sig.fromUid || sig.fromUid === currentUser.uid) continue;
+
+      const pc = createGroupPeerConnection(sig.fromUid, sessionId, false);
+      try {
+        if (sig.type === 'offer' && sig.sdp) {
+          await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          await push(ref(db, `groupCallSignals/${sessionId}/${sig.fromUid}`), {
+            fromUid: currentUser.uid,
+            type: 'answer',
+            sdp: { type: answer.type, sdp: answer.sdp },
+            createdAt: Date.now()
+          });
+        } else if (sig.type === 'answer' && sig.sdp) {
+          await pc.setRemoteDescription(new RTCSessionDescription(sig.sdp));
+        } else if (sig.type === 'candidate' && sig.candidate) {
+          await pc.addIceCandidate(new RTCIceCandidate(sig.candidate)).catch(()=>{});
+        }
+      } catch (e) {}
     }
   });
 }
 
-async function endDirectCall() {
-  if (!callState.active) return;
-  const { pc, localStream, remoteStream, callDocRef, unsub } = callState;
-  callState.active = false;
-  if (unsub) try { unsub(); } catch (e) {}
-  if (pc) try { pc.close(); } catch (e) {}
-  if (localStream) localStream.getTracks().forEach(t => t.stop());
-  if (remoteStream) try { remoteStream.srcObject = null; } catch (e) {}
-  if (callDocRef) await update(callDocRef, { status: 'ended', endedAt: Date.now() }).catch(() => {});
+async function cleanupGroupCall() {
+  if (unsubs.groupCallSession) { try { unsubs.groupCallSession(); } catch(e) {} unsubs.groupCallSession = null; }
+  if (unsubs.groupCallSignals) { try { unsubs.groupCallSignals(); } catch(e) {} unsubs.groupCallSignals = null; }
+  Object.values(groupCallState.peers).forEach(pc => { try { pc.close(); } catch(e) {} });
+  if (groupCallState.localStream) { try { groupCallState.localStream.getTracks().forEach(t => t.stop()); } catch(e) {} }
+
+  const chatId = groupCallState.chatId;
+  const sessionId = groupCallState.sessionId;
+  if (currentUser && chatId && sessionId) {
+    try {
+      await remove(ref(db, `groupCalls/${chatId}/${sessionId}/participants/${currentUser.uid}`));
+      await remove(ref(db, `groupCallSignals/${sessionId}/${currentUser.uid}`));
+      const snap = await get(ref(db, `groupCalls/${chatId}/${sessionId}/participants`));
+      if (!snap.exists() || Object.keys(snap.val() || {}).length === 0) {
+        await update(ref(db, `groupCalls/${chatId}/${sessionId}`), { ended: true }).catch(()=>{});
+      }
+    } catch (e) {}
+  }
+
+  groupCallState = {
+    active: false, chatId: null, sessionId: null, localStream: null,
+    peers: {}, participants: {}, micEnabled: true, isMinimized: false,
+    processedSignalIds: new Set()
+  };
+  document.getElementById('cpGroupMembers').style.display = 'none';
+  document.getElementById('cpAvatarWrap').style.display = 'block';
+  document.getElementById('cpName').style.display = 'block';
   document.getElementById('callPanel').classList.remove('show');
+  document.getElementById('callPanel').classList.remove('minimized');
   updateChatHeader();
 }
 
-document.getElementById('cpMicBtn').addEventListener('click', () => {
-  if (groupCallState.active) {
-    groupCallState.micEnabled = !groupCallState.micEnabled;
-    if (groupCallState.localStream) groupCallState.localStream.getAudioTracks().forEach(t => { t.enabled = groupCallState.micEnabled; });
-    const btn = document.getElementById('cpMicBtn');
-    btn.classList.toggle('off', !groupCallState.micEnabled);
-    btn.innerHTML = groupCallState.micEnabled ? iconMic(22, '#fff') : iconMicOff(22, '#fff');
-    document.getElementById('cpStatusBar').textContent = groupCallState.micEnabled ? 'マイク: オン' : 'マイク: ミュート';
-    if (currentUser && groupCallState.chatId && groupCallState.sessionId) {
-      update(ref(db, `groupCalls/${groupCallState.chatId}/${groupCallState.sessionId}/participants/${currentUser.uid}`), { muted: !groupCallState.micEnabled }).catch(() => {});
-    }
-    return;
+document.getElementById('chatCallBtn').addEventListener('click', () => {
+  if (!currentChatId || !chatsCache[currentChatId]) return;
+  const chat = chatsCache[currentChatId];
+  if (chat.type === 'group') {
+    joinOrStartGroupCall(currentChatId, activeGroupCallInfo?.sessionId || null);
+  } else {
+    const otherUid = Object.keys(chat.members || {}).find(uid => uid !== currentUser.uid);
+    if (otherUid) startDirectCall(currentChatId, otherUid);
   }
-  if (callState.active) {
-    callState.micEnabled = !callState.micEnabled;
-    if (callState.localStream) callState.localStream.getAudioTracks().forEach(t => { t.enabled = callState.micEnabled; });
-    const btn = document.getElementById('cpMicBtn');
-    btn.classList.toggle('off', !callState.micEnabled);
-    btn.innerHTML = callState.micEnabled ? iconMic(22, '#fff') : iconMicOff(22, '#fff');
-    document.getElementById('cpStatusBar').textContent = callState.micEnabled ? 'マイク: オン' : 'マイク: ミュート';
-  }
+});
+document.getElementById('groupCallBannerJoinBtn').addEventListener('click', () => {
+  if (!currentChatId || !activeGroupCallInfo) return;
+  joinOrStartGroupCall(currentChatId, activeGroupCallInfo.sessionId);
 });
 
-document.getElementById('cpEndBtn').addEventListener('click', () => {
-  if (groupCallState.active) leaveGroupCall();
-  else if (callState.active) endDirectCall();
-});
 document.getElementById('cpMinimizeBtn').addEventListener('click', () => {
   document.getElementById('callPanel').classList.toggle('minimized');
 });
+document.getElementById('cpMicBtn').addEventListener('click', () => {
+  const btn = document.getElementById('cpMicBtn');
+  if (groupCallState.active) {
+    groupCallState.micEnabled = !groupCallState.micEnabled;
+    if (groupCallState.localStream) groupCallState.localStream.getAudioTracks().forEach(t => { t.enabled = groupCallState.micEnabled; });
+    btn.classList.toggle('off', !groupCallState.micEnabled);
+    btn.innerHTML = groupCallState.micEnabled ? iconMic(22, '#fff') : iconMicOff(22, '#fff');
+  } else if (callState.active) {
+    callState.micEnabled = !callState.micEnabled;
+    if (callState.localStream) callState.localStream.getAudioTracks().forEach(t => { t.enabled = callState.micEnabled; });
+    btn.classList.toggle('off', !callState.micEnabled);
+    btn.innerHTML = callState.micEnabled ? iconMic(22, '#fff') : iconMicOff(22, '#fff');
+  }
+});
+document.getElementById('cpEndBtn').addEventListener('click', async () => {
+  if (groupCallState.active) {
+    await cleanupGroupCall();
+    showBanner('グループ通話から退出しました', false);
+    return;
+  }
+  if (callState.callDocRef) { try { await update(callState.callDocRef, { status: 'ended' }); } catch(e) {} }
+  cleanupDirectCall();
+  showBanner('通話を終了しました', false);
+});
 
 /* ============================================================
-   緊急モード・管理者機能・BAN・非公開モード
+   緊急モード
    ============================================================ */
-function initEmergencyListener() {
-  if (unsubs.emergency) unsubs.emergency();
-  unsubs.emergency = onValue(ref(db, 'emergency'), (snap) => {
-    const val = snap.exists() ? snap.val() : { active: false };
-    emergencyState = val;
-    if (val.active) {
-      emergencyOverlay.classList.add('show');
-      emergencyOverlay.innerHTML = `${currentUser && isAdmin(currentUser.email) ? '<div id="adminCtrlDHint">管理者解除: Ctrl + D</div>' : ''}<div id="emergencyTriggeredBy">発動: ${escapeHtml(val.triggeredByName || val.triggeredByEmail || '')}</div>`;
-      document.title = '無';
-      setFavicon(FAVICON_BLACK);
-      if (emergencyEnforcerInterval) clearInterval(emergencyEnforcerInterval);
-      emergencyEnforcerInterval = setInterval(() => {
-        if (emergencyState.active && !emergencyExiting) {
-          emergencyOverlay.classList.add('show');
-          document.title = '無';
-        }
-      }, 600);
-    } else {
-      emergencyExiting = false;
-      if (emergencyEnforcerInterval) { clearInterval(emergencyEnforcerInterval); emergencyEnforcerInterval = null; }
-      emergencyOverlay.classList.remove('show');
-      emergencyOverlay.innerHTML = '';
-      refreshFavicon();
-      updateTitleUnread();
-    }
-  }, () => {});
+function triggerEmergencyMode(byEmail = '') {
+  if (emergencyState.active) return;
+  emergencyState.active = true; emergencyExiting = false;
+  if (currentUser && byEmail) {
+    const histId = 'em_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+    set(ref(db, `emergencyHistory/${histId}`), { triggeredByEmail: byEmail, triggeredByUid: currentUser.uid, triggeredAt: Date.now() }).catch(()=>{});
+  }
+  set(ref(db, 'emergencyMode'), { active: true, triggeredByEmail: byEmail || (currentUser?.email || ''), triggeredAt: Date.now() }).catch(()=>{});
+  activateEmergencyBlackout(byEmail);
 }
-
-async function triggerEmergency() {
-  if (!currentUser) return;
-  const now = Date.now();
-  try {
-    await set(ref(db, 'emergency'), {
-      active: true,
-      triggeredBy: currentUser.uid,
-      triggeredByEmail: currentUser.email || '',
-      triggeredByName: myProfile.nickname || 'ユーザー',
-      triggeredAt: now
-    });
-    await push(ref(db, 'emergencyHistory'), {
-      uid: currentUser.uid,
-      email: currentUser.email || '',
-      nickname: myProfile.nickname || 'ユーザー',
-      avatar: myProfile.avatar || DEFAULT_AVATAR,
-      triggeredAt: now,
-      type: 'trigger',
-      isAdmin: isAdmin(currentUser.email)
-    }).catch(() => {});
-  } catch (e) {}
+function activateEmergencyBlackout(byEmail = '') {
+  emergencyState.active = true; emergencyExiting = false;
+  document.body.style.background = '#000'; document.title = '無'; setFavicon(FAVICON_BLACK);
+  document.querySelectorAll('video, audio').forEach(el => { try { el.pause(); el.muted = true; } catch(e) {} });
+  cleanupStoryMedia();
+  if (callState.active) cleanupDirectCall();
+  if (groupCallState.active) cleanupGroupCall();
+  if (!document.getElementById('emergencyTriggeredBy')) {
+    const tag = document.createElement('div'); tag.id = 'emergencyTriggeredBy';
+    tag.textContent = byEmail ? `発動者: ${byEmail}` : '発動者: 不明';
+    document.body.appendChild(tag);
+  }
+  emergencyOverlay.classList.add('show');
+  if (currentUser && isAdmin(currentUser.email)) {
+    let hint = document.getElementById('adminCtrlDHint');
+    if (!hint) { hint = document.createElement('div'); hint.id = 'adminCtrlDHint'; hint.textContent = '管理者解除: Ctrl + D'; document.body.appendChild(hint); }
+    setTimeout(() => { const h = document.getElementById('adminCtrlDHint'); if (h) h.remove(); }, 4000);
+  }
+  if (emergencyEnforcerInterval) clearInterval(emergencyEnforcerInterval);
+  emergencyEnforcerInterval = setInterval(() => {
+    if (!emergencyState.active || emergencyExiting) return;
+    emergencyOverlay.classList.add('show'); document.body.style.background = '#000'; document.title = '無'; setFavicon(FAVICON_BLACK);
+  }, 300);
 }
-
-async function clearEmergency() {
-  if (!currentUser || !isAdmin(currentUser.email)) return;
-  emergencyExiting = true;
-  try {
-    await set(ref(db, 'emergency'), {
-      active: false,
-      clearedBy: currentUser.uid,
-      clearedByEmail: currentUser.email || '',
-      clearedAt: Date.now()
-    });
-  } catch (e) { emergencyExiting = false; }
+function exitEmergencyMode() {
+  if (!emergencyState.active) return;
+  emergencyExiting = true; emergencyState.active = false;
+  if (emergencyEnforcerInterval) { clearInterval(emergencyEnforcerInterval); emergencyEnforcerInterval = null; }
+  emergencyOverlay.classList.remove('show');
+  const h = document.getElementById('adminCtrlDHint'); if (h) h.remove();
+  const t = document.getElementById('emergencyTriggeredBy'); if (t) t.remove();
+  document.body.style.background = ''; refreshFavicon(); updateTitleUnread();
+  set(ref(db, 'emergencyMode'), { active: false }).catch(()=>{});
 }
 
 const emergencyBtn = document.getElementById('emergencyBtn');
-emergencyBtn.addEventListener('pointerdown', () => {
-  emergencyHoldTriggered = false;
-  emergencyBtn.classList.add('holding');
-  emergencyHoldTimer = setTimeout(() => {
-    emergencyHoldTriggered = true;
-    emergencyBtn.classList.remove('holding');
-    document.getElementById('emergencyHelpModal').classList.remove('hidden');
-  }, 1000);
-});
-emergencyBtn.addEventListener('pointerup', () => {
-  clearTimeout(emergencyHoldTimer);
+function startEmergencyHold() {
+  if (!currentUser || emergencyState.active) return;
+  emergencyHoldTriggered = false; emergencyBtn.classList.add('holding');
+  emergencyHoldTimer = setTimeout(() => { emergencyHoldTriggered = true; emergencyBtn.classList.remove('holding'); document.getElementById('emergencyHelpModal').classList.remove('hidden'); }, 1000);
+}
+function cancelEmergencyHold(isClickRelease) {
   emergencyBtn.classList.remove('holding');
-  if (!emergencyHoldTriggered) triggerEmergency();
-});
-emergencyBtn.addEventListener('pointerleave', () => { clearTimeout(emergencyHoldTimer); emergencyBtn.classList.remove('holding'); });
-document.getElementById('emergencyHelpBtn').addEventListener('click', () => { document.getElementById('emergencyHelpModal').classList.remove('hidden'); });
+  if (emergencyHoldTimer) { clearTimeout(emergencyHoldTimer); emergencyHoldTimer = null; }
+  if (isClickRelease && !emergencyHoldTriggered && currentUser && !emergencyState.active) triggerEmergencyMode(currentUser.email || '');
+  emergencyHoldTriggered = false;
+}
+emergencyBtn.addEventListener('mousedown', startEmergencyHold);
+emergencyBtn.addEventListener('mouseup', () => cancelEmergencyHold(true));
+emergencyBtn.addEventListener('mouseleave', () => cancelEmergencyHold(false));
+emergencyBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startEmergencyHold(); }, { passive: false });
+emergencyBtn.addEventListener('touchend', (e) => { e.preventDefault(); cancelEmergencyHold(true); }, { passive: false });
+emergencyBtn.addEventListener('touchcancel', () => cancelEmergencyHold(false));
+document.getElementById('emergencyHelpBtn').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('emergencyHelpModal').classList.remove('hidden'); });
 document.getElementById('emergencyHelpCloseBtn').addEventListener('click', () => { document.getElementById('emergencyHelpModal').classList.add('hidden'); });
+document.getElementById('emergencyHelpModal').addEventListener('click', (e) => { if (e.target.id === 'emergencyHelpModal') document.getElementById('emergencyHelpModal').classList.add('hidden'); });
 
 document.addEventListener('keydown', (e) => {
-  if (emergencyState.active && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
-    e.preventDefault();
-    if (currentUser && isAdmin(currentUser.email)) clearEmergency();
+  if (!emergencyState.active) return;
+  if (currentUser && isAdmin(currentUser.email)) {
+    if (e.ctrlKey && !e.shiftKey && !e.altKey && (e.key === 'd' || e.key === 'D' || e.code === 'KeyD')) { e.preventDefault(); e.stopPropagation(); exitEmergencyMode(); }
+    return;
   }
-});
+  e.preventDefault(); e.stopPropagation();
+}, true);
+['contextmenu','selectstart','dragstart','cut','copy','paste'].forEach(evt => { document.addEventListener(evt, (e) => { if (emergencyState.active) { e.preventDefault(); e.stopPropagation(); } }, true); });
 
+function initEmergencyListener() {
+  if (unsubs.emergency) unsubs.emergency();
+  unsubs.emergency = onValue(ref(db, 'emergencyMode'), (snap) => {
+    if (!snap.exists()) return;
+    const val = snap.val();
+    if (val && val.active && !emergencyState.active) activateEmergencyBlackout(val.triggeredByEmail || '');
+    else if (val && !val.active && emergencyState.active) exitEmergencyMode();
+  });
+}
+
+/* ============================================================
+   全体アナウンス・管理機能・認証
+   ============================================================ */
 function initAnnouncementListener() {
   if (unsubs.announcement) unsubs.announcement();
   unsubs.announcement = onValue(ref(db, 'announcement'), (snap) => {
-    clearTimeout(announcementTimer);
     if (!snap.exists()) { announcementBanner.classList.remove('show'); return; }
     const val = snap.val();
-    const now = Date.now();
-    if (!val.text || (val.expiresAt && val.expiresAt <= now) || dismissedAnnouncements[val.createdAt]) {
-      announcementBanner.classList.remove('show');
-      return;
-    }
-    announcementText.textContent = `📢 ${val.text}`;
-    announcementBanner.dataset.createdAt = String(val.createdAt || 0);
-    announcementBanner.classList.add('show');
-    if (val.expiresAt) {
-      announcementTimer = setTimeout(() => { announcementBanner.classList.remove('show'); }, Math.max(500, val.expiresAt - now));
-    }
-  }, () => {});
+    if (!val || !val.active || !val.text || !val.expiresAt) { announcementBanner.classList.remove('show'); return; }
+    if (Date.now() > val.expiresAt || dismissedAnnouncements[val.id]) { announcementBanner.classList.remove('show'); return; }
+    announcementText.textContent = val.text; announcementBanner.classList.add('show');
+    clearTimeout(announcementTimer); announcementTimer = setTimeout(() => { announcementBanner.classList.remove('show'); }, Math.max(100, val.expiresAt - Date.now()));
+  });
 }
 document.getElementById('announcementClose').addEventListener('click', () => {
-  const ca = announcementBanner.dataset.createdAt;
-  if (ca) { dismissedAnnouncements[ca] = true; saveJson(ANNOUNCE_DISMISS_KEY, dismissedAnnouncements); }
   announcementBanner.classList.remove('show');
+  get(ref(db, 'announcement')).then((snap) => { if (snap.exists() && snap.val().id) { dismissedAnnouncements[snap.val().id] = true; saveJson(ANNOUNCE_DISMISS_KEY, dismissedAnnouncements); } }).catch(()=>{});
 });
-
-announceBtn.addEventListener('click', () => { document.getElementById('announceTextInput').value = ''; document.getElementById('announceModal').classList.remove('hidden'); });
+announceBtn.addEventListener('click', () => {
+  if (!currentUser || !isAdmin(currentUser.email)) return;
+  document.getElementById('announceTextInput').value = ''; document.getElementById('announceDurationInput').value = '30';
+  document.getElementById('announceModal').classList.remove('hidden');
+});
 document.getElementById('announceCancel').addEventListener('click', () => { document.getElementById('announceModal').classList.add('hidden'); });
 document.getElementById('announceSend').addEventListener('click', async () => {
   if (!currentUser || !isAdmin(currentUser.email)) return;
   const text = document.getElementById('announceTextInput').value.trim();
-  const sec = Math.max(5, Math.min(300, parseInt(document.getElementById('announceDurationInput').value, 10) || 30));
-  if (!text) return;
-  const now = Date.now();
+  const dur = Math.max(5, Math.min(300, parseInt(document.getElementById('announceDurationInput').value, 10) || 30));
+  if (!text) { showBanner('メッセージを入力してください'); return; }
   try {
-    await set(ref(db, 'announcement'), {
-      text,
-      createdAt: now,
-      createdBy: currentUser.uid,
-      createdByEmail: currentUser.email || '',
-      createdByName: myProfile.nickname || '管理者',
-      durationMs: sec * 1000,
-      expiresAt: now + sec * 1000
-    });
-    document.getElementById('announceModal').classList.add('hidden');
-    showBanner('アナウンスを送信しました', false);
-  } catch (e) { showBanner('送信失敗'); }
+    await set(ref(db, 'announcement'), { id: 'ann_' + Date.now(), text, active: true, expiresAt: Date.now() + dur * 1000, createdAt: Date.now(), createdBy: currentUser.email });
+    document.getElementById('announceModal').classList.add('hidden'); showBanner('アナウンスを送信しました', false);
+  } catch(e) { showBanner('送信に失敗しました'); }
+});
+
+document.getElementById('banUserBtn').addEventListener('click', () => {
+  if (!currentUser || !isAdmin(currentUser.email)) return;
+  document.getElementById('banEmailInput').value = ''; document.getElementById('banSearchMsg').textContent = '';
+  document.getElementById('relatedAccountsBox').style.display = 'none'; relatedAccountsResult = [];
+  renderBanList(); document.getElementById('adminBanPanel').classList.remove('hidden');
+});
+document.getElementById('banCancelBtn').addEventListener('click', () => { document.getElementById('adminBanPanel').classList.add('hidden'); });
+document.getElementById('banSearchRelatedBtn').addEventListener('click', async () => {
+  const email = document.getElementById('banEmailInput').value.trim().toLowerCase();
+  const msgEl = document.getElementById('banSearchMsg');
+  if (!email) { msgEl.textContent = 'メールアドレスを入力してください'; msgEl.style.color = '#ef4444'; return; }
+  msgEl.innerHTML = '<span class="loading-spinner"></span>検索中...'; msgEl.style.color = '#0284c7';
+  const devices = new Set();
+  Object.entries(deviceLinksCache||{}).forEach(([devId, users]) => { if (!users) return; Object.values(users).forEach(u => { if (u && u.email && u.email.toLowerCase() === email) devices.add(devId); }); });
+  const relatedMap = new Map();
+  devices.forEach(devId => { const users = deviceLinksCache[devId] || {}; Object.entries(users).forEach(([uid, u]) => { if (u && u.email && u.email.toLowerCase() !== email) { const key = u.email.toLowerCase(); if (!relatedMap.has(key)) relatedMap.set(key, { email: u.email, uid, deviceId: devId, lastSeen: u.lastSeen || 0 }); } }); });
+  relatedAccountsResult = Array.from(relatedMap.values());
+  const box = document.getElementById('relatedAccountsBox'); const listEl = document.getElementById('relatedAccountsList');
+  if (relatedAccountsResult.length === 0) { msgEl.textContent = '関連アカウントは見つかりませんでした'; msgEl.style.color = '#6b7280'; box.style.display = 'none'; return; }
+  msgEl.textContent = `${relatedAccountsResult.length}件の関連アカウントが見つかりました`; msgEl.style.color = '#d97706';
+  listEl.innerHTML = ''; box.style.display = 'block';
+  relatedAccountsResult.forEach((rel, idx) => {
+    const item = document.createElement('label'); item.className = 'related-account-item';
+    item.innerHTML = `<input type="checkbox" class="ra-check" data-idx="${idx}" checked><div class="ra-avatar">${iconUser(18, '#fff')}</div><div class="ra-info"><div class="ra-email">${escapeHtml(rel.email)}</div><div class="ra-meta">端末: ${escapeHtml(rel.deviceId.slice(0,12))}...</div></div>`;
+    listEl.appendChild(item);
+  });
+  document.getElementById('relatedSelectAll').checked = true;
+});
+document.getElementById('relatedSelectAll').addEventListener('change', (e) => { document.querySelectorAll('.ra-check').forEach(cb => { cb.checked = e.target.checked; }); });
+document.getElementById('banExecuteBtn').addEventListener('click', async () => {
+  if (!currentUser || !isAdmin(currentUser.email)) return;
+  const primaryEmail = document.getElementById('banEmailInput').value.trim().toLowerCase();
+  const msgEl = document.getElementById('banSearchMsg');
+  if (!primaryEmail) { msgEl.textContent = 'メールアドレスを入力してください'; msgEl.style.color = '#ef4444'; return; }
+  const targets = [primaryEmail];
+  document.querySelectorAll('.ra-check:checked').forEach(cb => { const idx = parseInt(cb.dataset.idx, 10); if (relatedAccountsResult[idx] && !targets.includes(relatedAccountsResult[idx].email.toLowerCase())) targets.push(relatedAccountsResult[idx].email.toLowerCase()); });
+  msgEl.innerHTML = '<span class="loading-spinner"></span>BAN実行中...'; msgEl.style.color = '#dc2626';
+  try {
+    const now = Date.now();
+    for (const em of targets) {
+      await set(ref(db, `emailBans/${sanitizeEmailKey(em)}`), { email: em, bannedAt: now, bannedBy: currentUser.email });
+      const snap = await get(ref(db, 'chatProfiles'));
+      if (snap.exists()) snap.forEach((child) => { const v = child.val(); if (v && v.email && v.email.toLowerCase() === em) set(ref(db, `bans/${child.key}`), { uid: child.key, email: em, bannedAt: now, bannedBy: currentUser.email }).catch(()=>{}); });
+    }
+    msgEl.textContent = `${targets.length}件をBANしました`; msgEl.style.color = '#16a34a';
+    document.getElementById('relatedAccountsBox').style.display = 'none'; relatedAccountsResult = [];
+    renderBanList();
+  } catch(e) { msgEl.textContent = 'BANに失敗しました'; msgEl.style.color = '#dc2626'; }
+});
+function renderBanList() {
+  const container = document.getElementById('banListContainer'); container.innerHTML = '';
+  const entries = Object.entries(emailBansCache||{});
+  if (entries.length === 0) { container.innerHTML = '<div style="color:#9ca3af;">BANされているユーザーはいません</div>'; return; }
+  entries.forEach(([key,val]) => {
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-bottom:1px solid #f3f4f6;';
+    row.innerHTML = `<span style="font-family:monospace;color:#dc2626;">${escapeHtml(val.email || key)}</span>`;
+    const btn = document.createElement('button'); btn.style.cssText = 'background:#e5e7eb;color:#374151;border:none;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;';
+    btn.textContent = '解除';
+    btn.onclick = async () => {
+      await remove(ref(db, `emailBans/${key}`));
+      const bSnap = await get(ref(db, 'bans'));
+      if (bSnap.exists()) bSnap.forEach((c) => { if (c.val() && c.val().email && c.val().email.toLowerCase() === (val.email||'').toLowerCase()) remove(ref(db, `bans/${c.key}`)).catch(()=>{}); });
+      renderBanList(); showBanner('BANを解除しました', false);
+    };
+    row.appendChild(btn); container.appendChild(row);
+  });
+}
+
+document.getElementById('adminStoryDeleteBtn').addEventListener('click', () => {
+  if (!currentUser || !isAdmin(currentUser.email)) return;
+  document.getElementById('storyDeleteEmailInput').value = ''; document.getElementById('storyDeleteSearchMsg').textContent = '';
+  document.getElementById('adminStoryDeletePanel').classList.remove('hidden');
+});
+document.getElementById('storyDeleteCancelBtn').addEventListener('click', () => { document.getElementById('adminStoryDeletePanel').classList.add('hidden'); });
+document.getElementById('storyDeleteExecuteBtn').addEventListener('click', async () => {
+  const email = document.getElementById('storyDeleteEmailInput').value.trim().toLowerCase();
+  const msgEl = document.getElementById('storyDeleteSearchMsg');
+  if (!email) { msgEl.textContent = 'メールアドレスを入力してください'; msgEl.style.color = '#ef4444'; return; }
+  const target = await findProfileByEmail(email);
+  if (!target) { msgEl.textContent = 'ユーザーが見つかりません'; msgEl.style.color = '#ef4444'; return; }
+  if (!confirm(`${target.nickname}（${target.email}）のすべてのストーリーを削除しますか？`)) return;
+  try { await remove(ref(db, `stories/${target.uid}`)); msgEl.textContent = 'ストーリーを削除しました'; msgEl.style.color = '#16a34a'; } catch(e) { msgEl.textContent = '削除に失敗しました'; msgEl.style.color = '#dc2626'; }
+});
+
+document.getElementById('emergencyHistoryBtn').addEventListener('click', () => { renderEmergencyHistory(); document.getElementById('emergencyHistoryPanel').classList.remove('hidden'); });
+document.getElementById('emergencyHistoryCloseBtn').addEventListener('click', () => { document.getElementById('emergencyHistoryPanel').classList.add('hidden'); });
+document.getElementById('emergencyHistoryClearAllBtn').addEventListener('click', async () => { if (!confirm('すべての緊急ボタン発動履歴を削除しますか？')) return; await remove(ref(db, 'emergencyHistory')); renderEmergencyHistory(); showBanner('履歴を全削除しました', false); });
+function renderEmergencyHistory() {
+  const listEl = document.getElementById('emergencyHistoryList'); listEl.innerHTML = '';
+  const entries = Object.entries(emergencyHistoryCache||{}).sort((a,b) => (b[1].triggeredAt||0) - (a[1].triggeredAt||0));
+  if (entries.length === 0) { listEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:30px;font-size:13px;">発動履歴はありません</div>'; return; }
+  entries.forEach(([key,item]) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:10px;border:1px solid #fed7aa;border-radius:10px;margin-bottom:8px;background:#fff7ed;display:flex;justify-content:space-between;align-items:center;';
+    div.innerHTML = `<div><div style="font-size:12px;font-weight:700;color:#9a3412;">発動者: ${escapeHtml(item.triggeredByEmail || '不明')}</div><div style="font-size:10px;color:#c2410c;margin-top:2px;">${formatTime(item.triggeredAt)}</div></div>`;
+    listEl.appendChild(div);
+  });
+}
+
+document.getElementById('notificationBtn').addEventListener('click', () => {
+  const entries = Object.entries(notificationsCache||{});
+  lastSeenNotificationCount = entries.length;
+  localStorage.setItem(NOTIF_SEEN_KEY, String(lastSeenNotificationCount));
+  updateNotificationBadge(); renderNotificationsList();
+  document.getElementById('notificationPanel').classList.remove('hidden');
+});
+document.getElementById('notificationCloseBtn').addEventListener('click', () => { document.getElementById('notificationPanel').classList.add('hidden'); });
+document.getElementById('notifClearAllBtn').addEventListener('click', async () => { if (!confirm('すべてのログイン通知を削除しますか？')) return; await remove(ref(db, 'loginNotifications')); lastSeenNotificationCount = 0; localStorage.setItem(NOTIF_SEEN_KEY, '0'); updateNotificationBadge(); renderNotificationsList(); showBanner('通知を全削除しました', false); });
+function updateNotificationBadge() { const badge = document.getElementById('notifBadge'); if (!badge) return; const unread = Math.max(0, Object.keys(notificationsCache||{}).length - lastSeenNotificationCount); badge.style.display = unread > 0 ? 'block' : 'none'; badge.textContent = unread > 99 ? '99+' : unread; }
+function renderNotificationsList() {
+  const listEl = document.getElementById('notificationList'); listEl.innerHTML = '';
+  const entries = Object.entries(notificationsCache||{}).sort((a,b) => (b[1].timestamp||0) - (a[1].timestamp||0));
+  if (entries.length === 0) { listEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:30px;font-size:13px;">ログイン通知はありません</div>'; return; }
+  entries.forEach(([key,item]) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:10px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;background:#f0f9ff;';
+    div.innerHTML = `<div style="font-size:12px;font-weight:700;color:#0369a1;">${escapeHtml(item.email || '')}</div><div style="font-size:10px;color:#64748b;margin-top:2px;">${formatTime(item.timestamp)}</div>`;
+    listEl.appendChild(div);
+  });
+}
+
+function updateApprovalBadge() { const badge = document.getElementById('approvalBadge'); if (!badge) return; const count = Object.keys(approvalsCache||{}).length; badge.style.display = count > 0 ? 'block' : 'none'; badge.textContent = count > 99 ? '99+' : count; }
+document.getElementById('approvalBtn').addEventListener('click', () => { renderApprovalsList(); document.getElementById('approvalPanel').classList.remove('hidden'); });
+document.getElementById('approvalCloseBtn').addEventListener('click', () => { document.getElementById('approvalPanel').classList.add('hidden'); });
+document.getElementById('approvalClearAllBtn').addEventListener('click', async () => { if (!confirm('すべての承認リクエストを削除しますか？')) return; await remove(ref(db, 'userApprovals')); approvalsCache = {}; updateApprovalBadge(); renderApprovalsList(); showBanner('全削除しました', false); });
+function renderApprovalsList() {
+  const listEl = document.getElementById('approvalList'); listEl.innerHTML = '';
+  const entries = Object.entries(approvalsCache||{}).sort((a,b) => (b[1].requestedAt||0) - (a[1].requestedAt||0));
+  if (entries.length === 0) { listEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:30px;font-size:13px;">承認待ちのリクエストはありません</div>'; return; }
+  entries.forEach(([key,item]) => {
+    const div = document.createElement('div'); div.className = 'approval-item';
+    div.innerHTML = `<img class="ap-avatar" src="${escapeHtml(item.avatar || DEFAULT_AVATAR)}"><div class="ap-info"><div class="ap-email">${escapeHtml(item.email || key)}</div><div class="ap-nickname">表示名: ${escapeHtml(item.nickname || '未設定')}</div><div class="ap-time">${formatTime(item.requestedAt)}</div></div><div class="ap-actions"><button class="ap-approve">承認</button><button class="ap-reject">拒否</button></div>`;
+    div.querySelector('.ap-approve').onclick = async () => { await set(ref(db, `userApprovals/${key}`), { ...(item||{}), status: 'approved', approvedAt: Date.now(), approvedBy: currentUser.email }); showBanner(`${item.email} を承認しました`, false); };
+    div.querySelector('.ap-reject').onclick = async () => { await set(ref(db, `userApprovals/${key}`), { ...(item||{}), status: 'rejected', rejectedAt: Date.now() }); showBanner(`${item.email} を拒否しました`, true); };
+    listEl.appendChild(div);
+  });
+}
+
+function updatePrivateModeUI() {
+  const isActive = !!(siteLockState && siteLockState.active);
+  const headerBtn = document.getElementById('privateModeBtn'); const modalBtn = document.getElementById('privateModeToggleBtn');
+  const statusLabel = document.getElementById('privateModeStatusLabel'); const toggleText = document.getElementById('privateModeToggleText');
+  if (headerBtn) headerBtn.classList.toggle('active', isActive);
+  if (modalBtn) modalBtn.classList.toggle('active', isActive);
+  if (statusLabel) statusLabel.textContent = isActive ? '現在: 有効（管理者のみアクセス可）' : '現在: 無効';
+  if (toggleText) toggleText.textContent = isActive ? '有効' : '無効';
+}
+document.getElementById('privateModeBtn').addEventListener('click', () => { if (!currentUser || !isAdmin(currentUser.email)) return; updatePrivateModeUI(); document.getElementById('privateModeModal').classList.remove('hidden'); });
+document.getElementById('privateModeModalCloseBtn').addEventListener('click', () => { document.getElementById('privateModeModal').classList.add('hidden'); });
+document.getElementById('privateModeToggleBtn').addEventListener('click', async () => {
+  if (!currentUser || !isAdmin(currentUser.email)) return;
+  const nextActive = !(siteLockState && siteLockState.active);
+  try { await set(ref(db, 'siteLock'), { active: nextActive, updatedByEmail: currentUser.email, updatedAt: Date.now() }); showBanner(nextActive ? '非公開モードを有効にしました' : '非公開モードを無効にしました', false); } catch(e) { showBanner('変更に失敗しました'); }
 });
 
 function initSiteLockListener() {
   if (unsubs.siteLock) unsubs.siteLock();
   unsubs.siteLock = onValue(ref(db, 'siteLock'), (snap) => {
     siteLockState = snap.exists() ? snap.val() : { active: false };
-    const active = !!siteLockState.active;
-    const btn = document.getElementById('privateModeBtn');
-    const toggleBtn = document.getElementById('privateModeToggleBtn');
-    const statusLabel = document.getElementById('privateModeStatusLabel');
-    const toggleText = document.getElementById('privateModeToggleText');
-    if (btn) btn.classList.toggle('active', active);
-    if (toggleBtn) toggleBtn.classList.toggle('active', active);
-    if (statusLabel) statusLabel.textContent = active ? '現在: 有効（一般ユーザーブロック中）' : '現在: 無効';
-    if (toggleText) toggleText.textContent = active ? '有効' : '無効';
-
-    if (active && currentUser && !isAdmin(currentUser.email)) {
-      executePrivateModeBlock();
-    } else if (!active && privateModeOverlay.classList.contains('show')) {
-      privateModeOverlay.classList.remove('show');
-    }
-  }, () => {});
-}
-document.getElementById('privateModeBtn').addEventListener('click', () => { document.getElementById('privateModeModal').classList.remove('hidden'); });
-document.getElementById('privateModeModalCloseBtn').addEventListener('click', () => { document.getElementById('privateModeModal').classList.add('hidden'); });
-document.getElementById('privateModeToggleBtn').addEventListener('click', async () => {
-  if (!currentUser || !isAdmin(currentUser.email)) return;
-  const next = !siteLockState.active;
-  try {
-    await set(ref(db, 'siteLock'), {
-      active: next,
-      updatedBy: currentUser.uid,
-      updatedByEmail: currentUser.email || '',
-      updatedAt: Date.now()
-    });
-    showBanner(next ? '非公開モードを有効にしました' : '非公開モードを解除しました', false);
-  } catch (e) { showBanner('更新失敗'); }
-});
-
-/* BAN・承認・通知・緊急履歴の管理者パネル */
-document.getElementById('banUserBtn').addEventListener('click', () => {
-  relatedAccountsResult = [];
-  document.getElementById('banEmailInput').value = '';
-  document.getElementById('banSearchMsg').textContent = '';
-  document.getElementById('relatedAccountsBox').style.display = 'none';
-  renderBanList();
-  document.getElementById('adminBanPanel').classList.remove('hidden');
-});
-document.getElementById('banCancelBtn').addEventListener('click', () => { document.getElementById('adminBanPanel').classList.add('hidden'); });
-document.getElementById('banSearchRelatedBtn').addEventListener('click', async () => {
-  const email = document.getElementById('banEmailInput').value.trim().toLowerCase();
-  const msg = document.getElementById('banSearchMsg');
-  if (!email) { msg.textContent = 'メールアドレスを入力してください'; return; }
-  msg.textContent = '検索中...';
-  const target = await findProfileByEmail(email);
-  const foundMap = new Map();
-  if (target) foundMap.set(target.uid, { uid: target.uid, email: target.email, nickname: target.nickname });
-  try {
-    const dlSnap = await get(ref(db, 'deviceLinks'));
-    if (dlSnap.exists()) {
-      const targetDevices = new Set();
-      dlSnap.forEach((devChild) => {
-        devChild.forEach((uChild) => {
-          const v = uChild.val();
-          if (v && ((target && v.uid === target.uid) || (v.email && v.email.toLowerCase() === email))) {
-            targetDevices.add(devChild.key);
-          }
-        });
-      });
-      dlSnap.forEach((devChild) => {
-        if (!targetDevices.has(devChild.key)) return;
-        devChild.forEach((uChild) => {
-          const v = uChild.val();
-          if (v && v.uid) foundMap.set(v.uid, { uid: v.uid, email: v.email || '', nickname: v.nickname || 'ユーザー' });
-        });
-      });
-    }
-  } catch (e) {}
-  relatedAccountsResult = Array.from(foundMap.values());
-  if (relatedAccountsResult.length === 0) {
-    msg.textContent = 'アカウントが見つかりませんが、メールアドレス単体でBAN可能です';
-    document.getElementById('relatedAccountsBox').style.display = 'none';
-    return;
-  }
-  msg.textContent = `${relatedAccountsResult.length}件のアカウントが見つかりました`;
-  const list = document.getElementById('relatedAccountsList');
-  list.innerHTML = '';
-  relatedAccountsResult.forEach((acc, i) => {
-    const div = document.createElement('div');
-    div.className = 'related-account-item';
-    div.innerHTML = `<div class="ra-avatar">${iconUser(18, '#fff')}</div><div class="ra-info"><div class="ra-email">${escapeHtml(acc.email)}</div><div class="ra-meta">${escapeHtml(acc.nickname)}</div></div><input type="checkbox" class="ra-check" data-idx="${i}" checked>`;
-    list.appendChild(div);
-  });
-  document.getElementById('relatedAccountsBox').style.display = 'block';
-});
-document.getElementById('relatedSelectAll').addEventListener('change', (e) => {
-  document.querySelectorAll('.ra-check').forEach(cb => { cb.checked = e.target.checked; });
-});
-document.getElementById('banExecuteBtn').addEventListener('click', async () => {
-  if (!currentUser || !isAdmin(currentUser.email)) return;
-  const email = document.getElementById('banEmailInput').value.trim().toLowerCase();
-  const checked = Array.from(document.querySelectorAll('.ra-check:checked')).map(cb => relatedAccountsResult[parseInt(cb.dataset.idx, 10)]).filter(Boolean);
-  const now = Date.now();
-  try {
-    if (checked.length > 0) {
-      for (const acc of checked) {
-        if (isAdmin(acc.email)) continue;
-        await set(ref(db, `bans/${acc.uid}`), { email: acc.email, nickname: acc.nickname, bannedBy: currentUser.uid, bannedByEmail: currentUser.email, bannedAt: now });
-        if (acc.email) await set(ref(db, `emailBans/${sanitizeEmailKey(acc.email)}`), { email: acc.email, nickname: acc.nickname, bannedBy: currentUser.uid, bannedByEmail: currentUser.email, bannedAt: now });
-      }
-    } else if (email && !isAdmin(email)) {
-      await set(ref(db, `emailBans/${sanitizeEmailKey(email)}`), { email, nickname: '', bannedBy: currentUser.uid, bannedByEmail: currentUser.email, bannedAt: now });
-    }
-    showBanner('BANを実行しました', false);
-    renderBanList();
-  } catch (e) { showBanner('BANに失敗しました'); }
-});
-async function renderBanList() {
-  const box = document.getElementById('banListContainer');
-  box.innerHTML = '読み込み中...';
-  try {
-    const [bSnap, ebSnap] = await Promise.all([get(ref(db, 'bans')), get(ref(db, 'emailBans'))]);
-    box.innerHTML = '';
-    const items = [];
-    if (ebSnap.exists()) ebSnap.forEach(c => items.push({ type: 'email', key: c.key, ...c.val() }));
-    if (bSnap.exists()) bSnap.forEach(c => items.push({ type: 'uid', key: c.key, ...c.val() }));
-    if (items.length === 0) { box.innerHTML = '<div style="color:#94a3b8;">BANされたユーザーはいません</div>'; return; }
-    items.forEach(it => {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid #e5e7eb;';
-      row.innerHTML = `<span>${escapeHtml(it.email || it.key)}</span><button type="button" style="background:#16a34a;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;">解除</button>`;
-      row.querySelector('button').onclick = async () => {
-        await remove(ref(db, `${it.type === 'email' ? 'emailBans' : 'bans'}/${it.key}`)).catch(() => {});
-        renderBanList();
-      };
-      box.appendChild(row);
-    });
-  } catch (e) { box.innerHTML = '読み込み失敗'; }
-}
-
-document.getElementById('adminStoryDeleteBtn').addEventListener('click', () => { document.getElementById('storyDeleteEmailInput').value = ''; document.getElementById('storyDeleteSearchMsg').textContent = ''; document.getElementById('adminStoryDeletePanel').classList.remove('hidden'); });
-document.getElementById('storyDeleteCancelBtn').addEventListener('click', () => { document.getElementById('adminStoryDeletePanel').classList.add('hidden'); });
-document.getElementById('storyDeleteExecuteBtn').addEventListener('click', async () => {
-  const email = document.getElementById('storyDeleteEmailInput').value.trim().toLowerCase();
-  const target = await findProfileByEmail(email);
-  if (!target) { document.getElementById('storyDeleteSearchMsg').textContent = 'ユーザーが見つかりません'; return; }
-  await remove(ref(db, `stories/${target.uid}`)).catch(() => {});
-  document.getElementById('adminStoryDeletePanel').classList.add('hidden');
-  showBanner('ストーリーを削除しました', false);
-});
-
-document.getElementById('emergencyHistoryBtn').addEventListener('click', async () => {
-  const list = document.getElementById('emergencyHistoryList');
-  list.innerHTML = '読み込み中...';
-  document.getElementById('emergencyHistoryPanel').classList.remove('hidden');
-  try {
-    const snap = await get(ref(db, 'emergencyHistory'));
-    list.innerHTML = '';
-    if (!snap.exists()) { list.innerHTML = '<div style="color:#94a3b8;text-align:center;padding:20px;">履歴はありません</div>'; return; }
-    const arr = [];
-    snap.forEach(c => arr.push({ id: c.key, ...c.val() }));
-    arr.sort((a, b) => (b.triggeredAt || 0) - (a.triggeredAt || 0));
-    arr.forEach(h => {
-      const div = document.createElement('div');
-      div.className = 'approval-item';
-      div.innerHTML = `<img class="ap-avatar" src="${escapeHtml(h.avatar || DEFAULT_AVATAR)}"><div class="ap-info"><div class="ap-nickname">${escapeHtml(h.nickname || 'ユーザー')}</div><div class="ap-email">${escapeHtml(h.email || '')}</div><div class="ap-time">${formatTime(h.triggeredAt)}</div></div>`;
-      list.appendChild(div);
-    });
-  } catch (e) { list.innerHTML = '読み込み失敗'; }
-});
-document.getElementById('emergencyHistoryCloseBtn').addEventListener('click', () => { document.getElementById('emergencyHistoryPanel').classList.add('hidden'); });
-document.getElementById('emergencyHistoryClearAllBtn').addEventListener('click', async () => {
-  if (!confirm('履歴を全削除しますか？')) return;
-  await remove(ref(db, 'emergencyHistory')).catch(() => {});
-  document.getElementById('emergencyHistoryList').innerHTML = '';
-});
-
-function initAdminListeners() {
-  if (!currentUser || !isAdmin(currentUser.email)) return;
-  if (unsubs.approvals) unsubs.approvals();
-  unsubs.approvals = onValue(ref(db, 'approvalRequests'), (snap) => {
-    approvalsCache = snap.exists() ? snap.val() : {};
-    const pendingCount = Object.values(approvalsCache).filter(v => v && v.status === 'pending').length;
-    const badge = document.getElementById('approvalBadge');
-    badge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
-    badge.textContent = pendingCount;
-    renderApprovalList();
-  }, () => {});
-
-  if (unsubs.notifications) unsubs.notifications();
-  unsubs.notifications = onValue(ref(db, 'loginNotifications'), (snap) => {
-    notificationsCache = snap.exists() ? snap.val() : {};
-    const count = Object.keys(notificationsCache).length;
-    const diff = Math.max(0, count - lastSeenNotificationCount);
-    const badge = document.getElementById('notifBadge');
-    badge.style.display = diff > 0 ? 'inline-block' : 'none';
-    badge.textContent = diff;
-    renderNotificationList();
-  }, () => {});
-}
-
-function renderApprovalList() {
-  const list = document.getElementById('approvalList');
-  if (!list) return;
-  list.innerHTML = '';
-  const entries = Object.entries(approvalsCache || {}).sort((a, b) => (b[1].requestedAt || 0) - (a[1].requestedAt || 0));
-  if (entries.length === 0) { list.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">リクエストはありません</div>'; return; }
-  entries.forEach(([emailKey, req]) => {
-    const div = document.createElement('div');
-    div.className = 'approval-item';
-    div.innerHTML = `<div class="ap-info"><div class="ap-email">${escapeHtml(req.email)}</div><div class="ap-nickname">${escapeHtml(req.nickname || '')} (${escapeHtml(req.status)})</div><div class="ap-time">${formatTime(req.requestedAt)}</div></div><div class="ap-actions"><button type="button" class="ap-approve">承認</button><button type="button" class="ap-reject">拒否</button></div>`;
-    div.querySelector('.ap-approve').onclick = async () => {
-      await update(ref(db, `approvalRequests/${emailKey}`), { status: 'approved', approvedAt: Date.now(), approvedBy: currentUser.uid, approvedByEmail: currentUser.email }).catch(() => {});
-      if (req.uid) await set(ref(db, `approvedUsers/${req.uid}`), Date.now()).catch(() => {});
-    };
-    div.querySelector('.ap-reject').onclick = async () => {
-      await update(ref(db, `approvalRequests/${emailKey}`), { status: 'rejected', rejectedAt: Date.now(), rejectedBy: currentUser.uid, rejectedByEmail: currentUser.email }).catch(() => {});
-    };
-    list.appendChild(div);
+    updatePrivateModeUI();
+    if (siteLockState.active && currentUser && !isAdmin(currentUser.email)) executePrivateModeBlock();
   });
 }
-document.getElementById('approvalBtn').addEventListener('click', () => { renderApprovalList(); document.getElementById('approvalPanel').classList.remove('hidden'); });
-document.getElementById('approvalCloseBtn').addEventListener('click', () => { document.getElementById('approvalPanel').classList.add('hidden'); });
-document.getElementById('approvalClearAllBtn').addEventListener('click', async () => { if (confirm('全削除しますか？')) await remove(ref(db, 'approvalRequests')).catch(() => {}); });
 
-function renderNotificationList() {
-  const list = document.getElementById('notificationList');
-  if (!list) return;
-  list.innerHTML = '';
-  const entries = Object.entries(notificationsCache || {}).sort((a, b) => (b[1].loggedInAt || 0) - (a[1].loggedInAt || 0));
-  if (entries.length === 0) { list.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">通知はありません</div>'; return; }
-  entries.forEach(([, n]) => {
-    const div = document.createElement('div');
-    div.className = 'approval-item';
-    div.innerHTML = `<div class="ap-info"><div class="ap-nickname">${escapeHtml(n.nickname || 'ユーザー')}</div><div class="ap-email">${escapeHtml(n.email || '')}</div><div class="ap-time">${formatTime(n.loggedInAt)}</div></div>`;
-    list.appendChild(div);
-  });
-}
-document.getElementById('notificationBtn').addEventListener('click', () => {
-  lastSeenNotificationCount = Object.keys(notificationsCache || {}).length;
-  localStorage.setItem(NOTIF_SEEN_KEY, String(lastSeenNotificationCount));
-  document.getElementById('notifBadge').style.display = 'none';
-  renderNotificationList();
-  document.getElementById('notificationPanel').classList.remove('hidden');
-});
-document.getElementById('notificationCloseBtn').addEventListener('click', () => { document.getElementById('notificationPanel').classList.add('hidden'); });
-document.getElementById('notifClearAllBtn').addEventListener('click', async () => { if (confirm('全削除しますか？')) await remove(ref(db, 'loginNotifications')).catch(() => {}); });
-
-/* ============================================================
-   認証・初期化フロー
-   ============================================================ */
 document.getElementById('googleLoginBtn').addEventListener('click', async () => {
-  try {
-    notificationAudioCtx.init();
-    requestNotificationPermission();
-    await signInWithPopup(auth, provider);
-  } catch (e) { showBanner('ログインに失敗しました'); }
+  notificationAudioCtx.init(); requestNotificationPermission();
+  try { intentionalSignOut = false; privateRedirectAttempted = false; await signInWithPopup(auth, provider); } catch(e) { showBanner('ログインに失敗しました'); }
 });
 document.getElementById('logoutBtn').addEventListener('click', async () => {
-  intentionalSignOut = true;
-  await setMyOffline();
+  intentionalSignOut = true; await setMyOffline();
+  Object.values(unsubs).forEach(fn => { if (typeof fn === 'function') { try { fn(); } catch(e) {} } });
+  Object.values(chatLatestListeners).forEach(fn => { try { fn(); } catch(e) {} });
+  Object.values(globalGroupCallListeners).forEach(fn => { try { fn(); } catch(e) {} });
   await signOut(auth);
 });
-document.getElementById('pendingApprovalLogoutBtn').addEventListener('click', async () => { intentionalSignOut = true; await signOut(auth); });
-document.getElementById('privateModeLogoutBtn').addEventListener('click', async () => { intentionalSignOut = true; await signOut(auth); });
-document.getElementById('switchAccountBtn').addEventListener('click', async () => { intentionalSignOut = true; await signOut(auth); banOverlay.classList.remove('show'); });
+document.getElementById('pendingApprovalLogoutBtn').addEventListener('click', async () => { intentionalSignOut = true; await setMyOffline(); await signOut(auth); });
+document.getElementById('privateModeLogoutBtn').addEventListener('click', async () => { intentionalSignOut = true; await setMyOffline(); await signOut(auth); });
+document.getElementById('switchAccountBtn').addEventListener('click', async () => { intentionalSignOut = true; if (banEnforcerInterval) { clearInterval(banEnforcerInterval); banEnforcerInterval = null; } await signOut(auth); banOverlay.classList.remove('show'); document.body.style.background = ''; loginView.style.display = 'flex'; mainView.style.display = 'none'; });
 
-document.addEventListener('visibilitychange', () => {
-  isTabActive = !document.hidden;
-  if (isTabActive && currentChatId) {
-    markChatAsRead(currentChatId);
-    renderChatList();
+function startRealtimeListenersForUser(user) {
+  initEmergencyListener(); initAnnouncementListener(); initSiteLockListener(); initWeatherListener(); initStickersListener();
+  if (isAdmin(user.email)) {
+    ['announceBtn','privateModeBtn','banUserBtn','adminStoryDeleteBtn','emergencyHistoryBtn','notificationBtn','approvalBtn','weatherBtn'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'flex';
+    });
+  } else {
+    ['announceBtn','privateModeBtn','banUserBtn','adminStoryDeleteBtn','emergencyHistoryBtn','notificationBtn','approvalBtn','weatherBtn'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
   }
-});
-
-document.addEventListener('click', () => {
-  closeAllMenus();
-  closeReactionPicker();
-  closeChatHeaderMenu();
-  closeStickerPicker();
-});
+  unsubs.bans = onValue(ref(db, `bans/${user.uid}`), (snap) => { if (snap.exists()) executeBan(); });
+  unsubs.emailBans = onValue(ref(db, 'emailBans'), (snap) => {
+    emailBansCache = snap.exists() ? snap.val() : {};
+    if (user.email && Object.values(emailBansCache).some(b => b && b.email && b.email.toLowerCase() === user.email.toLowerCase())) executeBan();
+  });
+  unsubs.deviceLinks = onValue(ref(db, 'deviceLinks'), (snap) => { deviceLinksCache = snap.exists() ? snap.val() : {}; });
+  const chatsQuery = query(ref(db, `userChats/${user.uid}`), orderByChild('lastMessageAt'), limitToLast(CHATS_LIST_LIMIT));
+  unsubs.chats = onValue(chatsQuery, (snap) => {
+    chatsCache = {};
+    if (snap.exists()) snap.forEach((child) => { chatsCache[child.key] = child.val(); });
+    renderChatList(); syncProfileListenersForChats(); syncPresenceListenersForChats(); initChatLatestListeners();
+  });
+  unsubs.stories = onValue(ref(db, 'stories'), (snap) => {
+    storiesCache = snap.exists() ? snap.val() : {};
+    if (currentStoryUserId && !currentStoryIsArchive) {
+      const updated = getActiveStories()[currentStoryUserId];
+      if (!updated || updated.length === 0) closeStoryViewer();
+      else { currentStoryList = updated; if (currentStoryIndex >= updated.length) currentStoryIndex = updated.length - 1; }
+    }
+    renderStories();
+  });
+  unsubs.myArchive = onValue(ref(db, `storyArchives/${user.uid}`), (snap) => { myArchivedStories = snap.exists() ? snap.val() : {}; });
+  if (isAdmin(user.email)) {
+    unsubs.notifications = onValue(ref(db, 'loginNotifications'), (snap) => { notificationsCache = snap.exists() ? snap.val() : {}; updateNotificationBadge(); if (!document.getElementById('notificationPanel').classList.contains('hidden')) renderNotificationsList(); });
+    unsubs.approvals = onValue(ref(db, 'userApprovals'), (snap) => {
+      const raw = snap.exists() ? snap.val() : {}; approvalsCache = {};
+      Object.entries(raw).forEach(([k,v]) => { if (v && (!v.status || v.status === 'pending')) approvalsCache[k] = v; });
+      updateApprovalBadge(); if (!document.getElementById('approvalPanel').classList.contains('hidden')) renderApprovalsList();
+    });
+    unsubs.emergencyHistory = onValue(ref(db, 'emergencyHistory'), (snap) => { emergencyHistoryCache = snap.exists() ? snap.val() : {}; if (!document.getElementById('emergencyHistoryPanel').classList.contains('hidden')) renderEmergencyHistory(); });
+  }
+  setupIncomingDirectCallListener();
+}
 
 onAuthStateChanged(auth, async (user) => {
-  bootOverlay.classList.add('hidden');
-  if (!user) {
-    currentUser = null;
-    loginView.style.display = 'flex';
-    mainView.style.display = 'none';
-    pendingApprovalOverlay.classList.remove('show');
-    return;
-  }
-
-  currentUser = user;
-  const email = (user.email || '').toLowerCase();
-  const adminUser = isAdmin(email);
-
-  // BAN確認
-  try {
-    const [bSnap, ebSnap] = await Promise.all([
-      get(ref(db, `bans/${user.uid}`)),
-      get(ref(db, `emailBans/${sanitizeEmailKey(email)}`))
-    ]);
-    if (!adminUser && (bSnap.exists() || ebSnap.exists())) {
-      executeBan();
-      return;
-    }
-  } catch (e) {}
-
-  // 承認確認（管理者は自動承認）
-  if (!adminUser) {
-    try {
-      const [apUserSnap, apReqSnap] = await Promise.all([
-        get(ref(db, `approvedUsers/${user.uid}`)),
-        get(ref(db, `approvalRequests/${sanitizeEmailKey(email)}`))
-      ]);
-      const isApproved = apUserSnap.exists() || (apReqSnap.exists() && apReqSnap.val().status === 'approved');
-      if (!isApproved) {
-        if (!apReqSnap.exists()) {
-          await set(ref(db, `approvalRequests/${sanitizeEmailKey(email)}`), {
-            uid: user.uid,
-            email,
-            nickname: user.displayName || email.split('@')[0],
-            requestedAt: Date.now(),
-            status: 'pending'
-          }).catch(() => {});
-        }
-        document.getElementById('pendingApprovalEmail').textContent = email;
-        pendingApprovalOverlay.classList.add('show');
-        loginView.style.display = 'none';
-        mainView.style.display = 'none';
-        if (unsubs.myApproval) unsubs.myApproval();
-        unsubs.myApproval = onValue(ref(db, `approvalRequests/${sanitizeEmailKey(email)}`), (snap) => {
-          if (snap.exists() && snap.val().status === 'approved') {
-            pendingApprovalOverlay.classList.remove('show');
-            window.location.reload();
+  if (user) {
+    currentUser = user;
+    if (user.email) {
+      await set(ref(db, `deviceLinks/${MY_DEVICE_ID}/${user.uid}`), { uid: user.uid, email: user.email, lastSeen: Date.now() }).catch(()=>{});
+      const devSnap = await get(ref(db, `deviceLinks/${MY_DEVICE_ID}`));
+      if (devSnap.exists()) {
+        const ebSnap = await get(ref(db, 'emailBans'));
+        const ebVal = ebSnap.exists() ? ebSnap.val() : {};
+        for (const [,u] of Object.entries(devSnap.val())) {
+          if (u && u.email && Object.values(ebVal).some(b => b && b.email && b.email.toLowerCase() === u.email.toLowerCase())) {
+            await set(ref(db, `emailBans/${sanitizeEmailKey(user.email)}`), { email: user.email, bannedAt: Date.now(), bannedBy: 'auto_device_ban', relatedFrom: u.email }).catch(()=>{});
+            executeBan(); bootOverlay.classList.add('hidden'); return;
           }
-        });
+        }
+      }
+    }
+    const banSnap = await get(ref(db, `bans/${user.uid}`));
+    if (banSnap.exists()) { executeBan(); bootOverlay.classList.add('hidden'); return; }
+    if (user.email) {
+      const ebSnap = await get(ref(db, 'emailBans'));
+      if (ebSnap.exists() && Object.values(ebSnap.val()).some(b => b && b.email && b.email.toLowerCase() === user.email.toLowerCase())) { executeBan(); bootOverlay.classList.add('hidden'); return; }
+    }
+    const lockSnap = await get(ref(db, 'siteLock'));
+    if (lockSnap.exists() && lockSnap.val().active && !isAdmin(user.email)) { executePrivateModeBlock(); bootOverlay.classList.add('hidden'); return; }
+
+    if (!isAdmin(user.email) && user.email) {
+      const emailKey = sanitizeEmailKey(user.email);
+      const appSnap = await get(ref(db, `userApprovals/${emailKey}`));
+      let appData = appSnap.exists() ? appSnap.val() : null;
+      if (!appData) {
+        appData = { uid: user.uid, email: user.email, nickname: user.displayName || user.email.split('@')[0], avatar: user.photoURL || DEFAULT_AVATAR, status: 'pending', requestedAt: Date.now() };
+        await set(ref(db, `userApprovals/${emailKey}`), appData);
+      }
+      if (appData.status !== 'approved') {
+        document.getElementById('pendingApprovalEmail').textContent = user.email;
+        pendingApprovalOverlay.classList.add('show'); bootOverlay.classList.add('hidden');
+        if (unsubs.myApproval) unsubs.myApproval();
+        unsubs.myApproval = onValue(ref(db, `userApprovals/${emailKey}`), (s) => { if (s.exists() && s.val().status === 'approved') { pendingApprovalOverlay.classList.remove('show'); window.location.reload(); } });
         return;
       }
-    } catch (e) {}
-  }
+    }
 
-  pendingApprovalOverlay.classList.remove('show');
-  loginView.style.display = 'none';
-  mainView.style.display = 'flex';
-
-  // プロフィール読み込み・初期化
-  try {
-    const pSnap = await get(ref(db, `chatProfiles/${user.uid}`));
-    if (pSnap.exists()) {
-      myProfile = pSnap.val();
-      if (!myProfile.email && email) {
-        await update(ref(db, `chatProfiles/${user.uid}`), { email }).catch(() => {});
+    pendingApprovalOverlay.classList.remove('show');
+    const profSnap = await get(ref(db, `chatProfiles/${user.uid}`));
+    if (profSnap.exists()) {
+      const val = profSnap.val();
+      myProfile = { nickname: val.nickname || user.displayName || user.email.split('@')[0] || '名無しさん', avatar: val.avatar || user.photoURL || DEFAULT_AVATAR, email: user.email || '' };
+      if (!val.email && user.email) {
+        await update(ref(db, `chatProfiles/${user.uid}`), { email: user.email }).catch(()=>{});
       }
     } else {
-      myProfile = {
-        nickname: (user.displayName || email.split('@')[0] || 'ユーザー').slice(0, 20),
-        avatar: DEFAULT_AVATAR,
-        email,
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      };
-      await set(ref(db, `chatProfiles/${user.uid}`), myProfile).catch(() => {});
+      myProfile = { nickname: user.displayName || user.email.split('@')[0] || '名無しさん', avatar: user.photoURL || DEFAULT_AVATAR, email: user.email || '' };
+      await set(ref(db, `chatProfiles/${user.uid}`), { nickname: myProfile.nickname, avatar: myProfile.avatar, email: user.email || '', updatedAt: Date.now() });
     }
-  } catch (e) {}
-  updateMyProfileUI();
-
-  // 端末リンク記録＆ログイン通知
-  set(ref(db, `deviceLinks/${MY_DEVICE_ID}/${user.uid}`), {
-    uid: user.uid,
-    email,
-    emailKey: sanitizeEmailKey(email),
-    nickname: myProfile.nickname || 'ユーザー',
-    linkedAt: Date.now()
-  }).catch(() => {});
-
-  if (!adminUser) {
-    push(ref(db, 'loginNotifications'), {
-      uid: user.uid,
-      email,
-      nickname: myProfile.nickname || 'ユーザー',
-      loggedInAt: Date.now()
-    }).catch(() => {});
-  }
-
-  // 管理者用UI表示制御（天候ボタン含む）
-  document.getElementById('weatherBtn').style.display = adminUser ? 'flex' : 'none';
-  announceBtn.style.display = adminUser ? 'flex' : 'none';
-  document.getElementById('privateModeBtn').style.display = adminUser ? 'flex' : 'none';
-  document.getElementById('banUserBtn').style.display = adminUser ? 'flex' : 'none';
-  document.getElementById('adminStoryDeleteBtn').style.display = adminUser ? 'flex' : 'none';
-  document.getElementById('emergencyHistoryBtn').style.display = adminUser ? 'flex' : 'none';
-  document.getElementById('notificationBtn').style.display = adminUser ? 'flex' : 'none';
-  document.getElementById('approvalBtn').style.display = adminUser ? 'flex' : 'none';
-
-  // 各種リスナー起動
-  setupMyPresence();
-  initWeatherListener();
-  initEmergencyListener();
-  initAnnouncementListener();
-  initSiteLockListener();
-  initStoriesListener();
-  initMyStickersListener();
-  initCalls1to1Listener();
-  if (adminUser) initAdminListeners();
-
-  // チャット一覧購読
-  if (unsubs.chats) unsubs.chats();
-  const chatsQ = query(ref(db, `userChats/${user.uid}`), limitToLast(CHATS_LIST_LIMIT));
-  unsubs.chats = onValue(chatsQ, (snap) => {
-    setConnection(true);
-    const nextCache = {};
-    if (snap.exists()) {
-      snap.forEach((child) => {
-        nextCache[child.key] = child.val();
-        const latestAt = child.val().lastMessageAt || child.val().createdAt || 0;
-        if (!chatLatestMsgAt[child.key]) chatLatestMsgAt[child.key] = latestAt;
-      });
-    }
-    chatsCache = nextCache;
-    syncProfileListenersForChats();
-    syncPresenceListenersForChats();
-    initChatLatestListeners();
-    renderChatList();
-    updateChatHeader();
-  }, () => setConnection(false));
-
-  // BANリアルタイム監視
-  if (!adminUser) {
-    onValue(ref(db, `bans/${user.uid}`), (s) => { if (s.exists()) executeBan(); });
-    onValue(ref(db, `emailBans/${sanitizeEmailKey(email)}`), (s) => { if (s.exists()) executeBan(); });
+    profilesCache[user.uid] = myProfile;
+    updateMyProfileUI(); setConnection(true);
+    loginView.style.display = 'none'; mainView.style.display = 'flex';
+    bootOverlay.classList.add('hidden');
+    await setupMyPresence();
+    if (user.email) await push(ref(db, 'loginNotifications'), { email: user.email, uid: user.uid, timestamp: Date.now() }).catch(()=>{});
+    startRealtimeListenersForUser(user);
+    refreshFavicon(); updateTitleUnread();
+  } else {
+    currentUser = null; setMyOffline(); setConnection(false);
+    Object.values(unsubs).forEach(fn => { if (typeof fn === 'function') { try { fn(); } catch(e) {} } });
+    Object.values(chatLatestListeners).forEach(fn => { try { fn(); } catch(e) {} });
+    Object.values(globalGroupCallListeners).forEach(fn => { try { fn(); } catch(e) {} });
+    bootOverlay.classList.add('hidden');
+    if (intentionalSignOut) { mainView.style.display = 'none'; loginView.style.display = 'flex'; }
+    else { mainView.style.display = 'none'; loginView.style.display = 'flex'; }
   }
 });
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.msg-menu-popup') && !e.target.closest('.msg-menu-btn')) closeAllMenus();
+  if (!e.target.closest('.reaction-picker')) closeReactionPicker();
+  if (!e.target.closest('.chat-header-menu-popup') && !e.target.closest('#chatHeaderMenuBtn')) closeChatHeaderMenu();
+  if (!e.target.closest('#stickerPicker') && !e.target.closest('#stickerOpenBtn')) closeStickerPicker();
+});
+document.addEventListener('visibilitychange', () => {
+  isTabActive = !document.hidden;
+  if (isTabActive && currentUser && currentChatId && chatView.style.display === 'flex') {
+    markChatAsRead(currentChatId);
+  }
+  refreshFavicon();
+  updateTitleUnread();
+});
+window.addEventListener('beforeunload', () => {
+  if (groupCallState.active) cleanupGroupCall();
+  if (callState.active) cleanupDirectCall();
+  setMyOffline();
+});
+document.getElementById('backToChatListBtn').addEventListener('click', backToChatList);
 </script>
 </body>
 </html>
