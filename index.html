@@ -78,7 +78,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .online-dot.online { background: #16a34a; box-shadow: 0 0 6px rgba(22, 163, 74, 0.6); }
 .avatar-online-wrap { position: relative; display: inline-flex; flex-shrink: 0; }
 .avatar-online-wrap .online-dot { position: absolute; right: -1px; bottom: -1px; width: 13px; height: 13px; border: 2px solid #fff; }
-.avatar-online-wrap .online-dot.small { width: 10px; height: 10px; }
 .online-label { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #16a34a; font-weight: 600; }
 .online-label.offline { color: #9ca3af; }
 .online-label .online-dot { width: 8px; height: 8px; border-width: 1px; }
@@ -186,12 +185,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .reply-quote .reply-name { font-weight: 700; color: #dc2626; }
 .msg-row.mine .reply-quote { background: rgba(255, 255, 255, 0.45); border-left-color: #16a34a; }
 .msg-row.mine .reply-quote .reply-name { color: #15803d; }
-.msg-reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; padding: 0 4px; }
-.msg-row.mine .msg-reactions { justify-content: flex-end; }
-.reaction-chip { display: inline-flex; align-items: center; gap: 3px; background: #fff; border: 1px solid #bae6fd; border-radius: 9999px; padding: 2px 8px; font-size: 13px; cursor: pointer; user-select: none; }
-.reaction-chip.mine { background: #fef2f2; border-color: #f87171; }
-.reaction-chip .reaction-count { font-size: 11px; font-weight: 700; color: #64748b; }
-.reaction-chip.mine .reaction-count { color: #dc2626; }
 .msg-file { margin-top: 6px; display: block; border-radius: 12px; overflow: hidden; cursor: zoom-in; max-width: 100%; border: 1px solid #bae6fd; background: #f0f9ff; }
 .msg-file img { display: block; max-height: 280px; max-width: 100%; object-fit: contain; }
 .msg-file.only-file { margin-top: 0; }
@@ -215,12 +208,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .chat-call-btn.in-call { background: linear-gradient(135deg, #16a34a, #15803d); animation: callPulseBtn 1.5s infinite; }
 @keyframes callPulseBtn { 0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); } 50% { box-shadow: 0 0 0 7px rgba(22, 163, 74, 0); } }
 .chat-call-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.chat-header-menu-popup { position: fixed; background: #fff; border: 1px solid #bae6fd; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 200px; z-index: 30000; overflow: hidden; }
-.chat-header-menu-popup button { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 11px 14px; font-size: 13px; background: none; border: none; cursor: pointer; color: #374151; }
-.chat-header-menu-popup button:hover { background: #f0f9ff; }
-.chat-header-menu-popup button.danger { color: #dc2626; }
-.reaction-picker { position: fixed; background: #fff; border: 1px solid #bae6fd; border-radius: 9999px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; flex-wrap: wrap; max-width: 340px; gap: 2px; padding: 6px 8px; z-index: 31000; }
-.reaction-picker button { width: 32px; height: 32px; border-radius: 50%; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
 #groupCallBanner {
   background: linear-gradient(90deg, #15803d, #0284c7, #b91c1c);
@@ -289,8 +276,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 #lightbox .lightbox-close { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; background: rgba(255,255,255,0.15); border: none; color: #fff; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 #statusBanner { position: fixed; top: 12px; left: 50%; transform: translate(-50%, -150%); z-index: 25000; padding: 10px 20px; font-size: 13px; font-weight: 600; border-radius: 9999px; transition: transform 0.35s, opacity 0.3s; opacity: 0; box-shadow: 0 6px 20px rgba(0,0,0,0.2); white-space: nowrap; max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis; pointer-events: none; color: #fff; }
 #statusBanner.show { transform: translate(-50%, 0); opacity: 1; }
-#loginToastContainer { position: fixed; top: 60px; right: 16px; z-index: 26000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: 340px; }
-@keyframes toastSlideIn { 0% { opacity: 0; transform: translateX(40px); } 100% { opacity: 1; transform: translateX(0); } }
 #bootOverlay { position: fixed; inset: 0; background: linear-gradient(135deg, #0c4a6e, #0f172a); z-index: 99997; display: flex; align-items: center; justify-content: center; color: #fff; flex-direction: column; gap: 16px; }
 #bootOverlay.hidden { display: none; }
 #bootOverlay .boot-spinner { width: 44px; height: 44px; border: 3px solid #38bdf8; border-top-color: #dc2626; border-radius: 50%; animation: spin 0.8s linear infinite; }
@@ -330,7 +315,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .story-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #fff; }
 .story-name { font-size: 11px; color: #334155; max-width: 64px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .story-add { width: 62px; height: 62px; border-radius: 50%; border: 2px dashed #38bdf8; background: #f0f9ff; display: flex; align-items: center; justify-content: center; color: #0284c7; }
-.stories-empty { padding: 18px 20px; text-align: center; color: #64748b; font-size: 12px; line-height: 1.6; }
 
 #storyViewer { position: fixed; inset: 0; z-index: 20000; background: #000; display: none; align-items: center; justify-content: center; }
 #storyViewer.show { display: flex; }
@@ -355,23 +339,15 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 #storyStageContent .story-image-audio-wrap { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; background: #000; }
 #storyStageContent .story-image-audio-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
 #storyStageContent .story-image-audio-wrap audio { display: none !important; }
-.story-stats-overlay { position: absolute; bottom: 74px; left: 16px; z-index: 5; color: rgba(255,255,255,0.9); font-size: 12px; display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.35); padding: 6px 12px; border-radius: 9999px; }
 .story-footer { position: absolute; bottom: 12px; left: 12px; right: 12px; display: flex; align-items: center; gap: 8px; z-index: 5; }
 .story-footer input { flex: 1; border-radius: 9999px; padding: 10px 16px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: #fff; font-size: 13px; outline: none; }
 .story-footer input::placeholder { color: rgba(255,255,255,0.65); }
-.story-like-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); cursor: pointer; color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.story-like-btn.liked { background: rgba(220,38,38,0.25); border-color: rgba(220,38,38,0.7); color: #dc2626; }
-.heart-float { position: fixed; pointer-events: none; color: #dc2626; z-index: 2147483646; animation: heartFloatUp 0.9s ease-out forwards; }
-@keyframes heartFloatUp { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -20px) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -120px) scale(0.8); opacity: 0; } }
 
 .preset-avatar { width: 52px; height: 52px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; object-fit: cover; }
 .preset-avatar.selected { border-color: #dc2626; }
 .member-chip { display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; border: 1px solid #7dd3fc; border-radius: 9999px; padding: 2px 8px 2px 2px; font-size: 12px; color: #0369a1; margin: 2px; }
 .member-chip img { width: 20px; height: 20px; border-radius: 50%; }
 .member-chip .remove-x { cursor: pointer; color: #dc2626; font-weight: bold; margin-left: 2px; font-size: 14px; }
-#scrollToBottomBtn { position: absolute; bottom: 90px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #16a34a); color: #fff; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 45; }
-#scrollToBottomBtn.show { display: flex; }
-#scrollToBottomBtn .unread-dot-inner { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; background: #dc2626; border: 2px solid #fff; border-radius: 50%; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 
 .eh-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid #e5e7eb; }
 .eh-icon { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #dc2626, #991b1b); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -399,16 +375,12 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 
 .svg-icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
 .icon-12 { width: 12px; height: 12px; }
-.icon-14 { width: 14px; height: 14px; }
 .icon-16 { width: 16px; height: 16px; }
 .icon-18 { width: 18px; height: 18px; }
 .icon-20 { width: 20px; height: 20px; }
 .icon-22 { width: 22px; height: 22px; }
-.icon-24 { width: 24px; height: 24px; }
 .icon-28 { width: 28px; height: 28px; }
 .icon-32 { width: 32px; height: 32px; }
-.icon-40 { width: 40px; height: 40px; }
-.icon-48 { width: 48px; height: 48px; }
 .icon-64 { width: 64px; height: 64px; }
 
 #incomingCallOverlay { position: fixed; inset: 0; z-index: 35000; background: linear-gradient(135deg, #0c4a6e 0%, #14532d 50%, #7f1d1d 100%); display: none; flex-direction: column; align-items: center; justify-content: center; color: #fff; padding: 24px; text-align: center; }
@@ -423,14 +395,14 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 #incomingCallOverlay .ic-btn.accept { background: linear-gradient(135deg, #16a34a, #15803d); box-shadow: 0 4px 20px rgba(22,163,74,0.5); }
 #incomingCallOverlay .ic-btn.reject { background: linear-gradient(135deg, #dc2626, #991b1b); box-shadow: 0 4px 20px rgba(220,38,38,0.5); }
 
-#callPanel { position: fixed; bottom: 20px; right: 20px; width: 340px; max-width: calc(100vw - 32px); background: #0f172a; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); z-index: 34000; overflow: hidden; display: none; flex-direction: column; color: #fff; border: 2px solid #16a34a; }
+#callPanel { position: fixed; bottom: 20px; right: 20px; width: 350px; max-width: calc(100vw - 32px); background: #0f172a; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); z-index: 34000; overflow: hidden; display: none; flex-direction: column; color: #fff; border: 2px solid #16a34a; }
 #callPanel.show { display: flex; }
 #callPanel.minimized { width: 210px; }
 #callPanel.minimized .cp-status-bar, #callPanel.minimized .cp-group-members { display: none !important; }
 #callPanel .cp-header { padding: 10px 12px; background: linear-gradient(135deg, #0284c7, #16a34a, #dc2626); display: flex; align-items: center; gap: 8px; }
 #callPanel .cp-header .cp-title { font-size: 13px; font-weight: 700; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #callPanel .cp-header button { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-#callPanel .cp-body { position: relative; background: linear-gradient(135deg, #1e293b, #0f172a); padding: 18px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+#callPanel .cp-body { position: relative; background: linear-gradient(135deg, #1e293b, #0f172a); padding: 16px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 #callPanel.minimized .cp-body { padding: 10px; flex-direction: row; gap: 10px; }
 #callPanel .cp-avatar-wrap { position: relative; width: 76px; height: 76px; flex-shrink: 0; }
 #callPanel.minimized .cp-avatar-wrap { width: 36px; height: 36px; }
@@ -441,14 +413,14 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 #callPanel.minimized .cp-name { font-size: 12px; }
 #callPanel .cp-status { font-size: 12px; color: #4ade80; font-weight: 700; }
 #callPanel.minimized .cp-status { display: none; }
-.cp-group-members { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-height: 150px; overflow-y: auto; margin-top: 8px; padding: 6px; background: rgba(15, 23, 42, 0.55); border-radius: 10px; }
-.cp-member-chip { display: flex; flex-direction: column; align-items: center; width: 68px; position: relative; }
+.cp-group-members { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-height: 160px; overflow-y: auto; margin-top: 6px; padding: 8px; background: rgba(15, 23, 42, 0.65); border-radius: 10px; }
+.cp-member-chip { display: flex; flex-direction: column; align-items: center; width: 70px; position: relative; }
 .cp-member-chip img { width: 44px; height: 44px; border-radius: 50%; border: 2.5px solid #22c55e; object-fit: cover; transition: box-shadow 0.2s, border-color 0.2s; }
 .cp-member-chip.connecting img { border-color: #f59e0b; }
 .cp-member-chip.speaking img { border-color: #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.85); }
-.cp-member-chip span { font-size: 10px; color: #e2e8f0; max-width: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 3px; font-weight: 600; }
+.cp-member-chip span { font-size: 10px; color: #e2e8f0; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 3px; font-weight: 600; }
 .cp-member-chip small { font-size: 9px; color: #94a3b8; }
-#callPanel .cp-status-bar { padding: 6px 12px; background: #0f172a; font-size: 11px; color: #94a3b8; text-align: center; }
+#callPanel .cp-status-bar { padding: 6px 12px; background: #0f172a; font-size: 11px; color: #94a3b8; text-align: center; word-break: break-all; }
 #callPanel .cp-controls { padding: 12px; display: flex; justify-content: center; gap: 14px; background: #1e293b; }
 #callPanel .cp-ctrl { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.12); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, transform 0.15s; }
 #callPanel .cp-ctrl:hover { background: rgba(255,255,255,0.22); transform: scale(1.05); }
@@ -466,11 +438,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .private-toggle-btn.active .toggle-indicator { background: #fca5a5; }
 .private-toggle-btn .toggle-indicator::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
 .private-toggle-btn.active .toggle-indicator::after { transform: translateX(12px); }
-
-#stickerManageGrid img { image-rendering: -webkit-optimize-contrast; }
-#stickerPickerGrid img { image-rendering: -webkit-optimize-contrast; }
-#stickerPicker button { transition: transform 0.1s, background 0.15s; }
-#stickerPicker button:hover { background: #e0f2fe !important; transform: scale(1.05); }
 
 @media (max-width: 500px) {
   .header-title { font-size: 17px; }
@@ -533,7 +500,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 </div>
 
 <div id="statusBanner"></div>
-<div id="loginToastContainer"></div>
 <div id="lightbox">
   <button class="lightbox-close" id="lightboxClose">
     <svg class="svg-icon icon-20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -666,7 +632,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
           <svg class="svg-icon icon-18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 10V14L7 15V9L3 10Z" fill="#ffffff"/>
             <path d="M7 9V15L18 19V5L7 9Z" fill="#ffffff"/>
-            <path d="M18 8C19.5 8 21 9.5 21 12C21 14.5 19.5 16 18 16" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </button>
         <button id="privateModeBtn" class="private-toggle-btn" style="display:none;" title="非公開モード切替">
@@ -682,21 +647,16 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
         <button id="adminStoryDeleteBtn" class="admin-btn" style="display:none;background:linear-gradient(135deg,#ec4899,#be185d);" title="ストーリー削除">
           <svg class="svg-icon icon-18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 7L12 3L21 7V17L12 21L3 17V7Z" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M12 3V21" stroke="#ffffff" stroke-width="1.5"/>
           </svg>
         </button>
         <button id="emergencyHistoryBtn" class="admin-btn" style="display:none;background:linear-gradient(135deg,#ea580c,#9a3412);" title="緊急履歴">
           <svg class="svg-icon icon-18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 3L2 20H22L12 3Z" fill="#ffffff" stroke="#7f1d1d" stroke-width="1" stroke-linejoin="round"/>
-            <line x1="12" y1="9" x2="12" y2="15" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="12" cy="17.5" r="1" fill="#dc2626"/>
           </svg>
         </button>
         <button id="notificationBtn" class="admin-btn" style="display:none;background:linear-gradient(135deg,#0891b2,#0e7490);" title="ログイン通知">
           <svg class="svg-icon icon-18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M6 18H18L16 15V11C16 8.5 14.5 6.5 12 6C9.5 6.5 8 8.5 8 11V15L6 18Z" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M12 4V6" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-            <path d="M10 21C10 22.1 10.9 23 12 23C13.1 23 14 22.1 14 21" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
           </svg>
           <span id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#dc2626;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:9999px;border:2px solid #fff;">0</span>
         </button>
@@ -723,19 +683,12 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
         <div style="flex-shrink:0; background:rgba(255,255,255,0.85); border-bottom:1px solid #bae6fd;">
           <div style="padding:8px 14px 0; display:flex; justify-content:space-between; align-items:center;">
             <span style="font-size:12px; font-weight:700; color:#0369a1;">❄️ ストーリー</span>
-            <button id="myArchiveBtn" style="background:none;border:none;color:#dc2626;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;">
-              <svg class="svg-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
-                <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="#dc2626" stroke-width="1.5"/>
-                <path d="M2 6H14" stroke="#dc2626" stroke-width="1.5"/>
-                <path d="M6 9H10" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-              アーカイブ
-            </button>
+            <button id="myArchiveBtn" style="background:none;border:none;color:#dc2626;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;">アーカイブ</button>
           </div>
           <div id="storiesStrip" class="stories-strip">
             <div class="story-bubble" id="storyAddBtn">
               <div class="story-add">
-                <svg class="svg-icon icon-24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg class="svg-icon icon-24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
                   <line x1="12" y1="5" x2="12" y2="19" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round"/>
                   <line x1="5" y1="12" x2="19" y2="12" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round"/>
                 </svg>
@@ -783,12 +736,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
           <div class="chat-messages" id="messagesContainer"></div>
           <div id="typingIndicatorSlot"></div>
         </div>
-        <button id="scrollToBottomBtn">
-          <svg class="svg-icon icon-18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 9L12 15L18 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="unread-dot-inner" id="scrollUnreadCount" style="display:none;">0</span>
-        </button>
         <form class="chat-input-form" id="messageForm">
           <div class="reply-preview" id="replyPreviewBox">
             <div class="reply-preview-body">
@@ -820,8 +767,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
                 <svg class="svg-icon icon-22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="3" y="3" width="18" height="18" rx="4" stroke="#0369a1" stroke-width="2"/>
                   <path d="M8 14C9 16 11 17 12 17C13 17 15 16 16 14" stroke="#0369a1" stroke-width="2" stroke-linecap="round"/>
-                  <circle cx="9" cy="9" r="1.2" fill="#0369a1"/>
-                  <circle cx="15" cy="9" r="1.2" fill="#0369a1"/>
                 </svg>
               </button>
               <label class="chat-input-icon-btn" style="cursor:pointer;">
@@ -882,26 +827,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
   </div>
 </div>
 
-<!-- メンバー追加モーダル -->
-<div id="addMemberModal" class="modal-backdrop hidden">
-  <div class="modal-content" style="border-top:6px solid #0284c7;">
-    <h3 style="font-size:17px;font-weight:700;margin:0 0 4px;color:#0369a1;">メンバーを追加</h3>
-    <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">メールアドレス:</label>
-    <div style="display:flex;gap:8px;margin-bottom:8px;">
-      <input type="email" id="addMemberEmailInput" placeholder="example@gmail.com" style="flex:1;border:1px solid #bae6fd;padding:9px 12px;border-radius:8px;font-size:13px;outline:none;">
-      <button id="addMemberSearchBtn" type="button" class="primary-btn" style="padding:9px 14px;">検索</button>
-    </div>
-    <div id="addMemberSearchMsg" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div>
-    <div id="addMemberResultBox" style="min-height:44px;border:1px dashed #7dd3fc;border-radius:8px;padding:8px;margin-bottom:14px;">
-      <span style="font-size:11px;color:#94a3b8;">メールアドレスを入力して検索してください</span>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;">
-      <button id="addMemberCancelBtn" class="secondary-btn">キャンセル</button>
-      <button id="addMemberConfirmBtn" class="primary-btn">追加</button>
-    </div>
-  </div>
-</div>
-
 <!-- メッセージ編集モーダル -->
 <div id="editMsgModal" class="modal-backdrop hidden">
   <div class="modal-content">
@@ -924,10 +849,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
       <div id="presetAvatarRow" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px;"></div>
       <div style="margin-top:12px;">
         <label style="display:inline-flex;align-items:center;gap:6px;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#0369a1;cursor:pointer;">
-          <svg class="svg-icon icon-16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 16V4M12 4L7 9M12 4L17 9" stroke="#0369a1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M4 16V18C4 19.1 4.9 20 6 20H18C19.1 20 20 19.1 20 18V16" stroke="#0369a1" stroke-width="2" stroke-linecap="round"/>
-          </svg>
           画像をアップロード
           <input type="file" id="profileAvatarFileInput" accept="image/*" style="display:none;">
         </label>
@@ -1047,13 +968,7 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 <div id="emergencyHelpModal" class="modal-backdrop hidden">
   <div class="modal-content" style="border-top:6px solid #dc2626;max-width:560px;">
     <div class="eh-header">
-      <div class="eh-icon">
-        <svg class="svg-icon icon-28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 3L2 20H22L12 3Z" fill="#ffffff" stroke="#7f1d1d" stroke-width="1" stroke-linejoin="round"/>
-          <line x1="12" y1="9" x2="12" y2="15" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="12" cy="17.5" r="1" fill="#dc2626"/>
-        </svg>
-      </div>
+      <div class="eh-icon">!</div>
       <div><div class="eh-title">緊急モードについて</div></div>
     </div>
     <div class="eh-body">
@@ -1087,9 +1002,7 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
     <label style="display:block;font-size:11px;color:#64748b;margin:8px 0 4px;">動画（mp4）:</label>
     <input type="file" id="storyVideoInput" accept="video/mp4,video/*,.mp4" style="width:100%;border:1px solid #bae6fd;padding:8px;border-radius:8px;font-size:12px;margin-bottom:8px;">
     <div id="storyVideoPreview" style="display:none;margin-top:8px;text-align:center;"></div>
-    <div id="storyUploadInfo" style="font-size:11px;color:#64748b;margin-bottom:12px;"></div>
-    <div id="storyPostMsg" style="font-size:12px;margin-bottom:8px;min-height:16px;"></div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
       <button id="storyPostCancelBtn" class="secondary-btn">キャンセル</button>
       <button id="storyPostBtn" style="background:linear-gradient(135deg,#dc2626,#16a34a);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;">投稿する</button>
     </div>
@@ -1112,8 +1025,7 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
   <div class="modal-content" style="border-top:6px solid #dc2626; max-width:480px;">
     <h3 style="font-size:17px;font-weight:700;margin:0 0 8px;color:#dc2626;">非公開モード設定</h3>
     <p style="font-size:12px;color:#64748b;margin:0 0 16px;line-height:1.6;">
-      非公開モードを有効にすると、管理者以外のユーザーはアクセスできなくなります。<br>
-      一般ユーザーは自動的にブロックページへリダイレクトされます。
+      非公開モードを有効にすると、管理者以外のユーザーはアクセスできなくなります。
     </p>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;margin-bottom:16px;">
       <div>
@@ -1135,7 +1047,6 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 <div id="stickerManageModal" class="modal-backdrop hidden">
   <div class="modal-content" style="border-top:6px solid #16a34a; max-width:520px;">
     <h3 style="font-size:17px;font-weight:700;margin:0 0 8px;color:#15803d;">マイスタンプ</h3>
-    <p style="font-size:11px;color:#64748b;margin:0 0 12px;">画像/GIFをアップロードしてスタンプを作成できます（最大1MB）</p>
     <label style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#15803d;cursor:pointer;margin-bottom:12px;">
       スタンプを追加
       <input type="file" id="stickerUploadInput" accept="image/*,image/gif" style="display:none;">
@@ -1177,17 +1088,8 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
     <div class="story-nav-left" id="storyNavLeft"></div>
     <div class="story-nav-right" id="storyNavRight"></div>
     <div id="storyStageContent"></div>
-    <div class="story-stats-overlay" id="storyStatsOverlay" style="display:none;">
-      <span class="stat" id="storyViewCount"></span>
-      <span class="stat" id="storyLikeCount"></span>
-    </div>
     <div class="story-footer">
       <input type="text" id="storyReplyInput" placeholder="返信を送る..." maxlength="300">
-      <button class="story-like-btn" id="storyLikeBtn">
-        <svg class="svg-icon icon-24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 21C12 21 3 14 3 8.5C3 5.5 5.5 3 8.5 3C10.2 3 11.5 3.8 12 5C12.5 3.8 13.8 3 15.5 3C18.5 3 21 5.5 21 8.5C21 14 12 21 12 21Z" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" fill="none" id="storyLikePath"/>
-        </svg>
-      </button>
     </div>
   </div>
 </div>
@@ -1270,12 +1172,11 @@ const CHATS_LIST_LIMIT = 30;
 let currentUser = null;
 let myProfile = { nickname: '', avatar: DEFAULT_AVATAR };
 let currentChatId = null;
-let chatsCache = {}, messagesCache = [], profilesCache = {}, bansCache = {}, emailBansCache = {}, deviceLinksCache = {}, readsCache = {}, typingCache = {}, presenceCache = {}, reactionsCache = {};
-let unsubs = { chats: null, messages: null, profiles: null, bans: null, emailBans: null, deviceLinks: null, reads: null, typing: null, stories: null, myArchive: null, presence: null, emergency: null, announcement: null, notifications: null, reactions: null, approvals: null, myApproval: null, storyLikes: null, storyViews: null, emergencyHistory: null, siteLock: null, myStickers: null, groupCallSession: null, groupCallSignals: null, groupCallWatch: null };
+let chatsCache = {}, messagesCache = [], profilesCache = {}, bansCache = {}, emailBansCache = {}, deviceLinksCache = {}, readsCache = {}, typingCache = {}, presenceCache = {};
+let unsubs = { chats: null, messages: null, profiles: null, bans: null, emailBans: null, deviceLinks: null, reads: null, typing: null, stories: null, myArchive: null, presence: null, emergency: null, announcement: null, notifications: null, approvals: null, myApproval: null, emergencyHistory: null, siteLock: null, myStickers: null, groupCallParticipants: null, groupCallSignals: null, groupCallWatch: null };
 let chatLatestListeners = {};
 let globalGroupCallListeners = {};
 let profileUnsubs = {};
-let presenceUnsubs = {};
 
 const UNREAD_STORAGE_KEY = 'sikunai_unread_v5';
 const LASTREAD_STORAGE_KEY = 'sikunai_lastread_v5';
@@ -1296,7 +1197,7 @@ let mySeenStories = loadJson(SEEN_STORIES_KEY);
 let dismissedAnnouncements = loadJson(ANNOUNCE_DISMISS_KEY);
 let chatLatestMsgAt = {};
 let isTabActive = !document.hidden;
-let isNearBottom = true, unreadInChat = 0;
+let isNearBottom = true;
 let myPresenceRef = null, heartbeatTimer = null;
 const HEARTBEAT_INTERVAL = 20000;
 const PRESENCE_STALE_MS = 60000;
@@ -1304,19 +1205,16 @@ let emergencyState = { active: false };
 let emergencyEnforcerInterval = null, emergencyExiting = false;
 let storiesCache = {};
 let currentStoryUserId = null, currentStoryIndex = 0, currentStoryList = [], currentStoryIsArchive = false;
-let storyTimer = null, storyProgressRAF = null, storyStartTime = 0, storyDuration = 5000, storyRemainingMs = 0, storyPaused = false;
-let currentStoryLikes = {}, currentStoryViews = {}, myArchivedStories = {};
+let storyTimer = null, myArchivedStories = {};
 let pendingStoryFile = null, pendingStoryAudio = null, pendingStoryVideo = null;
-let currentStoryAudioEl = null, currentStoryVideoEl = null;
 let typingTimeout = null, isCurrentlyTyping = false;
 const TYPING_TIMEOUT_MS = 3000;
-let pendingMembers = [], editingMsgKey = null, openMenuKey = null, openMenuEl = null, openChatHeaderMenuEl = null, intentionalSignOut = false, selectedAvatar = DEFAULT_AVATAR;
+let pendingMembers = [], editingMsgKey = null, openMenuEl = null, intentionalSignOut = false, selectedAvatar = DEFAULT_AVATAR;
 let uploadedAvatarDataUrl = null;
 let emergencyHoldTimer = null, emergencyHoldTriggered = false, banEnforcerInterval = null;
 let notificationsCache = {}, lastSeenNotificationCount = parseInt(localStorage.getItem(NOTIF_SEEN_KEY) || '0', 10);
 let approvalsCache = {};
-let replyingTo = null, currentReactionPicker = null, addMemberTargetProfile = null;
-let relatedAccountsResult = [];
+let replyingTo = null, relatedAccountsResult = [];
 let emergencyHistoryCache = {};
 let siteLockState = { active: false, updatedByEmail: '', updatedAt: 0 };
 let privateRedirectAttempted = false;
@@ -1325,7 +1223,7 @@ let stickerPickerOpen = false;
 let notifiedGroupCallSessions = new Set();
 
 /* ============================================================
-   グループメンバー一覧表示（表示名・メールアドレス）
+   グループメンバー一覧表示
    ============================================================ */
 async function openGroupMembersModal() {
   if (!currentChatId || !chatsCache[currentChatId]) return;
@@ -1504,7 +1402,7 @@ function fireNotification(chatId, senderName, messageText) {
 }
 
 /* ============================================================
-   音声通話（1対1 ＆ LINE風グループ通話メッシュWebRTC完全版）
+   音声通話（1対1 ＆ グループ通話メッシュWebRTC 確実動作版）
    ============================================================ */
 let callState = {
   active: false, mode: 'direct', role: null, chatId: null, peerUid: null, sessionId: null,
@@ -1525,7 +1423,8 @@ let groupCallState = {
   processedSignalIds: new Set(),
   signalQueues: {},
   keepAliveTimer: null,
-  audioContext: null
+  audioContext: null,
+  isEnding: false
 };
 let activeGroupCallInfo = null;
 
@@ -1540,6 +1439,13 @@ const ICE_SERVERS = {
   ],
   iceCandidatePoolSize: 10
 };
+
+function setCallStatusText(mainStatus, subStatus) {
+  const stEl = document.getElementById('cpStatus');
+  const barEl = document.getElementById('cpStatusBar');
+  if (stEl && mainStatus !== undefined) stEl.textContent = mainStatus;
+  if (barEl && subStatus !== undefined) barEl.textContent = subStatus;
+}
 
 function attachAndPlayRemoteStream(audioId, stream) {
   const container = document.getElementById('remoteAudioContainer');
@@ -1606,7 +1512,7 @@ async function acquireMicrophoneStream() {
     return stream;
   } catch (err) {
     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-      throw new Error('マイクの使用が許可されていません。ブラウザの設定からマイクを許可してください');
+      throw new Error('マイクの使用が許可されていません。ブラウザの設定でマイクを許可してください');
     }
     if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
       throw new Error('マイクが見つかりませんでした');
@@ -1631,7 +1537,7 @@ function setupLocalVoiceActivityMonitor(stream) {
 
     const dataArr = new Uint8Array(analyser.frequencyBinCount);
     const tick = () => {
-      if (!groupCallState.active || !groupCallState.audioContext) return;
+      if (!groupCallState.active || !groupCallState.audioContext || !currentUser) return;
       analyser.getByteFrequencyData(dataArr);
       let sum = 0;
       for (let i = 0; i < dataArr.length; i++) sum += dataArr[i];
@@ -1653,7 +1559,7 @@ function setupLocalVoiceActivityMonitor(stream) {
 function renderGroupCallMembers() {
   const container = document.getElementById('cpGroupMembers');
   if (!container) return;
-  if (!groupCallState.active) {
+  if (!groupCallState.active || !currentUser) {
     container.style.display = 'none';
     container.innerHTML = '';
     return;
@@ -1696,7 +1602,7 @@ function watchChatGroupCalls(chatId) {
       snap.forEach((child) => {
         const v = child.val();
         if (v && !v.ended && v.participants && Object.keys(v.participants).length > 0) {
-          if (!v.createdAt || (Date.now() - v.createdAt) < 3600000) {
+          if (!v.createdAt || (Date.now() - v.createdAt) < 7200000) {
             foundSession = { sessionId: child.key, ...v };
           }
         }
@@ -1760,38 +1666,83 @@ function watchAllGroupCallsForNotifications() {
   });
 }
 
+async function syncGroupPeersFromParticipants(parts) {
+  if (!groupCallState.active || !currentUser) return;
+  groupCallState.participants = parts || {};
+  renderGroupCallMembers();
+
+  const partUids = Object.keys(parts || {});
+  const count = partUids.length;
+  setCallStatusText(
+    `グループ通話中 (${count}人参加中)`,
+    count > 1 ? `${count}人で音声接続中` : '他のメンバーの参加を待っています...'
+  );
+
+  for (const peerUid of partUids) {
+    if (peerUid === currentUser.uid) continue;
+    ensureProfileListener(peerUid);
+    if (!groupCallState.peers[peerUid]) {
+      const shouldOffer = currentUser.uid < peerUid;
+      enqueuePeerTask(peerUid, () => createGroupPeerConnection(peerUid, shouldOffer));
+    }
+  }
+
+  Object.keys(groupCallState.peers).forEach((peerUid) => {
+    if (!parts[peerUid]) {
+      cleanupGroupPeer(peerUid);
+    }
+  });
+}
+
 async function joinOrStartGroupCall(chatId, existingSessionId = null) {
   if (!currentUser) {
-    showBanner('ログインしてから通話を開始してください');
+    showBanner('ログインしてから通話を開始してください', '#dc2626');
     return;
   }
   if (callState.active || groupCallState.active) {
-    showBanner('すでに通話中です');
+    showBanner('すでに通話中です', '#0284c7');
     return;
   }
   const chat = chatsCache[chatId];
-  if (!chat || chat.type !== 'group') return;
+  if (!chat || chat.type !== 'group') {
+    showBanner('グループチャットでのみ利用できます', '#dc2626');
+    return;
+  }
+
+  let stream = null;
+  try {
+    setCallStatusText('マイクを準備中...', 'マイクのアクセス許可を確認しています');
+    stream = await acquireMicrophoneStream();
+  } catch (err) {
+    showBanner(err.message || 'マイクの取得に失敗しました', '#dc2626');
+    return;
+  }
+
+  groupCallState.active = true;
+  groupCallState.isEnding = false;
+  groupCallState.chatId = chatId;
+  groupCallState.localStream = stream;
+  groupCallState.micEnabled = true;
+  groupCallState.peers = {};
+  groupCallState.participants = {};
+  groupCallState.processedSignalIds = new Set();
+  groupCallState.signalQueues = {};
+
+  openCallPanelUI(chat.name || 'グループ通話', DEFAULT_AVATAR, '通話ルームに接続中...', false, true);
+  document.getElementById('groupCallBanner').classList.remove('show');
+  updateChatHeader();
 
   try {
-    const stream = await acquireMicrophoneStream();
-    groupCallState.active = true;
-    groupCallState.chatId = chatId;
-    groupCallState.localStream = stream;
-    groupCallState.micEnabled = true;
-    groupCallState.peers = {};
-    groupCallState.participants = {};
-    groupCallState.processedSignalIds = new Set();
-    groupCallState.signalQueues = {};
-
     let sessionId = existingSessionId;
     let isNewSession = false;
+
     if (!sessionId) {
-      const existingSnap = await get(ref(db, `groupCalls/${chatId}`)).catch(() => null);
+      const existingSnap = await get(ref(db, `groupCalls/${chatId}`));
       if (existingSnap && existingSnap.exists()) {
         existingSnap.forEach((child) => {
           const v = child.val();
           if (v && !v.ended && v.participants && Object.keys(v.participants).length > 0) {
-            if (!v.createdAt || (Date.now() - v.createdAt) < 3600000) {
+            if (!v.createdAt || (Date.now() - v.createdAt) < 7200000) {
               sessionId = child.key;
             }
           }
@@ -1805,22 +1756,12 @@ async function joinOrStartGroupCall(chatId, existingSessionId = null) {
     }
     groupCallState.sessionId = sessionId;
 
-    // グループメンバー全員を chatMeta/members に確実に登録（DBルールの .exists() 通過を保証）
-    try {
-      const metaSnap = await get(ref(db, `chatMeta/${chatId}/members`)).catch(() => null);
-      const currentMetaMembers = (metaSnap && metaSnap.exists()) ? metaSnap.val() : {};
-      const mergedMembers = { ...(chat.members || {}), ...currentMetaMembers, [currentUser.uid]: true };
-      await update(ref(db, `chatMeta/${chatId}`), {
-        members: mergedMembers,
-        type: 'group'
-      }).catch(() => {});
-    } catch (e) {}
-
     const myParticipantData = {
       uid: currentUser.uid,
       nickname: myProfile.nickname || '名無しさん',
       avatar: myProfile.avatar || DEFAULT_AVATAR,
-      joinedAt: Date.now()
+      joinedAt: Date.now(),
+      lastPing: Date.now()
     };
 
     if (isNewSession) {
@@ -1836,7 +1777,7 @@ async function joinOrStartGroupCall(chatId, existingSessionId = null) {
       });
 
       const now = Date.now();
-      await push(ref(db, `chatMessages/${chatId}`), {
+      push(ref(db, `chatMessages/${chatId}`), {
         authorUid: currentUser.uid,
         content: `📞 ${myProfile.nickname || 'ユーザー'} がグループ通話を開始しました`,
         system: true,
@@ -1844,7 +1785,7 @@ async function joinOrStartGroupCall(chatId, existingSessionId = null) {
       }).catch(() => {});
 
       for (const uid of Object.keys(chat.members || {})) {
-        await update(ref(db, `userChats/${uid}/${chatId}`), {
+        update(ref(db, `userChats/${uid}/${chatId}`), {
           lastMessage: '📞 グループ通話を開始しました',
           lastMessageAt: now,
           lastSenderUid: currentUser.uid
@@ -1859,7 +1800,7 @@ async function joinOrStartGroupCall(chatId, existingSessionId = null) {
 
     if (groupCallState.keepAliveTimer) clearInterval(groupCallState.keepAliveTimer);
     groupCallState.keepAliveTimer = setInterval(() => {
-      if (groupCallState.active && groupCallState.chatId && groupCallState.sessionId) {
+      if (groupCallState.active && groupCallState.chatId && groupCallState.sessionId && currentUser) {
         update(ref(db, `groupCalls/${groupCallState.chatId}/${groupCallState.sessionId}/participants/${currentUser.uid}`), {
           lastPing: Date.now()
         }).catch(() => {});
@@ -1868,11 +1809,7 @@ async function joinOrStartGroupCall(chatId, existingSessionId = null) {
 
     setupLocalVoiceActivityMonitor(stream);
 
-    openCallPanelUI(chat.name || 'グループ通話', DEFAULT_AVATAR, 'グループ通話中 (1人)', false, true);
-    document.getElementById('groupCallBanner').classList.remove('show');
-    updateChatHeader();
-
-    // 先にシグナリングリスナーを張る
+    // 1. 自分の宛先シグナルを監視
     if (unsubs.groupCallSignals) { unsubs.groupCallSignals(); unsubs.groupCallSignals = null; }
     unsubs.groupCallSignals = onValue(ref(db, `groupCalls/${chatId}/${sessionId}/signals/${currentUser.uid}`), (snap) => {
       if (!groupCallState.active || !snap.exists()) return;
@@ -1888,56 +1825,32 @@ async function joinOrStartGroupCall(chatId, existingSessionId = null) {
       });
     }, (err) => {
       console.error('Signal listener error:', err);
-      showBanner('通話シグナリングの受信に失敗しました（権限を確認してください）');
+      showBanner('シグナリング受信エラー: ' + (err.message || err.code || ''), '#dc2626');
     });
 
-    // 参加者リスト監視
-    if (unsubs.groupCallSession) { unsubs.groupCallSession(); unsubs.groupCallSession = null; }
-    unsubs.groupCallSession = onValue(ref(db, `groupCalls/${chatId}/${sessionId}`), (snap) => {
+    // 2. 参加者リストを監視
+    if (unsubs.groupCallParticipants) { unsubs.groupCallParticipants(); unsubs.groupCallParticipants = null; }
+    unsubs.groupCallParticipants = onValue(ref(db, `groupCalls/${chatId}/${sessionId}/participants`), (snap) => {
       if (!groupCallState.active) return;
-      if (!snap.exists()) {
-        showBanner('グループ通話が終了しました');
-        endCurrentCall();
-        return;
-      }
-      const data = snap.val();
-      if (data.ended) {
-        showBanner('グループ通話が終了しました');
-        endCurrentCall();
-        return;
-      }
-      const parts = data.participants || {};
-      groupCallState.participants = parts;
-      renderGroupCallMembers();
-
-      const count = Object.keys(parts).length;
-      document.getElementById('cpStatus').textContent = `グループ通話中 (${count}人参加中)`;
-      document.getElementById('cpStatusBar').textContent = count > 1 ? `${count}人で音声接続中` : '他のメンバーの参加を待っています...';
-
-      Object.keys(parts).forEach((peerUid) => {
-        if (peerUid === currentUser.uid) return;
-        ensureProfileListener(peerUid);
-        if (!groupCallState.peers[peerUid]) {
-          const shouldOffer = currentUser.uid < peerUid;
-          enqueuePeerTask(peerUid, () => createGroupPeerConnection(peerUid, shouldOffer));
-        }
-      });
-
-      Object.keys(groupCallState.peers).forEach((peerUid) => {
-        if (!parts[peerUid]) {
-          cleanupGroupPeer(peerUid);
-        }
-      });
+      const parts = snap.exists() ? (snap.val() || {}) : {};
+      syncGroupPeersFromParticipants(parts);
     }, (err) => {
-      console.error('Session listener error:', err);
-      showBanner('通話セッションの接続に失敗しました: ' + (err.message || ''));
-      endCurrentCall();
+      console.error('Participants listener error:', err);
+      showBanner('参加者同期エラー: ' + (err.message || err.code || ''), '#dc2626');
     });
+
+    // 初期スナップショットを取得して即座に同期
+    const initSnap = await get(ref(db, `groupCalls/${chatId}/${sessionId}/participants`));
+    if (initSnap && initSnap.exists() && groupCallState.active) {
+      await syncGroupPeersFromParticipants(initSnap.val() || {});
+    }
 
   } catch (err) {
     console.error('joinOrStartGroupCall failed:', err);
-    showBanner(err.message || 'グループ通話の開始に失敗しました');
-    endCurrentCall();
+    const errMsg = 'グループ通話エラー: ' + (err.message || err.code || '通信に失敗しました');
+    setCallStatusText('接続失敗', errMsg);
+    showBanner(errMsg, '#dc2626');
+    await endCurrentCall();
   }
 }
 
@@ -1968,7 +1881,7 @@ function cleanupGroupPeer(peerUid) {
 }
 
 async function createGroupPeerConnection(peerUid, isInitiator) {
-  if (!groupCallState.active || !groupCallState.localStream) return null;
+  if (!groupCallState.active || !groupCallState.localStream || !currentUser) return null;
   if (groupCallState.peers[peerUid]) return groupCallState.peers[peerUid];
 
   const pc = new RTCPeerConnection(ICE_SERVERS);
@@ -1998,7 +1911,7 @@ async function createGroupPeerConnection(peerUid, isInitiator) {
   };
 
   pc.onicecandidate = (ev) => {
-    if (ev.candidate && groupCallState.active && groupCallState.chatId && groupCallState.sessionId) {
+    if (ev.candidate && groupCallState.active && groupCallState.chatId && groupCallState.sessionId && currentUser) {
       push(ref(db, `groupCalls/${groupCallState.chatId}/${groupCallState.sessionId}/signals/${peerUid}`), {
         type: 'candidate',
         from: currentUser.uid,
@@ -2014,11 +1927,11 @@ async function createGroupPeerConnection(peerUid, isInitiator) {
       peerEntry.connectionState = 'connected';
       renderGroupCallMembers();
     } else if (st === 'failed' || st === 'disconnected') {
-      if (isInitiator && pc.signalingState === 'stable' && groupCallState.active) {
+      if (isInitiator && pc.signalingState === 'stable' && groupCallState.active && currentUser) {
         pc.createOffer({ iceRestart: true })
           .then(offer => pc.setLocalDescription(offer).then(() => offer))
           .then(offer => {
-            if (!groupCallState.active) return;
+            if (!groupCallState.active || !currentUser) return;
             return push(ref(db, `groupCalls/${groupCallState.chatId}/${groupCallState.sessionId}/signals/${peerUid}`), {
               type: 'offer',
               from: currentUser.uid,
@@ -2062,7 +1975,7 @@ async function createGroupPeerConnection(peerUid, isInitiator) {
 
 async function handleGroupSignal(sig) {
   const peerUid = sig.from;
-  if (!peerUid || peerUid === currentUser.uid || !groupCallState.active) return;
+  if (!peerUid || !currentUser || peerUid === currentUser.uid || !groupCallState.active) return;
 
   if (sig.type === 'offer') {
     if (groupCallState.peers[peerUid]) {
@@ -2125,7 +2038,7 @@ async function handleGroupSignal(sig) {
 /* 1対1音声通話 */
 async function startVoiceCall(chatId, peerUid) {
   if (callState.active || groupCallState.active) {
-    showBanner('すでに通話中です');
+    showBanner('すでに通話中です', '#0284c7');
     return;
   }
   try {
@@ -2166,11 +2079,10 @@ async function startVoiceCall(chatId, peerUid) {
       if (!callState.active) return;
       if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
         callState.connected = true;
-        document.getElementById('cpStatus').textContent = '通話中';
-        document.getElementById('cpStatusBar').textContent = '音声接続済み';
+        setCallStatusText('通話中', '音声接続済み');
         document.getElementById('cpAvatarWrap').classList.remove('ringing');
       } else if (pc.iceConnectionState === 'failed') {
-        showBanner('通話の接続に失敗しました');
+        showBanner('通話の接続に失敗しました', '#dc2626');
         endCurrentCall();
       }
     };
@@ -2224,7 +2136,7 @@ async function startVoiceCall(chatId, peerUid) {
     });
 
   } catch (err) {
-    showBanner(err.message || '通話の開始に失敗しました');
+    showBanner(err.message || '通話の開始に失敗しました', '#dc2626');
     endCurrentCall();
   }
 }
@@ -2314,10 +2226,9 @@ async function acceptIncomingCall() {
       if (!callState.active) return;
       if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
         callState.connected = true;
-        document.getElementById('cpStatus').textContent = '通話中';
-        document.getElementById('cpStatusBar').textContent = '音声接続済み';
+        setCallStatusText('通話中', '音声接続済み');
       } else if (pc.iceConnectionState === 'failed') {
-        showBanner('通話の接続に失敗しました');
+        showBanner('通話の接続に失敗しました', '#dc2626');
         endCurrentCall();
       }
     };
@@ -2355,7 +2266,7 @@ async function acceptIncomingCall() {
     });
 
   } catch (err) {
-    showBanner(err.message || '通話への応答に失敗しました');
+    showBanner(err.message || '通話への応答に失敗しました', '#dc2626');
     await update(ref(db, `calls/${currentUser.uid}/${inc.sessionId}`), { status: 'ended' }).catch(() => {});
     endCurrentCall();
   }
@@ -2376,11 +2287,9 @@ function openCallPanelUI(title, avatar, statusText, isRinging, isGroup) {
   document.getElementById('cpName').textContent = title;
   document.getElementById('cpAvatarImg').src = avatar || DEFAULT_AVATAR;
   document.getElementById('cpAvatarWrap').style.display = isGroup ? 'none' : 'block';
-  document.getElementById('cpStatus').textContent = statusText;
-  document.getElementById('cpStatusBar').textContent = isRinging ? '相手が応答するのを待っています...' : '音声通話中';
+  setCallStatusText(statusText, isRinging ? '相手が応答するのを待っています...' : '音声接続中');
   document.getElementById('cpAvatarWrap').classList.toggle('ringing', !!isRinging);
-  const micBtn = document.getElementById('cpMicBtn');
-  micBtn.classList.remove('off');
+  document.getElementById('cpMicBtn').classList.remove('off');
   renderGroupCallMembers();
 }
 
@@ -2399,7 +2308,8 @@ function toggleMic() {
 }
 
 async function endCurrentCall() {
-  if (groupCallState.active) {
+  if (groupCallState.active && !groupCallState.isEnding) {
+    groupCallState.isEnding = true;
     const gChatId = groupCallState.chatId;
     const gSessionId = groupCallState.sessionId;
     const myUid = currentUser?.uid;
@@ -2412,7 +2322,7 @@ async function endCurrentCall() {
       try { groupCallState.audioContext.close(); } catch (e) {}
       groupCallState.audioContext = null;
     }
-    if (unsubs.groupCallSession) { unsubs.groupCallSession(); unsubs.groupCallSession = null; }
+    if (unsubs.groupCallParticipants) { unsubs.groupCallParticipants(); unsubs.groupCallParticipants = null; }
     if (unsubs.groupCallSignals) { unsubs.groupCallSignals(); unsubs.groupCallSignals = null; }
 
     Object.values(groupCallState.peers || {}).forEach((p) => {
@@ -2441,6 +2351,7 @@ async function endCurrentCall() {
     }
 
     groupCallState.active = false;
+    groupCallState.isEnding = false;
     groupCallState.chatId = null;
     groupCallState.sessionId = null;
     groupCallState.participants = {};
@@ -2494,7 +2405,7 @@ document.getElementById('groupCallBannerJoinBtn').addEventListener('click', () =
 });
 
 /* ============================================================
-   非公開モード
+   非公開モード・端末リンク・承認・BAN・緊急モード・その他機能
    ============================================================ */
 function listenSiteLock() {
   if (unsubs.siteLock) unsubs.siteLock();
@@ -2502,7 +2413,7 @@ function listenSiteLock() {
     siteLockState = snap.val() || { active: false };
     updatePrivateModeUI();
     enforcePrivateMode();
-  }, (err) => { console.warn('siteLock listener error:', err); });
+  }, () => {});
 }
 function updatePrivateModeUI() {
   const isAdm = currentUser && isAdmin(currentUser.email);
@@ -2528,59 +2439,37 @@ function updatePrivateModeUI() {
 }
 function enforcePrivateMode() {
   const pmOverlay = document.getElementById('privateModeOverlay');
-  if (!currentUser) { if (pmOverlay) pmOverlay.classList.remove('show'); return; }
-  if (isAdmin(currentUser.email)) { if (pmOverlay) pmOverlay.classList.remove('show'); return; }
+  if (!currentUser || isAdmin(currentUser.email)) { if (pmOverlay) pmOverlay.classList.remove('show'); return; }
   if (siteLockState.active) {
     if (pmOverlay) pmOverlay.classList.add('show');
     if (!privateRedirectAttempted) {
       privateRedirectAttempted = true;
-      try { window.location.replace(BLOCKED_REDIRECT_URL); } catch (e) {
-        try { window.location.href = BLOCKED_REDIRECT_URL; } catch (e2) {}
-      }
+      try { window.location.replace(BLOCKED_REDIRECT_URL); } catch (e) {}
     }
   } else {
     if (pmOverlay) pmOverlay.classList.remove('show');
   }
-}
-async function togglePrivateMode() {
-  if (!currentUser || !isAdmin(currentUser.email)) { showBanner('管理者のみ操作できます'); return; }
-  const nextActive = !siteLockState.active;
-  try {
-    await set(ref(db, 'siteLock'), {
-      active: nextActive,
-      updatedByEmail: currentUser.email || '',
-      updatedAt: Date.now()
-    });
-    showBanner(nextActive ? '非公開モードを有効にしました' : '非公開モードを無効にしました');
-  } catch (err) { showBanner('非公開モードの切替に失敗しました: ' + err.message); }
 }
 document.getElementById('privateModeBtn').addEventListener('click', () => {
   if (!currentUser || !isAdmin(currentUser.email)) return;
   updatePrivateModeUI();
   document.getElementById('privateModeModal').classList.remove('hidden');
 });
-document.getElementById('privateModeToggleBtn').addEventListener('click', togglePrivateMode);
-document.getElementById('privateModeModalCloseBtn').addEventListener('click', () => {
-  document.getElementById('privateModeModal').classList.add('hidden');
+document.getElementById('privateModeToggleBtn').addEventListener('click', async () => {
+  if (!currentUser || !isAdmin(currentUser.email)) return;
+  const nextActive = !siteLockState.active;
+  await set(ref(db, 'siteLock'), { active: nextActive, updatedByEmail: currentUser.email || '', updatedAt: Date.now() });
+  showBanner(nextActive ? '非公開モードを有効にしました' : '非公開モードを無効にしました');
 });
+document.getElementById('privateModeModalCloseBtn').addEventListener('click', () => document.getElementById('privateModeModal').classList.add('hidden'));
 document.getElementById('privateModeLogoutBtn').addEventListener('click', async () => {
-  intentionalSignOut = true;
-  await signOut(auth).catch(() => {});
+  intentionalSignOut = true; await signOut(auth).catch(() => {});
   try { window.location.replace(BLOCKED_REDIRECT_URL); } catch (e) {}
 });
 
-/* ============================================================
-   端末リンク・承認・BAN
-   ============================================================ */
 async function registerDeviceLink(user) {
   if (!user || !user.uid || !MY_DEVICE_ID) return;
-  try {
-    await set(ref(db, `deviceLinks/${MY_DEVICE_ID}/${user.uid}`), {
-      email: (user.email || '').toLowerCase(),
-      uid: user.uid,
-      lastSeen: Date.now()
-    });
-  } catch (e) {}
+  await set(ref(db, `deviceLinks/${MY_DEVICE_ID}/${user.uid}`), { email: (user.email || '').toLowerCase(), uid: user.uid, lastSeen: Date.now() }).catch(() => {});
 }
 function listenDeviceLinks() {
   if (!currentUser || !isAdmin(currentUser.email)) return;
@@ -2624,38 +2513,24 @@ function listenApprovals() {
     if (!document.getElementById('approvalPanel').classList.contains('hidden')) renderApprovalsList();
   }, () => {});
 }
-function getPendingApprovalsCount() {
-  return Object.values(approvalsCache).filter(a => a && a.status === 'pending').length;
-}
+function getPendingApprovalsCount() { return Object.values(approvalsCache).filter(a => a && a.status === 'pending').length; }
 function updateApprovalBadge() {
-  const badge = document.getElementById('approvalBadge');
-  if (!badge) return;
+  const badge = document.getElementById('approvalBadge'); if (!badge) return;
   const count = getPendingApprovalsCount();
-  badge.textContent = count;
-  badge.style.display = count > 0 ? 'inline-block' : 'none';
+  badge.textContent = count; badge.style.display = count > 0 ? 'inline-block' : 'none';
 }
 function renderApprovalsList() {
-  const listEl = document.getElementById('approvalList');
-  if (!listEl) return;
+  const listEl = document.getElementById('approvalList'); if (!listEl) return;
   const entries = Object.entries(approvalsCache).map(([uid, val]) => ({ uid, ...val })).sort((a, b) => (b.requestedAt || 0) - (a.requestedAt || 0));
-  if (entries.length === 0) {
-    listEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:24px;">承認リクエストはありません</div>';
-    return;
-  }
+  if (entries.length === 0) { listEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:24px;">承認リクエストはありません</div>'; return; }
   listEl.innerHTML = '';
   entries.forEach((item) => {
-    const div = document.createElement('div');
-    div.className = 'approval-item';
+    const div = document.createElement('div'); div.className = 'approval-item';
     const isPending = item.status === 'pending';
-    const statusBadge = isPending
-      ? '<span style="background:#fef08a;color:#854d0e;font-size:10px;padding:1px 6px;border-radius:9999px;font-weight:700;">承認待ち</span>'
-      : (item.status === 'approved'
-        ? '<span style="background:#dcfce7;color:#166534;font-size:10px;padding:1px 6px;border-radius:9999px;font-weight:700;">承認済</span>'
-        : '<span style="background:#fee2e2;color:#991b1b;font-size:10px;padding:1px 6px;border-radius:9999px;font-weight:700;">拒否済</span>');
     div.innerHTML = `
       <img class="ap-avatar" src="${escapeHtml(item.avatar || DEFAULT_AVATAR)}" alt="">
       <div class="ap-info">
-        <div class="ap-email">${escapeHtml(item.email || '')} ${statusBadge}</div>
+        <div class="ap-email">${escapeHtml(item.email || '')}</div>
         <div class="ap-nickname">ニックネーム: ${escapeHtml(item.nickname || '未設定')}</div>
         <div class="ap-time">${formatTime(item.requestedAt)}</div>
       </div>
@@ -2667,14 +2542,8 @@ function renderApprovalsList() {
   });
   listEl.querySelectorAll('.ap-approve').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const uid = btn.dataset.uid;
-      const reqData = approvalsCache[uid] || {};
-      await set(ref(db, `approvedUsers/${uid}`), {
-        email: (reqData.email || '').toLowerCase(),
-        nickname: reqData.nickname || '',
-        approvedBy: currentUser.email,
-        approvedAt: Date.now()
-      });
+      const uid = btn.dataset.uid; const reqData = approvalsCache[uid] || {};
+      await set(ref(db, `approvedUsers/${uid}`), { email: (reqData.email || '').toLowerCase(), nickname: reqData.nickname || '', approvedBy: currentUser.email, approvedAt: Date.now() });
       await update(ref(db, `approvalRequests/${uid}`), { status: 'approved', processedAt: Date.now() });
       showBanner(`${reqData.email || uid} を承認しました`);
     });
@@ -2682,28 +2551,14 @@ function renderApprovalsList() {
   listEl.querySelectorAll('.ap-reject').forEach(btn => {
     btn.addEventListener('click', async () => {
       const uid = btn.dataset.uid;
-      if (btn.dataset.del === '1') {
-        await remove(ref(db, `approvalRequests/${uid}`));
-      } else {
-        await update(ref(db, `approvalRequests/${uid}`), { status: 'rejected', processedAt: Date.now() });
-        showBanner('リクエストを拒否しました');
-      }
+      if (btn.dataset.del === '1') await remove(ref(db, `approvalRequests/${uid}`));
+      else await update(ref(db, `approvalRequests/${uid}`), { status: 'rejected', processedAt: Date.now() });
     });
   });
 }
-
-document.getElementById('approvalBtn').addEventListener('click', () => {
-  localStorage.setItem(APPROVAL_SEEN_KEY, String(getPendingApprovalsCount()));
-  renderApprovalsList();
-  document.getElementById('approvalPanel').classList.remove('hidden');
-});
-document.getElementById('approvalCloseBtn').addEventListener('click', () => {
-  document.getElementById('approvalPanel').classList.add('hidden');
-});
-document.getElementById('approvalClearAllBtn').addEventListener('click', async () => {
-  await remove(ref(db, 'approvalRequests')).catch(() => {});
-  renderApprovalsList();
-});
+document.getElementById('approvalBtn').addEventListener('click', () => { renderApprovalsList(); document.getElementById('approvalPanel').classList.remove('hidden'); });
+document.getElementById('approvalCloseBtn').addEventListener('click', () => document.getElementById('approvalPanel').classList.add('hidden'));
+document.getElementById('approvalClearAllBtn').addEventListener('click', async () => { await remove(ref(db, 'approvalRequests')).catch(() => {}); renderApprovalsList(); });
 
 async function checkUserApproval(user) {
   if (!user) return 'pending';
@@ -2712,24 +2567,13 @@ async function checkUserApproval(user) {
     const appSnap = await get(ref(db, `approvedUsers/${user.uid}`));
     if (appSnap.exists()) return 'approved';
     const reqSnap = await get(ref(db, `approvalRequests/${user.uid}`));
-    if (reqSnap.exists()) {
-      const val = reqSnap.val();
-      if (val && val.status === 'approved') return 'approved';
-      if (val && val.status === 'rejected') return 'rejected';
-      return 'pending';
-    }
+    if (reqSnap.exists()) return reqSnap.val()?.status || 'pending';
     await set(ref(db, `approvalRequests/${user.uid}`), {
-      uid: user.uid,
-      email: (user.email || '').toLowerCase(),
-      nickname: user.displayName || '',
-      avatar: user.photoURL || DEFAULT_AVATAR,
-      status: 'pending',
-      requestedAt: Date.now()
+      uid: user.uid, email: (user.email || '').toLowerCase(), nickname: user.displayName || '',
+      avatar: user.photoURL || DEFAULT_AVATAR, status: 'pending', requestedAt: Date.now()
     });
     return 'pending';
-  } catch (e) {
-    return 'pending';
-  }
+  } catch (e) { return 'pending'; }
 }
 
 function showPendingApprovalOverlay(user) {
@@ -2740,430 +2584,256 @@ function showPendingApprovalOverlay(user) {
   document.getElementById('pendingApprovalOverlay').classList.add('show');
   if (unsubs.myApproval) unsubs.myApproval();
   unsubs.myApproval = onValue(ref(db, `approvedUsers/${user.uid}`), (snap) => {
-    if (snap.exists()) {
-      document.getElementById('pendingApprovalOverlay').classList.remove('show');
-      window.location.reload();
-    }
+    if (snap.exists()) { document.getElementById('pendingApprovalOverlay').classList.remove('show'); window.location.reload(); }
   });
 }
 document.getElementById('pendingApprovalLogoutBtn').addEventListener('click', async () => {
-  intentionalSignOut = true;
-  await signOut(auth).catch(() => {});
-  document.getElementById('pendingApprovalOverlay').classList.remove('show');
-  showLoginScreen();
+  intentionalSignOut = true; await signOut(auth).catch(() => {});
+  document.getElementById('pendingApprovalOverlay').classList.remove('show'); showLoginScreen();
 });
 
-/* ============================================================
-   緊急モード
-   ============================================================ */
 function listenEmergency() {
   if (unsubs.emergency) unsubs.emergency();
   unsubs.emergency = onValue(ref(db, 'emergencyMode'), (snap) => {
-    const val = snap.val();
-    emergencyState = val || { active: false };
+    emergencyState = snap.val() || { active: false };
     if (emergencyState.active) enterEmergencyBlackout(emergencyState);
     else exitEmergencyBlackout();
-  }, (err) => { console.warn('Emergency listener error:', err); });
+  }, () => {});
 }
 function enterEmergencyBlackout(stateData = {}) {
   emergencyExiting = false;
-  const overlay = document.getElementById('emergencyOverlay');
-  if (overlay) overlay.classList.add('show');
+  const overlay = document.getElementById('emergencyOverlay'); if (overlay) overlay.classList.add('show');
   refreshFavicon(); updateTitleUnread();
   const isAdm = currentUser && isAdmin(currentUser.email);
   let hintEl = document.getElementById('adminCtrlDHint');
   if (isAdm) {
     if (!hintEl) { hintEl = document.createElement('div'); hintEl.id = 'adminCtrlDHint'; document.body.appendChild(hintEl); }
     hintEl.textContent = '🔑 管理者解除: Ctrl + D を押してください';
-  } else if (hintEl) { hintEl.remove(); }
+  } else if (hintEl) hintEl.remove();
   let byEl = document.getElementById('emergencyTriggeredBy');
   const triggerEmail = stateData.triggeredByEmail || stateData.triggeredBy || '';
   if (triggerEmail) {
     if (!byEl) { byEl = document.createElement('div'); byEl.id = 'emergencyTriggeredBy'; document.body.appendChild(byEl); }
     byEl.textContent = `by ${triggerEmail}`;
-  } else if (byEl) { byEl.remove(); }
+  } else if (byEl) byEl.remove();
   if (!emergencyEnforcerInterval) {
     emergencyEnforcerInterval = setInterval(() => {
       if (emergencyExiting || !emergencyState.active) return;
       const ov = document.getElementById('emergencyOverlay');
       if (ov && !ov.classList.contains('show')) ov.classList.add('show');
-      refreshFavicon();
     }, 300);
   }
 }
 function exitEmergencyBlackout() {
   emergencyExiting = true;
   if (emergencyEnforcerInterval) { clearInterval(emergencyEnforcerInterval); emergencyEnforcerInterval = null; }
-  const overlay = document.getElementById('emergencyOverlay');
-  if (overlay) overlay.classList.remove('show');
-  const hintEl = document.getElementById('adminCtrlDHint');
-  if (hintEl) hintEl.remove();
-  const byEl = document.getElementById('emergencyTriggeredBy');
-  if (byEl) byEl.remove();
+  const overlay = document.getElementById('emergencyOverlay'); if (overlay) overlay.classList.remove('show');
+  const hintEl = document.getElementById('adminCtrlDHint'); if (hintEl) hintEl.remove();
+  const byEl = document.getElementById('emergencyTriggeredBy'); if (byEl) byEl.remove();
   refreshFavicon(); updateTitleUnread();
 }
 async function triggerEmergencyMode() {
-  if (!currentUser) { showBanner('ログインしてから操作してください'); return; }
-  endCurrentCall();
+  if (!currentUser) return;
+  await endCurrentCall();
   const triggerEmail = currentUser.email || currentUser.uid || '不明';
-  const triggerName = myProfile.nickname || triggerEmail;
   const now = Date.now();
-  try {
-    await set(ref(db, 'emergencyMode'), { active: true, triggeredBy: currentUser.uid, triggeredByEmail: triggerEmail, triggeredAt: now });
-    await push(ref(db, 'emergencyHistory'), { triggeredByUid: currentUser.uid, triggeredByEmail: triggerEmail, triggeredByName: triggerName, triggeredAt: now });
-    emergencyState = { active: true, triggeredBy: currentUser.uid, triggeredByEmail: triggerEmail, triggeredAt: now };
-    enterEmergencyBlackout(emergencyState);
-  } catch (err) { showBanner('緊急モードの発動に失敗しました: ' + err.message); }
+  await set(ref(db, 'emergencyMode'), { active: true, triggeredBy: currentUser.uid, triggeredByEmail: triggerEmail, triggeredAt: now });
+  await push(ref(db, 'emergencyHistory'), { triggeredByUid: currentUser.uid, triggeredByEmail: triggerEmail, triggeredByName: myProfile.nickname || triggerEmail, triggeredAt: now });
 }
 async function clearEmergencyMode() {
-  if (!currentUser || !isAdmin(currentUser.email)) { showBanner('緊急モードを解除できるのは管理者のみです'); return; }
+  if (!currentUser || !isAdmin(currentUser.email)) return;
   emergencyExiting = true;
   if (emergencyEnforcerInterval) { clearInterval(emergencyEnforcerInterval); emergencyEnforcerInterval = null; }
-  try {
-    await set(ref(db, 'emergencyMode'), { active: false, clearedBy: currentUser.email, clearedAt: Date.now() });
-    emergencyState = { active: false };
-    exitEmergencyBlackout();
-    showBanner('緊急モードを解除しました');
-  } catch (err) { emergencyExiting = false; showBanner('解除に失敗しました: ' + err.message); }
+  await set(ref(db, 'emergencyMode'), { active: false, clearedBy: currentUser.email, clearedAt: Date.now() });
+  exitEmergencyBlackout();
 }
-
 document.addEventListener('keydown', async (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
-    if (emergencyState.active) { e.preventDefault(); e.stopPropagation(); await clearEmergencyMode(); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd' && emergencyState.active) {
+    e.preventDefault(); e.stopPropagation(); await clearEmergencyMode();
   }
 }, true);
 
 const emergencyBtn = document.getElementById('emergencyBtn');
 function startEmergencyHold(e) {
   if (e.type === 'mousedown' && e.button !== 0) return;
-  emergencyHoldTriggered = false;
-  emergencyBtn.classList.add('holding');
-  emergencyHoldTimer = setTimeout(() => {
-    emergencyHoldTriggered = true;
-    emergencyBtn.classList.remove('holding');
-    document.getElementById('emergencyHelpModal').classList.remove('hidden');
-  }, 1000);
+  emergencyHoldTriggered = false; emergencyBtn.classList.add('holding');
+  emergencyHoldTimer = setTimeout(() => { emergencyHoldTriggered = true; emergencyBtn.classList.remove('holding'); document.getElementById('emergencyHelpModal').classList.remove('hidden'); }, 1000);
 }
-function cancelEmergencyHold() {
-  if (emergencyHoldTimer) { clearTimeout(emergencyHoldTimer); emergencyHoldTimer = null; }
-  emergencyBtn.classList.remove('holding');
-}
+function cancelEmergencyHold() { if (emergencyHoldTimer) { clearTimeout(emergencyHoldTimer); emergencyHoldTimer = null; } emergencyBtn.classList.remove('holding'); }
 emergencyBtn.addEventListener('mousedown', startEmergencyHold);
 emergencyBtn.addEventListener('touchstart', startEmergencyHold, { passive: true });
-window.addEventListener('mouseup', cancelEmergencyHold);
-window.addEventListener('touchend', cancelEmergencyHold);
-emergencyBtn.addEventListener('click', (e) => {
-  e.preventDefault(); e.stopPropagation();
-  if (emergencyHoldTriggered) { emergencyHoldTriggered = false; return; }
-  triggerEmergencyMode();
-});
-document.getElementById('emergencyHelpBtn').addEventListener('click', () => {
-  document.getElementById('emergencyHelpModal').classList.remove('hidden');
-});
-document.getElementById('emergencyHelpCloseBtn').addEventListener('click', () => {
-  document.getElementById('emergencyHelpModal').classList.add('hidden');
-});
+window.addEventListener('mouseup', cancelEmergencyHold); window.addEventListener('touchend', cancelEmergencyHold);
+emergencyBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); if (emergencyHoldTriggered) { emergencyHoldTriggered = false; return; } triggerEmergencyMode(); });
+document.getElementById('emergencyHelpBtn').addEventListener('click', () => document.getElementById('emergencyHelpModal').classList.remove('hidden'));
+document.getElementById('emergencyHelpCloseBtn').addEventListener('click', () => document.getElementById('emergencyHelpModal').classList.add('hidden'));
 
-/* ============================================================
-   緊急履歴・ログイン通知・アナウンス
-   ============================================================ */
 function listenEmergencyHistory() {
   if (!currentUser || !isAdmin(currentUser.email)) return;
   if (unsubs.emergencyHistory) unsubs.emergencyHistory();
-  unsubs.emergencyHistory = onValue(ref(db, 'emergencyHistory'), (snap) => {
-    emergencyHistoryCache = snap.val() || {};
-    if (!document.getElementById('emergencyHistoryPanel').classList.contains('hidden')) renderEmergencyHistoryList();
-  }, () => {});
+  unsubs.emergencyHistory = onValue(ref(db, 'emergencyHistory'), (snap) => { emergencyHistoryCache = snap.val() || {}; if (!document.getElementById('emergencyHistoryPanel').classList.contains('hidden')) renderEmergencyHistoryList(); }, () => {});
 }
 function renderEmergencyHistoryList() {
-  const listEl = document.getElementById('emergencyHistoryList');
-  if (!listEl) return;
+  const listEl = document.getElementById('emergencyHistoryList'); if (!listEl) return;
   const entries = Object.entries(emergencyHistoryCache).map(([id, val]) => ({ id, ...val })).sort((a, b) => (b.triggeredAt || 0) - (a.triggeredAt || 0));
-  if (entries.length === 0) { listEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:24px;">緊急ボタン発動履歴はありません</div>'; return; }
+  if (entries.length === 0) { listEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:24px;">履歴はありません</div>'; return; }
   listEl.innerHTML = '';
   entries.forEach((item) => {
     const div = document.createElement('div');
     div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #fed7aa;border-radius:10px;margin-bottom:8px;background:#fff7ed;';
-    div.innerHTML = `
-      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:bold;">!</div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:12px;font-weight:700;color:#9a3412;word-break:break-all;">${escapeHtml(item.triggeredByEmail || item.triggeredByUid || '不明')}</div>
-        <div style="font-size:11px;color:#4b5563;">名前: ${escapeHtml(item.triggeredByName || '未設定')}</div>
-        <div style="font-size:10px;color:#9ca3af;margin-top:2px;">${formatTime(item.triggeredAt)}</div>
-      </div>
-      <button style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;" data-id="${item.id}">削除</button>
-    `;
-    div.querySelector('button').addEventListener('click', async () => { await remove(ref(db, `emergencyHistory/${item.id}`)).catch(() => {}); });
+    div.innerHTML = `<div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#9a3412;">${escapeHtml(item.triggeredByEmail || '')}</div><div style="font-size:10px;color:#9ca3af;">${formatTime(item.triggeredAt)}</div></div><button style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;">削除</button>`;
+    div.querySelector('button').addEventListener('click', async () => { await remove(ref(db, `emergencyHistory/${item.id}`)); });
     listEl.appendChild(div);
   });
 }
 document.getElementById('emergencyHistoryBtn').addEventListener('click', () => { renderEmergencyHistoryList(); document.getElementById('emergencyHistoryPanel').classList.remove('hidden'); });
-document.getElementById('emergencyHistoryCloseBtn').addEventListener('click', () => { document.getElementById('emergencyHistoryPanel').classList.add('hidden'); });
-document.getElementById('emergencyHistoryClearAllBtn').addEventListener('click', async () => { await remove(ref(db, 'emergencyHistory')).catch(() => {}); renderEmergencyHistoryList(); });
+document.getElementById('emergencyHistoryCloseBtn').addEventListener('click', () => document.getElementById('emergencyHistoryPanel').classList.add('hidden'));
+document.getElementById('emergencyHistoryClearAllBtn').addEventListener('click', async () => { await remove(ref(db, 'emergencyHistory')); renderEmergencyHistoryList(); });
 
 function listenAnnouncement() {
   if (unsubs.announcement) unsubs.announcement();
   unsubs.announcement = onValue(ref(db, 'announcement'), (snap) => {
-    const val = snap.val();
-    const banner = document.getElementById('announcementBanner');
-    if (!val || !val.text || Date.now() > (val.expiresAt || 0) || dismissedAnnouncements[val.id]) {
-      banner.classList.remove('show'); return;
-    }
-    document.getElementById('announcementText').textContent = val.text;
-    banner.classList.add('show');
+    const val = snap.val(); const banner = document.getElementById('announcementBanner');
+    if (!val || !val.text || Date.now() > (val.expiresAt || 0) || dismissedAnnouncements[val.id]) { banner.classList.remove('show'); return; }
+    document.getElementById('announcementText').textContent = val.text; banner.classList.add('show');
   }, () => {});
 }
 document.getElementById('announcementClose').addEventListener('click', () => {
   document.getElementById('announcementBanner').classList.remove('show');
-  get(ref(db, 'announcement')).then((snap) => {
-    const val = snap.val();
-    if (val && val.id) { dismissedAnnouncements[val.id] = true; saveJson(ANNOUNCE_DISMISS_KEY, dismissedAnnouncements); }
-  }).catch(() => {});
+  get(ref(db, 'announcement')).then((snap) => { const val = snap.val(); if (val && val.id) { dismissedAnnouncements[val.id] = true; saveJson(ANNOUNCE_DISMISS_KEY, dismissedAnnouncements); } }).catch(() => {});
 });
-document.getElementById('announceBtn').addEventListener('click', () => { document.getElementById('announceModal').classList.remove('hidden'); });
-document.getElementById('announceCancel').addEventListener('click', () => { document.getElementById('announceModal').classList.add('hidden'); });
+document.getElementById('announceBtn').addEventListener('click', () => document.getElementById('announceModal').classList.remove('hidden'));
+document.getElementById('announceCancel').addEventListener('click', () => document.getElementById('announceModal').classList.add('hidden'));
 document.getElementById('announceSend').addEventListener('click', async () => {
   const text = document.getElementById('announceTextInput').value.trim();
   const dur = Math.max(5, Math.min(300, parseInt(document.getElementById('announceDurationInput').value || '30', 10)));
   if (!text) return showBanner('アナウンス内容を入力してください');
   const id = 'ann_' + Date.now();
   await set(ref(db, 'announcement'), { id, text, createdAt: Date.now(), expiresAt: Date.now() + dur * 1000, createdBy: currentUser.email });
-  document.getElementById('announceModal').classList.add('hidden');
-  document.getElementById('announceTextInput').value = '';
-  showBanner('全体アナウンスを送信しました');
+  document.getElementById('announceModal').classList.add('hidden'); document.getElementById('announceTextInput').value = '';
 });
 
 async function recordAdminLoginNotification(user) {
   if (!user) return;
-  try {
-    await push(ref(db, 'adminNotifications'), {
-      uid: user.uid, email: user.email || '', nickname: myProfile.nickname || user.displayName || '未設定',
-      avatar: myProfile.avatar || user.photoURL || DEFAULT_AVATAR, deviceId: MY_DEVICE_ID, loggedInAt: Date.now()
-    });
-  } catch (e) {}
+  await push(ref(db, 'adminNotifications'), { uid: user.uid, email: user.email || '', nickname: myProfile.nickname || user.displayName || '未設定', avatar: myProfile.avatar || user.photoURL || DEFAULT_AVATAR, deviceId: MY_DEVICE_ID, loggedInAt: Date.now() }).catch(() => {});
 }
 function listenAdminNotifications() {
   if (!currentUser || !isAdmin(currentUser.email)) return;
   if (unsubs.notifications) unsubs.notifications();
-  unsubs.notifications = onValue(ref(db, 'adminNotifications'), (snap) => {
-    notificationsCache = snap.val() || {};
-    updateNotifBadge();
-    if (!document.getElementById('notificationPanel').classList.contains('hidden')) renderNotificationsList();
-  }, () => {});
+  unsubs.notifications = onValue(ref(db, 'adminNotifications'), (snap) => { notificationsCache = snap.val() || {}; updateNotifBadge(); if (!document.getElementById('notificationPanel').classList.contains('hidden')) renderNotificationsList(); }, () => {});
 }
 function updateNotifBadge() {
-  const badge = document.getElementById('notifBadge');
-  if (!badge) return;
-  const total = Object.keys(notificationsCache).length;
-  const unread = Math.max(0, total - lastSeenNotificationCount);
-  badge.textContent = unread > 99 ? '99+' : unread;
-  badge.style.display = unread > 0 ? 'inline-block' : 'none';
+  const badge = document.getElementById('notifBadge'); if (!badge) return;
+  const unread = Math.max(0, Object.keys(notificationsCache).length - lastSeenNotificationCount);
+  badge.textContent = unread > 99 ? '99+' : unread; badge.style.display = unread > 0 ? 'inline-block' : 'none';
 }
 function renderNotificationsList() {
-  const listEl = document.getElementById('notificationList');
-  if (!listEl) return;
+  const listEl = document.getElementById('notificationList'); if (!listEl) return;
   const entries = Object.entries(notificationsCache).map(([id, val]) => ({ id, ...val })).sort((a, b) => (b.loggedInAt || 0) - (a.loggedInAt || 0));
   if (entries.length === 0) { listEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:24px;">ログイン通知はありません</div>'; return; }
   listEl.innerHTML = '';
   entries.forEach((item) => {
     const div = document.createElement('div');
     div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;background:#f9fafb;';
-    div.innerHTML = `
-      <img style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;" src="${escapeHtml(item.avatar || DEFAULT_AVATAR)}" alt="">
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:12px;font-weight:700;color:#0e7490;word-break:break-all;">${escapeHtml(item.email || '不明')}</div>
-        <div style="font-size:11px;color:#374151;">名前: ${escapeHtml(item.nickname || '未設定')}</div>
-        <div style="font-size:10px;color:#9ca3af;margin-top:2px;">${formatTime(item.loggedInAt)}</div>
-      </div>
-      <button style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;" data-id="${item.id}">削除</button>
-    `;
-    div.querySelector('button').addEventListener('click', async () => { await remove(ref(db, `adminNotifications/${item.id}`)).catch(() => {}); });
+    div.innerHTML = `<img style="width:38px;height:38px;border-radius:50%;object-fit:cover;" src="${escapeHtml(item.avatar || DEFAULT_AVATAR)}" alt=""><div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#0e7490;">${escapeHtml(item.email || '')}</div><div style="font-size:11px;color:#374151;">名前: ${escapeHtml(item.nickname || '')}</div><div style="font-size:10px;color:#9ca3af;">${formatTime(item.loggedInAt)}</div></div><button style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;">削除</button>`;
+    div.querySelector('button').addEventListener('click', async () => { await remove(ref(db, `adminNotifications/${item.id}`)); });
     listEl.appendChild(div);
   });
 }
 document.getElementById('notificationBtn').addEventListener('click', () => {
   lastSeenNotificationCount = Object.keys(notificationsCache).length;
   localStorage.setItem(NOTIF_SEEN_KEY, String(lastSeenNotificationCount));
-  updateNotifBadge(); renderNotificationsList();
-  document.getElementById('notificationPanel').classList.remove('hidden');
+  updateNotifBadge(); renderNotificationsList(); document.getElementById('notificationPanel').classList.remove('hidden');
 });
-document.getElementById('notificationCloseBtn').addEventListener('click', () => { document.getElementById('notificationPanel').classList.add('hidden'); });
-document.getElementById('notifClearAllBtn').addEventListener('click', async () => {
-  await remove(ref(db, 'adminNotifications')).catch(() => {});
-  lastSeenNotificationCount = 0; localStorage.setItem(NOTIF_SEEN_KEY, '0');
-  updateNotifBadge(); renderNotificationsList();
-});
+document.getElementById('notificationCloseBtn').addEventListener('click', () => document.getElementById('notificationPanel').classList.add('hidden'));
+document.getElementById('notifClearAllBtn').addEventListener('click', async () => { await remove(ref(db, 'adminNotifications')); lastSeenNotificationCount = 0; localStorage.setItem(NOTIF_SEEN_KEY, '0'); updateNotifBadge(); renderNotificationsList(); });
 
-/* ============================================================
-   BAN機能
-   ============================================================ */
 function isEmailBanned(email) { return !!(email && emailBansCache[encodeEmailKey(email)]); }
-function isUidBanned(uid) { return !!(uid && bansCache[uid]); }
-function isCurrentUserBanned() {
-  if (!currentUser) return false;
-  if (isAdmin(currentUser.email)) return false;
-  return isUidBanned(currentUser.uid) || isEmailBanned(currentUser.email);
-}
+function isCurrentUserBanned() { return !!(currentUser && !isAdmin(currentUser.email) && isEmailBanned(currentUser.email)); }
 function triggerBanEnforcement() {
   if (banEnforcerInterval) return;
   const overlay = document.getElementById('banOverlay');
-  const msgEl = document.getElementById('banOverlayMsg');
-  const subEl = document.getElementById('banOverlaySub');
-  const showOverlay = () => {
-    if (msgEl) msgEl.textContent = 'アクセスが拒否されました';
-    if (subEl) subEl.textContent = 'このアカウントはBANされているため利用できません。';
-    if (overlay) overlay.classList.add('show');
-  };
-  showOverlay();
-  banEnforcerInterval = setInterval(() => { if (overlay && !overlay.classList.contains('show')) overlay.classList.add('show'); }, 300);
+  document.getElementById('banOverlayMsg').textContent = 'アクセスが拒否されました';
+  document.getElementById('banOverlaySub').textContent = 'このアカウントはBANされているため利用できません。';
+  overlay.classList.add('show');
+  banEnforcerInterval = setInterval(() => { if (!overlay.classList.contains('show')) overlay.classList.add('show'); }, 300);
 }
-function stopBanEnforcement() {
-  if (banEnforcerInterval) { clearInterval(banEnforcerInterval); banEnforcerInterval = null; }
-  const overlay = document.getElementById('banOverlay');
-  if (overlay) overlay.classList.remove('show');
-}
+function stopBanEnforcement() { if (banEnforcerInterval) { clearInterval(banEnforcerInterval); banEnforcerInterval = null; } document.getElementById('banOverlay').classList.remove('show'); }
 function listenEmailBans() {
   if (unsubs.emailBans) unsubs.emailBans();
-  unsubs.emailBans = onValue(ref(db, 'emailBans'), (snap) => {
-    emailBansCache = snap.val() || {};
-    if (currentUser && isCurrentUserBanned()) triggerBanEnforcement();
-    if (currentUser && isAdmin(currentUser.email) && !document.getElementById('adminBanPanel').classList.contains('hidden')) renderBanList();
-  }, () => {});
+  unsubs.emailBans = onValue(ref(db, 'emailBans'), (snap) => { emailBansCache = snap.val() || {}; if (currentUser && isCurrentUserBanned()) triggerBanEnforcement(); if (currentUser && isAdmin(currentUser.email) && !document.getElementById('adminBanPanel').classList.contains('hidden')) renderBanList(); }, () => {});
 }
 document.getElementById('banUserBtn').addEventListener('click', () => {
-  document.getElementById('banEmailInput').value = '';
-  document.getElementById('banSearchMsg').textContent = '';
-  document.getElementById('relatedAccountsBox').style.display = 'none';
-  relatedAccountsResult = []; renderBanList();
+  document.getElementById('banEmailInput').value = ''; document.getElementById('banSearchMsg').textContent = '';
+  document.getElementById('relatedAccountsBox').style.display = 'none'; relatedAccountsResult = []; renderBanList();
   document.getElementById('adminBanPanel').classList.remove('hidden');
 });
-document.getElementById('banCancelBtn').addEventListener('click', () => { document.getElementById('adminBanPanel').classList.add('hidden'); });
+document.getElementById('banCancelBtn').addEventListener('click', () => document.getElementById('adminBanPanel').classList.add('hidden'));
 document.getElementById('banSearchRelatedBtn').addEventListener('click', async () => {
   const email = document.getElementById('banEmailInput').value.trim().toLowerCase();
-  const msgEl = document.getElementById('banSearchMsg');
-  const boxEl = document.getElementById('relatedAccountsBox');
-  const listEl = document.getElementById('relatedAccountsList');
+  const msgEl = document.getElementById('banSearchMsg'); const boxEl = document.getElementById('relatedAccountsBox'); const listEl = document.getElementById('relatedAccountsList');
   if (!email) { msgEl.style.color = '#dc2626'; msgEl.textContent = 'メールアドレスを入力してください'; return; }
-  msgEl.style.color = '#0369a1'; msgEl.textContent = '検索中...';
-  try {
-    const snap = await get(ref(db, 'deviceLinks'));
-    if (snap.exists()) deviceLinksCache = snap.val();
-  } catch (e) {}
-  relatedAccountsResult = findRelatedAccountsByEmail(email);
-  listEl.innerHTML = '';
+  const snap = await get(ref(db, 'deviceLinks')).catch(() => null);
+  if (snap && snap.exists()) deviceLinksCache = snap.val();
+  relatedAccountsResult = findRelatedAccountsByEmail(email); listEl.innerHTML = '';
   if (relatedAccountsResult.length > 0) {
     relatedAccountsResult.forEach((acc, idx) => {
-      const div = document.createElement('div');
-      div.className = 'related-account-item';
-      div.innerHTML = `
-        <div class="ra-avatar">ID</div>
-        <div class="ra-info">
-          <div class="ra-email">${escapeHtml(acc.email)} ${acc.isTarget ? '<span style="background:#dc2626;color:#fff;font-size:10px;padding:1px 5px;border-radius:9999px;">指定</span>' : '<span style="background:#f59e0b;color:#fff;font-size:10px;padding:1px 5px;border-radius:9999px;">同一端末</span>'}</div>
-          <div class="ra-meta">最終利用: ${formatTime(acc.lastSeen)}</div>
-        </div>
-        <input type="checkbox" class="ra-check" data-idx="${idx}" checked>
-      `;
+      const div = document.createElement('div'); div.className = 'related-account-item';
+      div.innerHTML = `<div class="ra-avatar">ID</div><div class="ra-info"><div class="ra-email">${escapeHtml(acc.email)}</div><div class="ra-meta">${formatTime(acc.lastSeen)}</div></div><input type="checkbox" class="ra-check" data-idx="${idx}" checked>`;
       listEl.appendChild(div);
     });
-    boxEl.style.display = 'block';
-    msgEl.style.color = '#16a34a';
-    msgEl.textContent = `${relatedAccountsResult.length}件の関連アカウントが見つかりました`;
-  } else {
-    boxEl.style.display = 'none';
-    msgEl.style.color = '#0369a1';
-    msgEl.textContent = '端末履歴はありませんが、指定アドレスをBANできます';
-  }
-});
-document.getElementById('relatedSelectAll').addEventListener('change', (e) => {
-  document.querySelectorAll('#relatedAccountsList .ra-check').forEach(chk => { chk.checked = e.target.checked; });
+    boxEl.style.display = 'block'; msgEl.style.color = '#16a34a'; msgEl.textContent = `${relatedAccountsResult.length}件見つかりました`;
+  } else { boxEl.style.display = 'none'; msgEl.style.color = '#0369a1'; msgEl.textContent = '指定アドレスをBANできます'; }
 });
 document.getElementById('banExecuteBtn').addEventListener('click', async () => {
   const inputEmail = document.getElementById('banEmailInput').value.trim().toLowerCase();
   const msgEl = document.getElementById('banSearchMsg');
-  let emailsToBan = [];
-  if (relatedAccountsResult.length > 0) {
-    document.querySelectorAll('#relatedAccountsList .ra-check').forEach((chk, idx) => {
-      if (chk.checked && relatedAccountsResult[idx]) emailsToBan.push(relatedAccountsResult[idx].email);
-    });
-  }
-  if (emailsToBan.length === 0 && inputEmail) emailsToBan.push(inputEmail);
+  let emailsToBan = relatedAccountsResult.length > 0 ? relatedAccountsResult.filter((_, i) => document.querySelectorAll('#relatedAccountsList .ra-check')[i]?.checked).map(a => a.email) : (inputEmail ? [inputEmail] : []);
   emailsToBan = [...new Set(emailsToBan)].filter(em => !isAdmin(em));
-  if (emailsToBan.length === 0) { msgEl.style.color = '#dc2626'; msgEl.textContent = 'BAN対象のメールアドレスがありません'; return; }
-  for (const em of emailsToBan) {
-    await set(ref(db, `emailBans/${encodeEmailKey(em)}`), { email: em, bannedBy: currentUser.email, bannedAt: Date.now() });
-  }
-  msgEl.style.color = '#16a34a'; msgEl.textContent = `${emailsToBan.length}件をBANしました`;
-  document.getElementById('banEmailInput').value = '';
-  document.getElementById('relatedAccountsBox').style.display = 'none';
-  relatedAccountsResult = []; renderBanList();
+  if (emailsToBan.length === 0) { msgEl.style.color = '#dc2626'; msgEl.textContent = 'BAN対象がありません'; return; }
+  for (const em of emailsToBan) await set(ref(db, `emailBans/${encodeEmailKey(em)}`), { email: em, bannedBy: currentUser.email, bannedAt: Date.now() });
+  msgEl.style.color = '#16a34a'; msgEl.textContent = `${emailsToBan.length}件をBANしました`; renderBanList();
 });
 function renderBanList() {
-  const container = document.getElementById('banListContainer');
-  if (!container) return;
+  const container = document.getElementById('banListContainer'); if (!container) return;
   const entries = Object.entries(emailBansCache).map(([key, val]) => ({ key, email: val.email || key }));
-  if (entries.length === 0) { container.innerHTML = '<div style="color:#9ca3af;">BAN中のユーザーはいません</div>'; return; }
-  container.innerHTML = '';
+  container.innerHTML = entries.length === 0 ? '<div style="color:#9ca3af;">BAN中のユーザーはいません</div>' : '';
   entries.forEach((item) => {
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid #f3f4f6;';
-    div.innerHTML = `<span>${escapeHtml(item.email)}</span><button style="background:#fee2e2;color:#dc2626;border:none;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;" data-key="${item.key}">解除</button>`;
+    const div = document.createElement('div'); div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid #f3f4f6;';
+    div.innerHTML = `<span>${escapeHtml(item.email)}</span><button style="background:#fee2e2;color:#dc2626;border:none;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;">解除</button>`;
     div.querySelector('button').addEventListener('click', async () => { await remove(ref(db, `emailBans/${item.key}`)); renderBanList(); });
     container.appendChild(div);
   });
 }
 
-/* ============================================================
-   プレゼンス・認証・プロフィール
-   ============================================================ */
 function isUserOnline(uid) {
-  const p = presenceCache[uid];
-  if (!p) return false;
-  if (p.online === true) {
-    const last = p.lastSeen || p.updatedAt || 0;
-    return (Date.now() - last) < PRESENCE_STALE_MS;
-  }
-  return false;
+  const p = presenceCache[uid]; if (!p) return false;
+  return p.online === true && (Date.now() - (p.lastSeen || p.updatedAt || 0)) < PRESENCE_STALE_MS;
 }
 function startPresenceSystem() {
   if (!currentUser) return;
   myPresenceRef = ref(db, `presence/${currentUser.uid}`);
-  const writeOnline = () => {
-    if (!currentUser || !myPresenceRef) return;
-    set(myPresenceRef, { online: true, lastSeen: Date.now(), updatedAt: Date.now(), nickname: myProfile.nickname || '名無しさん' }).catch(() => {});
-  };
+  const writeOnline = () => { if (currentUser && myPresenceRef) set(myPresenceRef, { online: true, lastSeen: Date.now(), updatedAt: Date.now(), nickname: myProfile.nickname || '名無しさん' }).catch(() => {}); };
   writeOnline();
   onDisconnect(myPresenceRef).set({ online: false, lastSeen: Date.now(), updatedAt: Date.now() }).catch(() => {});
   if (heartbeatTimer) clearInterval(heartbeatTimer);
   heartbeatTimer = setInterval(() => { if (!document.hidden && currentUser) writeOnline(); }, HEARTBEAT_INTERVAL);
-  const connDot = document.getElementById('connDot');
-  const connText = document.getElementById('connText');
-  if (connDot) connDot.classList.add('online');
-  if (connText) connText.textContent = 'オンライン';
+  document.getElementById('connDot').classList.add('online');
+  document.getElementById('connText').textContent = 'オンライン';
   if (unsubs.presence) unsubs.presence();
-  unsubs.presence = onValue(ref(db, 'presence'), (snap) => {
-    presenceCache = snap.val() || {};
-    updateChatHeader();
-    if (currentChatId) renderMessages(true);
-    else renderChatList();
-  }, () => {});
+  unsubs.presence = onValue(ref(db, 'presence'), (snap) => { presenceCache = snap.val() || {}; updateChatHeader(); if (currentChatId) renderMessages(true); else renderChatList(); }, () => {});
 }
 function stopPresenceSystem() {
   if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
   if (myPresenceRef) { set(myPresenceRef, { online: false, lastSeen: Date.now(), updatedAt: Date.now() }).catch(() => {}); myPresenceRef = null; }
-  const connDot = document.getElementById('connDot');
-  const connText = document.getElementById('connText');
-  if (connDot) connDot.classList.remove('online');
-  if (connText) connText.textContent = 'オフライン';
+  document.getElementById('connDot').classList.remove('online');
+  document.getElementById('connText').textContent = 'オフライン';
 }
 
 document.addEventListener('visibilitychange', () => {
   isTabActive = !document.hidden;
   if (isTabActive) {
     if (currentUser && myPresenceRef) set(myPresenceRef, { online: true, lastSeen: Date.now(), updatedAt: Date.now(), nickname: myProfile.nickname || '名無しさん' }).catch(() => {});
-    if (currentChatId && messagesCache.length > 0) {
-      const latest = messagesCache[messagesCache.length - 1];
-      if (latest && latest.createdAt) { markChatAsRead(currentChatId, latest.createdAt); renderMessages(true); }
-    }
+    if (currentChatId && messagesCache.length > 0) { const latest = messagesCache[messagesCache.length - 1]; if (latest?.createdAt) { markChatAsRead(currentChatId, latest.createdAt); renderMessages(true); } }
   } else {
     setTypingState(false);
     if (currentUser && myPresenceRef) set(myPresenceRef, { online: false, lastSeen: Date.now(), updatedAt: Date.now() }).catch(() => {});
@@ -3172,9 +2842,7 @@ document.addEventListener('visibilitychange', () => {
 
 onAuthStateChanged(auth, async (user) => {
   document.getElementById('bootOverlay').classList.add('hidden');
-  listenEmergency();
-  listenSiteLock();
-
+  listenEmergency(); listenSiteLock();
   if (user) {
     currentUser = user;
     await registerDeviceLink(user);
@@ -3182,20 +2850,14 @@ onAuthStateChanged(auth, async (user) => {
     if (snap && snap.exists()) emailBansCache = snap.val();
     if (isCurrentUserBanned()) { triggerBanEnforcement(); return; }
     stopBanEnforcement();
-
     const approvalStatus = await checkUserApproval(user);
     if (approvalStatus !== 'approved') { showPendingApprovalOverlay(user); return; }
-
     if (siteLockState.active && !isAdmin(user.email)) { enforcePrivateMode(); return; }
-
     await initializeAfterLogin(user);
   } else {
     currentUser = null;
-    if (!intentionalSignOut) {
-      try { const res = await signInWithPopup(auth, provider); if (res.user) return; } catch (e) {}
-    }
-    intentionalSignOut = false;
-    showLoginScreen();
+    if (!intentionalSignOut) { try { const res = await signInWithPopup(auth, provider); if (res.user) return; } catch (e) {} }
+    intentionalSignOut = false; showLoginScreen();
   }
 });
 
@@ -3205,20 +2867,10 @@ async function initializeAfterLogin(user) {
   const profSnap = await get(ref(db, `chatProfiles/${user.uid}`)).catch(() => null);
   let nickname = user.displayName || (user.email ? user.email.split('@')[0] : '名無しさん');
   let avatar = user.photoURL || DEFAULT_AVATAR;
-  if (profSnap && profSnap.exists()) {
-    const p = profSnap.val();
-    if (p.nickname) nickname = p.nickname;
-    if (p.avatar) avatar = p.avatar;
-  }
+  if (profSnap && profSnap.exists()) { const p = profSnap.val(); if (p.nickname) nickname = p.nickname; if (p.avatar) avatar = p.avatar; }
   myProfile = { nickname, avatar, email: (user.email || '').toLowerCase() };
   profilesCache[user.uid] = { ...myProfile, uid: user.uid };
-  await update(ref(db, `chatProfiles/${user.uid}`), {
-    nickname: myProfile.nickname,
-    avatar: myProfile.avatar,
-    email: (user.email || '').toLowerCase(),
-    updatedAt: Date.now()
-  }).catch(() => {});
-
+  await update(ref(db, `chatProfiles/${user.uid}`), { nickname: myProfile.nickname, avatar: myProfile.avatar, email: (user.email || '').toLowerCase(), updatedAt: Date.now() }).catch(() => {});
   document.getElementById('myName').textContent = myProfile.nickname;
   document.getElementById('myAvatar').src = myProfile.avatar;
 
@@ -3231,48 +2883,24 @@ async function initializeAfterLogin(user) {
   document.getElementById('notificationBtn').style.display = isAdm ? 'flex' : 'none';
   document.getElementById('approvalBtn').style.display = isAdm ? 'flex' : 'none';
 
-  updatePrivateModeUI();
-  startPresenceSystem();
-  listenAnnouncement();
-  listenEmailBans();
-  listenForIncomingCalls();
-  if (isAdm) {
-    listenAdminNotifications();
-    listenApprovals();
-    listenDeviceLinks();
-    listenEmergencyHistory();
-  }
-  listenUserChats();
-  listenStories();
-  listenMyStickers();
+  updatePrivateModeUI(); startPresenceSystem(); listenAnnouncement(); listenEmailBans(); listenForIncomingCalls();
+  if (isAdm) { listenAdminNotifications(); listenApprovals(); listenDeviceLinks(); listenEmergencyHistory(); }
+  listenUserChats(); listenStories(); listenMyStickers();
   await recordAdminLoginNotification(user);
   showChatListView();
 }
 
 function showLoginScreen() {
   stopPresenceSystem();
-  if (unsubs.chats) unsubs.chats();
-  if (unsubs.messages) unsubs.messages();
-  if (unsubs.stories) unsubs.stories();
-  if (unsubs.myStickers) unsubs.myStickers();
+  if (unsubs.chats) unsubs.chats(); if (unsubs.messages) unsubs.messages(); if (unsubs.stories) unsubs.stories(); if (unsubs.myStickers) unsubs.myStickers();
   Object.values(chatLatestListeners).forEach(fn => fn()); chatLatestListeners = {};
   Object.values(globalGroupCallListeners).forEach(fn => fn()); globalGroupCallListeners = {};
-  document.getElementById('loginView').style.display = 'flex';
-  document.getElementById('mainView').style.display = 'none';
+  document.getElementById('loginView').style.display = 'flex'; document.getElementById('mainView').style.display = 'none';
   document.getElementById('bootOverlay').classList.add('hidden');
 }
 
-document.getElementById('googleLoginBtn').addEventListener('click', async () => {
-  intentionalSignOut = false;
-  try { await signInWithPopup(auth, provider); } catch (e) { showBanner('ログインに失敗しました'); }
-});
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-  intentionalSignOut = true;
-  endCurrentCall();
-  stopPresenceSystem();
-  await signOut(auth).catch(() => {});
-  showLoginScreen();
-});
+document.getElementById('googleLoginBtn').addEventListener('click', async () => { intentionalSignOut = false; try { await signInWithPopup(auth, provider); } catch (e) { showBanner('ログインに失敗しました'); } });
+document.getElementById('logoutBtn').addEventListener('click', async () => { intentionalSignOut = true; await endCurrentCall(); stopPresenceSystem(); await signOut(auth).catch(() => {}); showLoginScreen(); });
 
 /* ============================================================
    チャット一覧・チャット画面・メッセージ
@@ -3287,9 +2915,7 @@ function showChatListView() {
   document.getElementById('chatListView').style.display = 'flex';
   document.getElementById('chatView').style.display = 'none';
   document.getElementById('groupCallBanner').classList.remove('show');
-  renderChatList();
-  refreshFavicon();
-  updateTitleUnread();
+  renderChatList(); refreshFavicon(); updateTitleUnread();
 }
 
 function listenUserChats() {
@@ -3302,15 +2928,14 @@ function listenUserChats() {
       snap.forEach((child) => {
         newChats[child.key] = { id: child.key, ...child.val() };
         ensureChatLatestListener(child.key);
-        const uids = Object.keys(child.val().members || {});
-        uids.forEach(uid => ensureProfileListener(uid));
+        Object.keys(child.val().members || {}).forEach(uid => ensureProfileListener(uid));
       });
     }
     chatsCache = newChats;
     watchAllGroupCallsForNotifications();
     if (!currentChatId) renderChatList();
     else { updateChatHeader(); if (chatsCache[currentChatId] && messagesCache.length > 0) renderMessages(true); }
-  }, (err) => { console.warn('listenUserChats error:', err); });
+  }, () => {});
 }
 
 function ensureChatLatestListener(chatId) {
@@ -3319,20 +2944,15 @@ function ensureChatLatestListener(chatId) {
   chatLatestListeners[chatId] = onValue(q, (snap) => {
     if (!snap.exists() || !currentUser) return;
     snap.forEach((child) => {
-      const msg = child.val();
-      if (!msg || !msg.createdAt) return;
-      const prevLatest = chatLatestMsgAt[chatId] || 0;
-      if (msg.createdAt > prevLatest) {
+      const msg = child.val(); if (!msg || !msg.createdAt) return;
+      if (msg.createdAt > (chatLatestMsgAt[chatId] || 0)) {
         chatLatestMsgAt[chatId] = msg.createdAt;
         if (msg.authorUid !== currentUser.uid && !msg.system) {
-          const isViewingThisChat = (currentChatId === chatId) && isTabActive && !document.hidden;
-          const lastRead = lastReadAt[chatId] || 0;
-          if (!isViewingThisChat && msg.createdAt > lastRead) {
+          const isViewing = (currentChatId === chatId) && isTabActive && !document.hidden;
+          if (!isViewing && msg.createdAt > (lastReadAt[chatId] || 0)) {
             unreadCounts[chatId] = (unreadCounts[chatId] || 0) + 1;
             saveJson(UNREAD_STORAGE_KEY, unreadCounts);
-            const senderName = profilesCache[msg.authorUid]?.nickname || '相手';
-            const previewText = msg.type === 'sticker' ? 'スタンプを送信しました' : (msg.content || (msg.file ? '画像を送信しました' : ''));
-            fireNotification(chatId, senderName, previewText);
+            fireNotification(chatId, profilesCache[msg.authorUid]?.nickname || '相手', msg.type === 'sticker' ? 'スタンプ' : (msg.content || '画像'));
           }
         }
       }
@@ -3354,13 +2974,9 @@ function ensureProfileListener(uid) {
 }
 
 function renderChatList() {
-  const container = document.getElementById('chatListContainer');
-  if (!container || !currentUser) return;
+  const container = document.getElementById('chatListContainer'); if (!container || !currentUser) return;
   const list = Object.values(chatsCache).sort((a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0));
-  if (list.length === 0) {
-    container.innerHTML = '<div style="text-align:center;color:#64748b;padding:48px 20px;font-size:13px;">チャットがありません。<br>右上の「＋ チャット」から始めましょう！</div>';
-    return;
-  }
+  if (list.length === 0) { container.innerHTML = '<div style="text-align:center;color:#64748b;padding:48px 20px;font-size:13px;">チャットがありません。右上の「＋ チャット」から始めましょう！</div>'; return; }
   container.innerHTML = '';
   list.forEach((chat) => {
     const memberUids = Object.keys(chat.members || {});
@@ -3371,25 +2987,13 @@ function renderChatList() {
     const unread = unreadCounts[chat.id] || 0;
     const item = document.createElement('div');
     item.className = `chat-item ${unread > 0 ? 'unread' : ''}`;
-    let avatarHtml = '';
-    if (isGroup) {
-      const avs = otherUids.slice(0, 3).map(u => `<img class="avatar-sm" src="${escapeHtml(profilesCache[u]?.avatar || DEFAULT_AVATAR)}" alt="">`).join('');
-      avatarHtml = `<div class="group-avatars">${avs}</div>`;
-    } else {
-      const av = profilesCache[otherUid]?.avatar || DEFAULT_AVATAR;
-      const online = isUserOnline(otherUid);
-      avatarHtml = `<span class="avatar-online-wrap"><img class="avatar" src="${escapeHtml(av)}" alt=""><span class="online-dot ${online ? 'online' : ''}"></span></span>`;
-    }
+    let avatarHtml = isGroup
+      ? `<div class="group-avatars">${otherUids.slice(0, 3).map(u => `<img class="avatar-sm" src="${escapeHtml(profilesCache[u]?.avatar || DEFAULT_AVATAR)}" alt="">`).join('')}</div>`
+      : `<span class="avatar-online-wrap"><img class="avatar" src="${escapeHtml(profilesCache[otherUid]?.avatar || DEFAULT_AVATAR)}" alt=""><span class="online-dot ${isUserOnline(otherUid) ? 'online' : ''}"></span></span>`;
     item.innerHTML = `
       <div class="chat-item-avatar-wrap">${avatarHtml}${unread > 0 ? '<span class="unread-dot"></span>' : ''}</div>
-      <div class="chat-item-body">
-        <div class="chat-item-name">${escapeHtml(displayName)}</div>
-        <div class="chat-item-last">${escapeHtml(chat.lastMessage || 'メッセージはありません')}</div>
-      </div>
-      <div class="chat-item-side">
-        <span class="chat-item-time">${chat.lastMessageAt ? formatShortTime(chat.lastMessageAt) : ''}</span>
-        ${unread > 0 ? `<span class="chat-item-badge">${unread > 99 ? '99+' : unread}</span>` : ''}
-      </div>
+      <div class="chat-item-body"><div class="chat-item-name">${escapeHtml(displayName)}</div><div class="chat-item-last">${escapeHtml(chat.lastMessage || 'メッセージはありません')}</div></div>
+      <div class="chat-item-side"><span class="chat-item-time">${chat.lastMessageAt ? formatShortTime(chat.lastMessageAt) : ''}</span>${unread > 0 ? `<span class="chat-item-badge">${unread > 99 ? '99+' : unread}</span>` : ''}</div>
     `;
     item.addEventListener('click', () => openChat(chat.id));
     container.appendChild(item);
@@ -3399,14 +3003,12 @@ function renderChatList() {
 function openChat(chatId) {
   if (!chatsCache[chatId]) return;
   currentChatId = chatId;
-  unreadCounts[chatId] = 0;
-  saveJson(UNREAD_STORAGE_KEY, unreadCounts);
+  unreadCounts[chatId] = 0; saveJson(UNREAD_STORAGE_KEY, unreadCounts);
   refreshFavicon(); updateTitleUnread();
   document.getElementById('chatListView').style.display = 'none';
   document.getElementById('chatView').style.display = 'flex';
-  clearReply();
-  updateChatHeader();
-  watchChatGroupCalls(chatId);
+  clearReply(); updateChatHeader(); watchChatGroupCalls(chatId);
+
   const msgQuery = query(ref(db, `chatMessages/${chatId}`), orderByChild('createdAt'), limitToLast(MESSAGES_LIMIT));
   if (unsubs.messages) unsubs.messages();
   unsubs.messages = onValue(msgQuery, (snap) => {
@@ -3414,12 +3016,9 @@ function openChat(chatId) {
     if (snap.exists()) snap.forEach((child) => { msgs.push({ key: child.key, ...child.val() }); });
     msgs.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
     messagesCache = msgs;
-    if (msgs.length > 0) {
-      const latest = msgs[msgs.length - 1];
-      if (latest && latest.createdAt) { chatLatestMsgAt[chatId] = Math.max(chatLatestMsgAt[chatId] || 0, latest.createdAt); markChatAsRead(chatId, latest.createdAt); }
-    }
+    if (msgs.length > 0) { const latest = msgs[msgs.length - 1]; if (latest?.createdAt) { chatLatestMsgAt[chatId] = Math.max(chatLatestMsgAt[chatId] || 0, latest.createdAt); markChatAsRead(chatId, latest.createdAt); } }
     renderMessages(true);
-  }, (err) => { console.warn('messages listener error:', err); });
+  }, () => {});
 
   if (unsubs.reads) unsubs.reads();
   unsubs.reads = onValue(ref(db, `chatReads/${chatId}`), (snap) => { readsCache = snap.val() || {}; if (currentChatId === chatId) renderMessages(true); }, () => {});
@@ -3456,30 +3055,17 @@ function updateChatHeader() {
   const callBtn = document.getElementById('chatCallBtn');
   const callBtnLabel = document.getElementById('chatCallBtnLabel');
   if (callBtn) {
-    if (groupCallState.active && groupCallState.chatId === currentChatId) {
-      callBtn.classList.add('in-call');
-      callBtn.disabled = false;
-      if (callBtnLabel) callBtnLabel.textContent = '通話中';
-    } else if (callState.active && callState.chatId === currentChatId) {
-      callBtn.classList.add('in-call');
-      callBtn.disabled = false;
-      if (callBtnLabel) callBtnLabel.textContent = '通話中';
-    } else {
-      callBtn.classList.remove('in-call');
-      callBtn.disabled = false;
-      if (callBtnLabel) callBtnLabel.textContent = isGroup ? 'グル通' : '通話';
-    }
+    const inThisCall = (groupCallState.active && groupCallState.chatId === currentChatId) || (callState.active && callState.chatId === currentChatId);
+    callBtn.classList.toggle('in-call', inThisCall);
+    callBtn.disabled = false;
+    if (callBtnLabel) callBtnLabel.textContent = inThisCall ? '通話中' : (isGroup ? 'グル通' : '通話');
   }
 }
 
 document.getElementById('chatCallBtn').addEventListener('click', () => {
   if (!currentChatId || !chatsCache[currentChatId]) return;
   const chat = chatsCache[currentChatId];
-  if (groupCallState.active && groupCallState.chatId === currentChatId) {
-    document.getElementById('callPanel').classList.add('show');
-    return;
-  }
-  if (callState.active && callState.chatId === currentChatId) {
+  if ((groupCallState.active && groupCallState.chatId === currentChatId) || (callState.active && callState.chatId === currentChatId)) {
     document.getElementById('callPanel').classList.add('show');
     return;
   }
@@ -3502,10 +3088,8 @@ function markChatAsRead(chatId, timestamp) {
 }
 
 function renderMessages(forceScroll = false) {
-  const container = document.getElementById('messagesContainer');
-  if (!container || !currentUser) return;
+  const container = document.getElementById('messagesContainer'); if (!container || !currentUser) return;
   const wrap = document.getElementById('chatMessagesWrap');
-  const shouldScroll = forceScroll || isNearBottom;
   const memberCount = Object.keys(chatsCache[currentChatId]?.members || {}).length;
   container.innerHTML = '';
   let lastDateStr = '', prevAuthor = null, prevTime = 0;
@@ -3516,19 +3100,13 @@ function renderMessages(forceScroll = false) {
       const dateStr = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
       if (dateStr !== lastDateStr) {
         lastDateStr = dateStr; prevAuthor = null;
-        const div = document.createElement('div');
-        div.className = 'date-divider';
-        div.innerHTML = `<span>${dateStr}</span>`;
+        const div = document.createElement('div'); div.className = 'date-divider'; div.innerHTML = `<span>${dateStr}</span>`;
         container.appendChild(div);
       }
     }
     if (msg.system) {
-      const div = document.createElement('div');
-      div.className = 'system-message';
-      div.innerHTML = `<span>${escapeHtml(msg.content || '')}</span>`;
-      container.appendChild(div);
-      prevAuthor = null;
-      return;
+      const div = document.createElement('div'); div.className = 'system-message'; div.innerHTML = `<span>${escapeHtml(msg.content || '')}</span>`;
+      container.appendChild(div); prevAuthor = null; return;
     }
     const isMine = msg.authorUid === currentUser.uid;
     const isGrouped = (prevAuthor === msg.authorUid) && ((msg.createdAt || 0) - prevTime < 60000);
@@ -3541,55 +3119,25 @@ function renderMessages(forceScroll = false) {
     let readReceiptHtml = '';
     if (isMine && msg.createdAt) {
       let readCount = 0;
-      Object.entries(readsCache).forEach(([uid, r]) => {
-        if (uid !== currentUser.uid && r && (r.readAt || 0) >= msg.createdAt) readCount++;
-      });
-      if (readCount > 0) {
-        readReceiptHtml = memberCount > 2
-          ? `<div class="read-receipt">既読 ${readCount}</div>`
-          : `<div class="read-receipt">既読</div>`;
-      }
+      Object.entries(readsCache).forEach(([uid, r]) => { if (uid !== currentUser.uid && r && (r.readAt || 0) >= msg.createdAt) readCount++; });
+      if (readCount > 0) readReceiptHtml = memberCount > 2 ? `<div class="read-receipt">既読 ${readCount}</div>` : `<div class="read-receipt">既読</div>`;
     }
 
     const row = document.createElement('div');
     row.className = `msg-row ${isMine ? 'mine' : ''} ${isGrouped ? 'msg-grouped' : ''}`;
-    row.dataset.msgKey = msg.key;
-
-    const avatarHtml = isGrouped
-      ? '<div class="msg-avatar-slot empty"></div>'
-      : `<div class="msg-avatar-slot"><img class="avatar-sm" src="${escapeHtml(senderAvatar)}" alt=""></div>`;
-    const metaHtml = (!isGrouped || msg.edited)
-      ? `<div class="msg-meta">${!isGrouped ? `<span class="name">${escapeHtml(senderName)}</span>` : ''}${!isGrouped ? `<span class="time">${formatTime(msg.createdAt)}</span>` : ''}${msg.edited ? `<span class="edited-label">(編集済み)</span>` : ''}</div>`
-      : '';
+    const avatarHtml = isGrouped ? '<div class="msg-avatar-slot empty"></div>' : `<div class="msg-avatar-slot"><img class="avatar-sm" src="${escapeHtml(senderAvatar)}" alt=""></div>`;
+    const metaHtml = (!isGrouped || msg.edited) ? `<div class="msg-meta">${!isGrouped ? `<span class="name">${escapeHtml(senderName)}</span>` : ''}${!isGrouped ? `<span class="time">${formatTime(msg.createdAt)}</span>` : ''}${msg.edited ? `<span class="edited-label">(編集済み)</span>` : ''}</div>` : '';
 
     let innerBubble = '';
-    if (msg.storyReply) {
-      innerBubble += `<div class="story-reply-context">${msg.storyReply.mediaUrl ? `<img src="${escapeHtml(msg.storyReply.mediaUrl)}" alt="">` : ''}<div class="txt">ストーリーへの返信: ${escapeHtml(msg.storyReply.text || '')}</div></div>`;
-    }
-    if (msg.replyTo) {
-      innerBubble += `<div class="reply-quote"><div class="reply-name">${escapeHtml(msg.replyTo.senderName || '')}</div><div>${escapeHtml(msg.replyTo.content || '')}</div></div>`;
-    }
-    if (isSticker) {
-      innerBubble += `<div class="msg-sticker"><img src="${escapeHtml(msg.stickerUrl)}" alt="スタンプ"></div>`;
-    } else {
+    if (msg.storyReply) innerBubble += `<div class="story-reply-context">${msg.storyReply.mediaUrl ? `<img src="${escapeHtml(msg.storyReply.mediaUrl)}" alt="">` : ''}<div class="txt">ストーリーへの返信: ${escapeHtml(msg.storyReply.text || '')}</div></div>`;
+    if (msg.replyTo) innerBubble += `<div class="reply-quote"><div class="reply-name">${escapeHtml(msg.replyTo.senderName || '')}</div><div>${escapeHtml(msg.replyTo.content || '')}</div></div>`;
+    if (isSticker) innerBubble += `<div class="msg-sticker"><img src="${escapeHtml(msg.stickerUrl)}" alt="スタンプ"></div>`;
+    else {
       if (msg.content) innerBubble += `<div class="msg-content">${linkifyText(msg.content)}</div>`;
-      if (msg.file && msg.file.dataUrl) {
-        innerBubble += `<div class="msg-file ${!msg.content ? 'only-file' : ''}"><img src="${escapeHtml(msg.file.dataUrl)}" alt=""></div>`;
-      }
+      if (msg.file && msg.file.dataUrl) innerBubble += `<div class="msg-file ${!msg.content ? 'only-file' : ''}"><img src="${escapeHtml(msg.file.dataUrl)}" alt=""></div>`;
     }
 
-    row.innerHTML = `
-      ${avatarHtml}
-      <div class="msg-body">
-        ${metaHtml}
-        <div class="msg-bubble-wrap">
-          <div class="msg-bubble ${isSticker ? 'sticker-only' : ''}">${innerBubble}</div>
-          <button type="button" class="msg-menu-btn">⋮</button>
-        </div>
-        ${readReceiptHtml}
-      </div>
-    `;
-
+    row.innerHTML = `${avatarHtml}<div class="msg-body">${metaHtml}<div class="msg-bubble-wrap"><div class="msg-bubble ${isSticker ? 'sticker-only' : ''}">${innerBubble}</div><button type="button" class="msg-menu-btn">⋮</button></div>${readReceiptHtml}</div>`;
     const fileEl = row.querySelector('.msg-file');
     if (fileEl && msg.file?.dataUrl) fileEl.addEventListener('click', () => openLightbox(msg.file.dataUrl));
     const stickerEl = row.querySelector('.msg-sticker');
@@ -3599,163 +3147,99 @@ function renderMessages(forceScroll = false) {
     container.appendChild(row);
   });
 
-  if (shouldScroll && wrap) wrap.scrollTop = wrap.scrollHeight;
+  if (forceScroll && wrap) wrap.scrollTop = wrap.scrollHeight;
   renderTypingIndicator();
 }
 
 function renderTypingIndicator() {
-  const slot = document.getElementById('typingIndicatorSlot');
-  if (!slot || !currentChatId) return;
-  const now = Date.now();
-  const activeTypers = [];
-  Object.entries(typingCache).forEach(([uid, t]) => {
-    if (uid !== currentUser.uid && t && t.typing && (now - (t.updatedAt || 0)) < 6000) {
-      activeTypers.push(profilesCache[uid]?.nickname || t.nickname || '相手');
-    }
-  });
+  const slot = document.getElementById('typingIndicatorSlot'); if (!slot || !currentChatId) return;
+  const now = Date.now(); const activeTypers = [];
+  Object.entries(typingCache).forEach(([uid, t]) => { if (uid !== currentUser.uid && t && t.typing && (now - (t.updatedAt || 0)) < 6000) activeTypers.push(profilesCache[uid]?.nickname || t.nickname || '相手'); });
   if (activeTypers.length === 0) { slot.innerHTML = ''; return; }
   slot.innerHTML = `<div class="typing-indicator-row"><div class="msg-avatar-slot empty"></div><div class="typing-bubble"><span class="typing-label">${escapeHtml(activeTypers.join('、'))} が入力中</span><span class="typing-dots"><span></span><span></span><span></span></span></div></div>`;
 }
 
 function setTypingState(isTyping) {
-  if (!currentUser || !currentChatId) return;
-  if (isCurrentlyTyping === isTyping) return;
+  if (!currentUser || !currentChatId || isCurrentlyTyping === isTyping) return;
   isCurrentlyTyping = isTyping;
   set(ref(db, `chatTyping/${currentChatId}/${currentUser.uid}`), { typing: isTyping, nickname: myProfile.nickname || '名無しさん', updatedAt: Date.now() }).catch(() => {});
 }
 
 let pendingFileData = null;
 document.getElementById('messageFileInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   if (file.size > 1024 * 1024) { showBanner('画像は1MB以下にしてください'); e.target.value = ''; return; }
   const reader = new FileReader();
-  reader.onload = (ev) => {
-    pendingFileData = { dataUrl: ev.target.result, name: file.name };
-    document.getElementById('messagePreviewImg').src = ev.target.result;
-    document.getElementById('messagePreviewInfo').textContent = file.name;
-    document.getElementById('messagePreviewBox').classList.add('show');
-  };
-  reader.readAsDataURL(file);
-  e.target.value = '';
+  reader.onload = (ev) => { pendingFileData = { dataUrl: ev.target.result, name: file.name }; document.getElementById('messagePreviewImg').src = ev.target.result; document.getElementById('messagePreviewInfo').textContent = file.name; document.getElementById('messagePreviewBox').classList.add('show'); };
+  reader.readAsDataURL(file); e.target.value = '';
 });
-document.getElementById('msgPreviewRemoveBtn').addEventListener('click', () => {
-  pendingFileData = null;
-  document.getElementById('messagePreviewBox').classList.remove('show');
-});
+document.getElementById('msgPreviewRemoveBtn').addEventListener('click', () => { pendingFileData = null; document.getElementById('messagePreviewBox').classList.remove('show'); });
 
 function setReplyTo(msg) {
   const senderName = msg.authorUid === currentUser.uid ? 'あなた' : (profilesCache[msg.authorUid]?.nickname || '相手');
   replyingTo = { key: msg.key, senderName, content: msg.content || (msg.file ? '画像' : '') };
-  document.getElementById('replyPreviewName').textContent = senderName;
-  document.getElementById('replyPreviewText').textContent = replyingTo.content;
-  document.getElementById('replyPreviewBox').classList.add('show');
-  document.getElementById('messageInput').focus();
+  document.getElementById('replyPreviewName').textContent = senderName; document.getElementById('replyPreviewText').textContent = replyingTo.content;
+  document.getElementById('replyPreviewBox').classList.add('show'); document.getElementById('messageInput').focus();
 }
 function clearReply() { replyingTo = null; document.getElementById('replyPreviewBox').classList.remove('show'); }
 document.getElementById('replyPreviewCloseBtn').addEventListener('click', clearReply);
 
 function openMessageMenu(e, msg, isMine) {
   closeOpenMenus();
-  const popup = document.createElement('div');
-  popup.className = 'msg-menu-popup';
-  popup.innerHTML = `
-    <button data-act="reply">↩ 返信</button>
-    ${isMine && msg.content ? '<button data-act="edit">✏ 編集</button>' : ''}
-    ${isMine ? '<button class="danger" data-act="delete">🗑 削除</button>' : ''}
-  `;
+  const popup = document.createElement('div'); popup.className = 'msg-menu-popup';
+  popup.innerHTML = `<button data-act="reply">↩ 返信</button>${isMine && msg.content ? '<button data-act="edit">✏ 編集</button>' : ''}${isMine ? '<button class="danger" data-act="delete">🗑 削除</button>' : ''}`;
   popup.querySelector('[data-act="reply"]').addEventListener('click', () => { setReplyTo(msg); closeOpenMenus(); });
   const editBtn = popup.querySelector('[data-act="edit"]');
-  if (editBtn) editBtn.addEventListener('click', () => {
-    editingMsgKey = msg.key;
-    document.getElementById('editMsgInput').value = msg.content || '';
-    document.getElementById('editMsgModal').classList.remove('hidden');
-    closeOpenMenus();
-  });
+  if (editBtn) editBtn.addEventListener('click', () => { editingMsgKey = msg.key; document.getElementById('editMsgInput').value = msg.content || ''; document.getElementById('editMsgModal').classList.remove('hidden'); closeOpenMenus(); });
   const delBtn = popup.querySelector('[data-act="delete"]');
-  if (delBtn) delBtn.addEventListener('click', async () => {
-    await remove(ref(db, `chatMessages/${currentChatId}/${msg.key}`)).catch(() => {});
-    closeOpenMenus();
-  });
+  if (delBtn) delBtn.addEventListener('click', async () => { await remove(ref(db, `chatMessages/${currentChatId}/${msg.key}`)).catch(() => {}); closeOpenMenus(); });
   document.body.appendChild(popup);
   const rect = e.target.getBoundingClientRect();
-  popup.style.top = Math.min(window.innerHeight - 140, rect.bottom + 4) + 'px';
-  popup.style.left = Math.min(window.innerWidth - 190, Math.max(10, rect.left - 140)) + 'px';
+  popup.style.top = Math.min(window.innerHeight - 140, rect.bottom + 4) + 'px'; popup.style.left = Math.min(window.innerWidth - 190, Math.max(10, rect.left - 140)) + 'px';
   openMenuEl = popup;
 }
-function closeOpenMenus() {
-  if (openMenuEl) { openMenuEl.remove(); openMenuEl = null; }
-  if (openChatHeaderMenuEl) { openChatHeaderMenuEl.remove(); openChatHeaderMenuEl = null; }
-}
+function closeOpenMenus() { if (openMenuEl) { openMenuEl.remove(); openMenuEl = null; } }
 document.addEventListener('click', closeOpenMenus);
 
 document.getElementById('editMsgCancelBtn').addEventListener('click', () => { editingMsgKey = null; document.getElementById('editMsgModal').classList.add('hidden'); });
 document.getElementById('editMsgSaveBtn').addEventListener('click', async () => {
-  const newText = document.getElementById('editMsgInput').value.trim();
-  if (!newText || !editingMsgKey || !currentChatId) return;
+  const newText = document.getElementById('editMsgInput').value.trim(); if (!newText || !editingMsgKey || !currentChatId) return;
   await update(ref(db, `chatMessages/${currentChatId}/${editingMsgKey}`), { content: newText, edited: true, editedAt: Date.now() });
   editingMsgKey = null; document.getElementById('editMsgModal').classList.add('hidden');
 });
 
 const msgInput = document.getElementById('messageInput');
 msgInput.addEventListener('input', () => {
-  msgInput.style.height = 'auto';
-  msgInput.style.height = Math.min(140, msgInput.scrollHeight) + 'px';
-  setTypingState(true);
-  if (typingTimeout) clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => setTypingState(false), TYPING_TIMEOUT_MS);
+  msgInput.style.height = 'auto'; msgInput.style.height = Math.min(140, msgInput.scrollHeight) + 'px';
+  setTypingState(true); if (typingTimeout) clearTimeout(typingTimeout); typingTimeout = setTimeout(() => setTypingState(false), TYPING_TIMEOUT_MS);
 });
-msgInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('messageForm').dispatchEvent(new Event('submit')); }
-});
+msgInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('messageForm').dispatchEvent(new Event('submit')); } });
 
 document.getElementById('messageForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  if (!currentUser || !currentChatId) return;
-  const text = msgInput.value.trim();
-  if (!text && !pendingFileData) return;
-  setTypingState(false);
-  const now = Date.now();
+  e.preventDefault(); if (!currentUser || !currentChatId) return;
+  const text = msgInput.value.trim(); if (!text && !pendingFileData) return;
+  setTypingState(false); const now = Date.now();
   const payload = { authorUid: currentUser.uid, content: text || '', createdAt: now };
-  if (replyingTo) payload.replyTo = replyingTo;
-  if (pendingFileData) payload.file = pendingFileData;
-  msgInput.value = ''; msgInput.style.height = 'auto';
-  pendingFileData = null; document.getElementById('messagePreviewBox').classList.remove('show');
-  clearReply();
+  if (replyingTo) payload.replyTo = replyingTo; if (pendingFileData) payload.file = pendingFileData;
+  msgInput.value = ''; msgInput.style.height = 'auto'; pendingFileData = null; document.getElementById('messagePreviewBox').classList.remove('show'); clearReply();
   await push(ref(db, `chatMessages/${currentChatId}`), payload);
-  const preview = text || '画像を送信しました';
-  const chat = chatsCache[currentChatId];
-  if (chat) {
-    for (const uid of Object.keys(chat.members || {})) {
-      await update(ref(db, `userChats/${uid}/${currentChatId}`), { lastMessage: preview, lastMessageAt: now, lastSenderUid: currentUser.uid });
-    }
-  }
+  const preview = text || '画像を送信しました'; const chat = chatsCache[currentChatId];
+  if (chat) for (const uid of Object.keys(chat.members || {})) await update(ref(db, `userChats/${uid}/${currentChatId}`), { lastMessage: preview, lastMessageAt: now, lastSenderUid: currentUser.uid });
 });
 
-/* ============================================================
-   スタンプ機能
-   ============================================================ */
+/* スタンプ・新規チャット・プロフィール・ストーリー・アーカイブ */
 function listenMyStickers() {
   if (!currentUser) return;
   if (unsubs.myStickers) unsubs.myStickers();
-  unsubs.myStickers = onValue(ref(db, `stickers/${currentUser.uid}`), (snap) => {
-    myStickers = snap.val() || {};
-    renderStickerManageGrid();
-    if (stickerPickerOpen) renderStickerPicker();
-  }, () => {});
+  unsubs.myStickers = onValue(ref(db, `stickers/${currentUser.uid}`), (snap) => { myStickers = snap.val() || {}; renderStickerManageGrid(); if (stickerPickerOpen) renderStickerPicker(); }, () => {});
 }
 document.getElementById('stickerManageBtn').addEventListener('click', () => { renderStickerManageGrid(); document.getElementById('stickerManageModal').classList.remove('hidden'); });
-document.getElementById('stickerManageCloseBtn').addEventListener('click', () => { document.getElementById('stickerManageModal').classList.add('hidden'); });
+document.getElementById('stickerManageCloseBtn').addEventListener('click', () => document.getElementById('stickerManageModal').classList.add('hidden'));
 document.getElementById('stickerUploadInput').addEventListener('change', (e) => {
   const file = e.target.files[0]; if (!file || !currentUser) return;
-  const msgEl = document.getElementById('stickerUploadMsg');
-  if (file.size > 1024 * 1024) { msgEl.style.color = '#dc2626'; msgEl.textContent = '1MB以下の画像を選択してください'; e.target.value = ''; return; }
+  if (file.size > 1024 * 1024) { document.getElementById('stickerUploadMsg').textContent = '1MB以下にしてください'; e.target.value = ''; return; }
   const reader = new FileReader();
-  reader.onload = async (ev) => {
-    const id = 'stk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-    await set(ref(db, `stickers/${currentUser.uid}/${id}`), { dataUrl: ev.target.result, name: file.name, createdAt: Date.now() });
-    msgEl.style.color = '#16a34a'; msgEl.textContent = 'スタンプを追加しました';
-  };
+  reader.onload = async (ev) => { const id = 'stk_' + Date.now(); await set(ref(db, `stickers/${currentUser.uid}/${id}`), { dataUrl: ev.target.result, name: file.name, createdAt: Date.now() }); document.getElementById('stickerUploadMsg').textContent = 'スタンプを追加しました'; };
   reader.readAsDataURL(file); e.target.value = '';
 });
 function renderStickerManageGrid() {
@@ -3764,89 +3248,55 @@ function renderStickerManageGrid() {
   if (entries.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#9ca3af;padding:24px;font-size:12px;">スタンプがありません</div>'; return; }
   grid.innerHTML = '';
   entries.forEach(([id, stk]) => {
-    const div = document.createElement('div');
-    div.style.cssText = 'position:relative;border:1px solid #bae6fd;border-radius:10px;padding:6px;background:#f0f9ff;display:flex;align-items:center;justify-content:center;aspect-ratio:1;';
+    const div = document.createElement('div'); div.style.cssText = 'position:relative;border:1px solid #bae6fd;border-radius:10px;padding:6px;background:#f0f9ff;display:flex;align-items:center;justify-content:center;aspect-ratio:1;';
     div.innerHTML = `<img src="${escapeHtml(stk.dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;"><button style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#dc2626;color:#fff;border:2px solid #fff;font-size:11px;cursor:pointer;">×</button>`;
     div.querySelector('button').addEventListener('click', async (ev) => { ev.stopPropagation(); await remove(ref(db, `stickers/${currentUser.uid}/${id}`)); });
     grid.appendChild(div);
   });
 }
 document.getElementById('stickerOpenBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  const picker = document.getElementById('stickerPicker');
+  e.stopPropagation(); const picker = document.getElementById('stickerPicker');
   if (stickerPickerOpen) { picker.style.display = 'none'; stickerPickerOpen = false; return; }
-  renderStickerPicker();
-  const rect = e.currentTarget.getBoundingClientRect();
-  picker.style.display = 'block';
-  picker.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
-  picker.style.left = Math.min(window.innerWidth - 250, Math.max(12, rect.left - 100)) + 'px';
+  renderStickerPicker(); const rect = e.currentTarget.getBoundingClientRect();
+  picker.style.display = 'block'; picker.style.bottom = (window.innerHeight - rect.top + 8) + 'px'; picker.style.left = Math.min(window.innerWidth - 250, Math.max(12, rect.left - 100)) + 'px';
   stickerPickerOpen = true;
 });
-document.addEventListener('click', (e) => {
-  const picker = document.getElementById('stickerPicker');
-  if (stickerPickerOpen && !picker.contains(e.target) && e.target.id !== 'stickerOpenBtn') { picker.style.display = 'none'; stickerPickerOpen = false; }
-});
-document.getElementById('stickerPickerManageBtn').addEventListener('click', () => {
-  document.getElementById('stickerPicker').style.display = 'none'; stickerPickerOpen = false;
-  renderStickerManageGrid(); document.getElementById('stickerManageModal').classList.remove('hidden');
-});
+document.addEventListener('click', (e) => { const picker = document.getElementById('stickerPicker'); if (stickerPickerOpen && !picker.contains(e.target) && e.target.id !== 'stickerOpenBtn') { picker.style.display = 'none'; stickerPickerOpen = false; } });
+document.getElementById('stickerPickerManageBtn').addEventListener('click', () => { document.getElementById('stickerPicker').style.display = 'none'; stickerPickerOpen = false; renderStickerManageGrid(); document.getElementById('stickerManageModal').classList.remove('hidden'); });
 function renderStickerPicker() {
   const grid = document.getElementById('stickerPickerGrid'); const empty = document.getElementById('stickerPickerEmpty');
   const entries = Object.entries(myStickers).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-  grid.innerHTML = '';
-  if (entries.length === 0) { empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
+  grid.innerHTML = ''; if (entries.length === 0) { empty.style.display = 'block'; return; } empty.style.display = 'none';
   entries.forEach(([id, stk]) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.style.cssText = 'background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:4px;cursor:pointer;aspect-ratio:1;display:flex;align-items:center;justify-content:center;';
+    const btn = document.createElement('button'); btn.type = 'button'; btn.style.cssText = 'background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:4px;cursor:pointer;aspect-ratio:1;display:flex;align-items:center;justify-content:center;';
     btn.innerHTML = `<img src="${escapeHtml(stk.dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;">`;
     btn.addEventListener('click', async () => {
-      if (!currentChatId || !currentUser) return;
-      document.getElementById('stickerPicker').style.display = 'none'; stickerPickerOpen = false;
-      const now = Date.now();
-      await push(ref(db, `chatMessages/${currentChatId}`), { authorUid: currentUser.uid, type: 'sticker', stickerUrl: stk.dataUrl, createdAt: now });
-      const chat = chatsCache[currentChatId];
-      if (chat) {
-        for (const uid of Object.keys(chat.members || {})) {
-          await update(ref(db, `userChats/${uid}/${currentChatId}`), { lastMessage: 'スタンプを送信しました', lastMessageAt: now, lastSenderUid: currentUser.uid });
-        }
-      }
+      if (!currentChatId || !currentUser) return; document.getElementById('stickerPicker').style.display = 'none'; stickerPickerOpen = false;
+      const now = Date.now(); await push(ref(db, `chatMessages/${currentChatId}`), { authorUid: currentUser.uid, type: 'sticker', stickerUrl: stk.dataUrl, createdAt: now });
+      const chat = chatsCache[currentChatId]; if (chat) for (const uid of Object.keys(chat.members || {})) await update(ref(db, `userChats/${uid}/${currentChatId}`), { lastMessage: 'スタンプを送信しました', lastMessageAt: now, lastSenderUid: currentUser.uid });
     });
     grid.appendChild(btn);
   });
 }
 
-/* ============================================================
-   新規チャット・メンバー追加
-   ============================================================ */
-document.getElementById('newChatBtn').addEventListener('click', () => {
-  pendingMembers = []; document.getElementById('memberEmailInput').value = '';
-  document.getElementById('groupNameInput').value = ''; document.getElementById('memberSearchMsg').textContent = '';
-  renderPendingMembers(); document.getElementById('newChatModal').classList.remove('hidden');
-});
+document.getElementById('newChatBtn').addEventListener('click', () => { pendingMembers = []; document.getElementById('memberEmailInput').value = ''; document.getElementById('groupNameInput').value = ''; document.getElementById('memberSearchMsg').textContent = ''; renderPendingMembers(); document.getElementById('newChatModal').classList.remove('hidden'); });
 document.getElementById('newChatCancelBtn').addEventListener('click', () => document.getElementById('newChatModal').classList.add('hidden'));
 document.getElementById('addMemberBtn').addEventListener('click', async () => {
-  const email = document.getElementById('memberEmailInput').value.trim().toLowerCase();
-  const msgEl = document.getElementById('memberSearchMsg');
+  const email = document.getElementById('memberEmailInput').value.trim().toLowerCase(); const msgEl = document.getElementById('memberSearchMsg');
   if (!email) { msgEl.style.color = '#dc2626'; msgEl.textContent = 'メールアドレスを入力してください'; return; }
   if (email === (currentUser.email || '').toLowerCase()) { msgEl.style.color = '#dc2626'; msgEl.textContent = '自分のメールアドレスは追加できません'; return; }
   if (pendingMembers.some(m => m.email === email)) { msgEl.style.color = '#dc2626'; msgEl.textContent = 'すでに追加されています'; return; }
   msgEl.style.color = '#0369a1'; msgEl.textContent = 'ユーザーを検索中...';
   const found = await findUserByEmail(email);
   if (!found) { msgEl.style.color = '#dc2626'; msgEl.textContent = '該当するユーザーが見つかりません'; return; }
-  pendingMembers.push(found);
-  document.getElementById('memberEmailInput').value = '';
-  msgEl.style.color = '#16a34a'; msgEl.textContent = `${found.nickname} を追加しました`;
-  renderPendingMembers();
+  pendingMembers.push(found); document.getElementById('memberEmailInput').value = ''; msgEl.style.color = '#16a34a'; msgEl.textContent = `${found.nickname} を追加しました`; renderPendingMembers();
 });
 function renderPendingMembers() {
   const box = document.getElementById('selectedMembersBox');
   if (pendingMembers.length === 0) { box.innerHTML = '<span style="font-size:11px;color:#94a3b8;">まだ相手が追加されていません</span>'; return; }
   box.innerHTML = '';
   pendingMembers.forEach((m, idx) => {
-    const chip = document.createElement('span');
-    chip.className = 'member-chip';
+    const chip = document.createElement('span'); chip.className = 'member-chip';
     chip.innerHTML = `<img src="${escapeHtml(m.avatar || DEFAULT_AVATAR)}" alt=""><span>${escapeHtml(m.nickname)}</span><span class="remove-x">×</span>`;
     chip.querySelector('.remove-x').addEventListener('click', () => { pendingMembers.splice(idx, 1); renderPendingMembers(); });
     box.appendChild(chip);
@@ -3854,177 +3304,86 @@ function renderPendingMembers() {
 }
 document.getElementById('newChatCreateBtn').addEventListener('click', async () => {
   if (pendingMembers.length === 0) return showBanner('相手を1人以上追加してください');
-  const isGroup = pendingMembers.length >= 2;
-  const groupName = document.getElementById('groupNameInput').value.trim();
-  const membersMap = { [currentUser.uid]: true };
-  pendingMembers.forEach(m => { membersMap[m.uid] = true; });
+  const isGroup = pendingMembers.length >= 2; const groupName = document.getElementById('groupNameInput').value.trim();
+  const membersMap = { [currentUser.uid]: true }; pendingMembers.forEach(m => { membersMap[m.uid] = true; });
   const chatId = 'chat_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
   const chatData = { id: chatId, type: isGroup ? 'group' : 'direct', name: isGroup ? (groupName || pendingMembers.map(m => m.nickname).join('、')) : '', members: membersMap, createdBy: currentUser.uid, createdAt: Date.now(), lastMessage: '', lastMessageAt: Date.now() };
   await set(ref(db, `chatMeta/${chatId}`), chatData);
   for (const uid of Object.keys(membersMap)) await set(ref(db, `userChats/${uid}/${chatId}`), chatData);
-  document.getElementById('newChatModal').classList.add('hidden');
-  openChat(chatId);
+  document.getElementById('newChatModal').classList.add('hidden'); openChat(chatId);
 });
-
 async function findUserByEmail(email) {
-  const norm = email.trim().toLowerCase();
-  const snap = await get(ref(db, 'chatProfiles'));
-  if (snap.exists()) {
-    let found = null;
-    snap.forEach((child) => {
-      const val = child.val();
-      if (val && val.email && val.email.toLowerCase() === norm) found = { uid: child.key, nickname: val.nickname || norm.split('@')[0], avatar: val.avatar || DEFAULT_AVATAR, email: norm };
-    });
-    if (found) return found;
-  }
+  const norm = email.trim().toLowerCase(); const snap = await get(ref(db, 'chatProfiles'));
+  if (snap.exists()) { let found = null; snap.forEach((child) => { const val = child.val(); if (val && val.email && val.email.toLowerCase() === norm) found = { uid: child.key, nickname: val.nickname || norm.split('@')[0], avatar: val.avatar || DEFAULT_AVATAR, email: norm }; }); if (found) return found; }
   return null;
 }
 
-/* ============================================================
-   プロフィール・ストーリー・アーカイブ
-   ============================================================ */
 document.getElementById('profileBtn').addEventListener('click', () => {
-  document.getElementById('nicknameInput').value = myProfile.nickname || '';
-  selectedAvatar = myProfile.avatar || DEFAULT_AVATAR; uploadedAvatarDataUrl = null;
-  document.getElementById('profileAvatarPreview').src = selectedAvatar;
-  const row = document.getElementById('presetAvatarRow'); row.innerHTML = '';
-  PRESET_AVATARS.forEach((av) => {
-    const img = document.createElement('img');
-    img.className = `preset-avatar ${av === selectedAvatar ? 'selected' : ''}`;
-    img.src = av;
-    img.addEventListener('click', () => {
-      selectedAvatar = av; uploadedAvatarDataUrl = null;
-      document.getElementById('profileAvatarPreview').src = av;
-      row.querySelectorAll('img').forEach(i => i.classList.remove('selected'));
-      img.classList.add('selected');
-    });
-    row.appendChild(img);
-  });
+  document.getElementById('nicknameInput').value = myProfile.nickname || ''; selectedAvatar = myProfile.avatar || DEFAULT_AVATAR; uploadedAvatarDataUrl = null;
+  document.getElementById('profileAvatarPreview').src = selectedAvatar; const row = document.getElementById('presetAvatarRow'); row.innerHTML = '';
+  PRESET_AVATARS.forEach((av) => { const img = document.createElement('img'); img.className = `preset-avatar ${av === selectedAvatar ? 'selected' : ''}`; img.src = av; img.addEventListener('click', () => { selectedAvatar = av; uploadedAvatarDataUrl = null; document.getElementById('profileAvatarPreview').src = av; row.querySelectorAll('img').forEach(i => i.classList.remove('selected')); img.classList.add('selected'); }); row.appendChild(img); });
   document.getElementById('profileModal').classList.remove('hidden');
 });
 document.getElementById('profileCancelBtn').addEventListener('click', () => document.getElementById('profileModal').classList.add('hidden'));
 document.getElementById('profileAvatarFileInput').addEventListener('change', (e) => {
   const file = e.target.files[0]; if (!file) return;
   if (file.size > 1024 * 1024) { document.getElementById('profileUploadMsg').textContent = '1MB以下にしてください'; return; }
-  const reader = new FileReader();
-  reader.onload = (ev) => { uploadedAvatarDataUrl = ev.target.result; selectedAvatar = ev.target.result; document.getElementById('profileAvatarPreview').src = ev.target.result; };
-  reader.readAsDataURL(file);
+  const reader = new FileReader(); reader.onload = (ev) => { uploadedAvatarDataUrl = ev.target.result; selectedAvatar = ev.target.result; document.getElementById('profileAvatarPreview').src = ev.target.result; }; reader.readAsDataURL(file);
 });
 document.getElementById('profileSaveBtn').addEventListener('click', async () => {
-  const nick = document.getElementById('nicknameInput').value.trim() || '名無しさん';
-  const av = uploadedAvatarDataUrl || selectedAvatar || DEFAULT_AVATAR;
-  myProfile = { ...myProfile, nickname: nick, avatar: av };
-  profilesCache[currentUser.uid] = { ...myProfile, uid: currentUser.uid };
+  const nick = document.getElementById('nicknameInput').value.trim() || '名無しさん'; const av = uploadedAvatarDataUrl || selectedAvatar || DEFAULT_AVATAR;
+  myProfile = { ...myProfile, nickname: nick, avatar: av }; profilesCache[currentUser.uid] = { ...myProfile, uid: currentUser.uid };
   await update(ref(db, `chatProfiles/${currentUser.uid}`), { nickname: nick, avatar: av, email: (currentUser.email || '').toLowerCase(), updatedAt: Date.now() });
-  document.getElementById('myName').textContent = nick; document.getElementById('myAvatar').src = av;
-  document.getElementById('profileModal').classList.add('hidden');
-  showBanner('プロフィールを保存しました');
+  document.getElementById('myName').textContent = nick; document.getElementById('myAvatar').src = av; document.getElementById('profileModal').classList.add('hidden'); showBanner('プロフィールを保存しました');
 });
 
 function listenStories() {
-  if (!currentUser) return;
-  if (unsubs.stories) unsubs.stories();
-  const now = Date.now();
+  if (!currentUser) return; if (unsubs.stories) unsubs.stories(); const now = Date.now();
   unsubs.stories = onValue(ref(db, 'stories'), (snap) => {
     const newCache = {};
-    if (snap.exists()) {
-      snap.forEach((userSnap) => {
-        const uid = userSnap.key; const userStories = [];
-        userSnap.forEach((stSnap) => {
-          const st = stSnap.val();
-          if (st && (st.expiresAt || 0) > now) userStories.push({ id: stSnap.key, ...st });
-        });
-        if (userStories.length > 0) { userStories.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); newCache[uid] = userStories; }
-      });
-    }
+    if (snap.exists()) snap.forEach((userSnap) => { const uid = userSnap.key; const list = []; userSnap.forEach((stSnap) => { const st = stSnap.val(); if (st && (st.expiresAt || 0) > now) list.push({ id: stSnap.key, ...st }); }); if (list.length > 0) { list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); newCache[uid] = list; } });
     storiesCache = newCache; renderStoriesStrip();
   }, () => {});
 }
 function renderStoriesStrip() {
-  const strip = document.getElementById('storiesStrip'); if (!strip || !currentUser) return;
-  const addBtn = document.getElementById('storyAddBtn');
-  strip.innerHTML = ''; if (addBtn) strip.appendChild(addBtn);
-  const uids = Object.keys(storiesCache);
-  uids.sort((a, b) => a === currentUser.uid ? -1 : (b === currentUser.uid ? 1 : 0));
+  const strip = document.getElementById('storiesStrip'); if (!strip || !currentUser) return; const addBtn = document.getElementById('storyAddBtn'); strip.innerHTML = ''; if (addBtn) strip.appendChild(addBtn);
+  const uids = Object.keys(storiesCache).sort((a, b) => a === currentUser.uid ? -1 : (b === currentUser.uid ? 1 : 0));
   uids.forEach((uid) => {
-    const list = storiesCache[uid]; if (!list || list.length === 0) return;
-    const isMine = uid === currentUser.uid;
-    const allSeen = list.every(s => !!mySeenStories[s.id]);
-    const prof = profilesCache[uid] || {};
-    const bubble = document.createElement('div');
-    bubble.className = 'story-bubble';
+    const list = storiesCache[uid]; if (!list?.length) return; const isMine = uid === currentUser.uid; const allSeen = list.every(s => !!mySeenStories[s.id]); const prof = profilesCache[uid] || {};
+    const bubble = document.createElement('div'); bubble.className = 'story-bubble';
     bubble.innerHTML = `<div class="story-ring ${isMine ? 'mine' : (allSeen ? 'seen' : '')}"><img src="${escapeHtml(list[0].mediaUrl || prof.avatar || DEFAULT_AVATAR)}" alt=""></div><span class="story-name">${escapeHtml(isMine ? 'あなた' : (prof.nickname || 'ユーザー'))}</span>`;
-    bubble.addEventListener('click', () => openStoryViewer(uid, 0, false));
-    strip.appendChild(bubble);
+    bubble.addEventListener('click', () => openStoryViewer(uid, 0, false)); strip.appendChild(bubble);
   });
 }
-
-document.getElementById('storyAddBtn').addEventListener('click', () => {
-  pendingStoryFile = null; pendingStoryAudio = null; pendingStoryVideo = null;
-  document.getElementById('storyTextInput').value = '';
-  document.getElementById('storyUploadPreview').style.display = 'none';
-  document.getElementById('storyAudioPreview').style.display = 'none';
-  document.getElementById('storyVideoPreview').style.display = 'none';
-  document.getElementById('storyPostModal').classList.remove('hidden');
-});
+document.getElementById('storyAddBtn').addEventListener('click', () => { pendingStoryFile = null; pendingStoryAudio = null; pendingStoryVideo = null; document.getElementById('storyTextInput').value = ''; document.getElementById('storyUploadPreview').style.display = 'none'; document.getElementById('storyAudioPreview').style.display = 'none'; document.getElementById('storyVideoPreview').style.display = 'none'; document.getElementById('storyPostModal').classList.remove('hidden'); });
 document.getElementById('storyPostCancelBtn').addEventListener('click', () => document.getElementById('storyPostModal').classList.add('hidden'));
-document.getElementById('storyFileInput').addEventListener('change', (e) => {
-  const f = e.target.files[0]; if (!f) return;
-  if (f.size > 1024 * 1024) { showBanner('画像は1MB以下にしてください'); return; }
-  const r = new FileReader();
-  r.onload = (ev) => { pendingStoryFile = ev.target.result; const p = document.getElementById('storyUploadPreview'); p.innerHTML = `<img src="${ev.target.result}" style="max-height:120px;border-radius:8px;margin:0 auto;">`; p.style.display = 'block'; };
-  r.readAsDataURL(f);
-});
-document.getElementById('storyAudioInput').addEventListener('change', (e) => {
-  const f = e.target.files[0]; if (!f) return;
-  if (f.size > 3 * 1024 * 1024) { showBanner('音声は3MB以下にしてください'); return; }
-  const r = new FileReader();
-  r.onload = (ev) => { pendingStoryAudio = ev.target.result; const p = document.getElementById('storyAudioPreview'); p.textContent = '♪ 音声選択済み'; p.style.display = 'block'; };
-  r.readAsDataURL(f);
-});
-document.getElementById('storyVideoInput').addEventListener('change', (e) => {
-  const f = e.target.files[0]; if (!f) return;
-  if (f.size > 5 * 1024 * 1024) { showBanner('動画は5MB以下にしてください'); return; }
-  const r = new FileReader();
-  r.onload = (ev) => { pendingStoryVideo = ev.target.result; const p = document.getElementById('storyVideoPreview'); p.textContent = '▶ 動画選択済み'; p.style.display = 'block'; };
-  r.readAsDataURL(f);
-});
+document.getElementById('storyFileInput').addEventListener('change', (e) => { const f = e.target.files[0]; if (!f) return; if (f.size > 1024 * 1024) { showBanner('1MB以下にしてください'); return; } const r = new FileReader(); r.onload = (ev) => { pendingStoryFile = ev.target.result; const p = document.getElementById('storyUploadPreview'); p.innerHTML = `<img src="${ev.target.result}" style="max-height:120px;border-radius:8px;margin:0 auto;">`; p.style.display = 'block'; }; r.readAsDataURL(f); });
+document.getElementById('storyAudioInput').addEventListener('change', (e) => { const f = e.target.files[0]; if (!f) return; if (f.size > 3 * 1024 * 1024) { showBanner('3MB以下にしてください'); return; } const r = new FileReader(); r.onload = (ev) => { pendingStoryAudio = ev.target.result; const p = document.getElementById('storyAudioPreview'); p.textContent = '♪ 音声選択済み'; p.style.display = 'block'; }; r.readAsDataURL(f); });
+document.getElementById('storyVideoInput').addEventListener('change', (e) => { const f = e.target.files[0]; if (!f) return; if (f.size > 5 * 1024 * 1024) { showBanner('5MB以下にしてください'); return; } const r = new FileReader(); r.onload = (ev) => { pendingStoryVideo = ev.target.result; const p = document.getElementById('storyVideoPreview'); p.textContent = '▶ 動画選択済み'; p.style.display = 'block'; }; r.readAsDataURL(f); });
 document.getElementById('storyPostBtn').addEventListener('click', async () => {
-  const text = document.getElementById('storyTextInput').value.trim();
-  if (!text && !pendingStoryFile && !pendingStoryAudio && !pendingStoryVideo) return showBanner('内容を入力またはメディアを選択してください');
-  const now = Date.now();
-  const storyData = { authorUid: currentUser.uid, text, mediaUrl: pendingStoryFile || '', audioUrl: pendingStoryAudio || '', videoUrl: pendingStoryVideo || '', createdAt: now, expiresAt: now + 24 * 60 * 60 * 1000 };
-  const newRef = push(ref(db, `stories/${currentUser.uid}`));
-  await set(newRef, storyData);
-  await set(ref(db, `storyArchive/${currentUser.uid}/${newRef.key}`), storyData);
-  document.getElementById('storyPostModal').classList.add('hidden');
-  showBanner('ストーリーを投稿しました');
+  const text = document.getElementById('storyTextInput').value.trim(); if (!text && !pendingStoryFile && !pendingStoryAudio && !pendingStoryVideo) return showBanner('内容を入力またはメディアを選択してください');
+  const now = Date.now(); const storyData = { authorUid: currentUser.uid, text, mediaUrl: pendingStoryFile || '', audioUrl: pendingStoryAudio || '', videoUrl: pendingStoryVideo || '', createdAt: now, expiresAt: now + 86400000 };
+  const newRef = push(ref(db, `stories/${currentUser.uid}`)); await set(newRef, storyData); await set(ref(db, `storyArchive/${currentUser.uid}/${newRef.key}`), storyData);
+  document.getElementById('storyPostModal').classList.add('hidden'); showBanner('ストーリーを投稿しました');
 });
-
 function openStoryViewer(uid, startIndex = 0, isArchive = false) {
   currentStoryUserId = uid; currentStoryIndex = startIndex; currentStoryIsArchive = isArchive;
   currentStoryList = isArchive ? Object.entries(myArchivedStories).map(([id, v]) => ({ id, ...v })) : (storiesCache[uid] || []);
-  if (currentStoryList.length === 0) return;
-  document.getElementById('storyViewer').classList.add('show');
-  showStoryItem();
+  if (!currentStoryList.length) return; document.getElementById('storyViewer').classList.add('show'); showStoryItem();
 }
 function showStoryItem() {
   const item = currentStoryList[currentStoryIndex]; if (!item) { closeStoryViewer(); return; }
   mySeenStories[item.id] = true; saveJson(SEEN_STORIES_KEY, mySeenStories); renderStoriesStrip();
   const prof = profilesCache[currentStoryUserId] || {};
-  document.getElementById('storyHeaderAvatar').src = prof.avatar || DEFAULT_AVATAR;
-  document.getElementById('storyHeaderName').textContent = prof.nickname || 'ユーザー';
-  document.getElementById('storyHeaderTime').textContent = formatShortTime(item.createdAt);
-  const bar = document.getElementById('storyProgressBar'); bar.innerHTML = '';
-  currentStoryList.forEach((_, idx) => { const seg = document.createElement('div'); seg.className = 'story-segment'; seg.innerHTML = `<div style="width:${idx < currentStoryIndex ? '100%' : '0%'}"></div>`; bar.appendChild(seg); });
+  document.getElementById('storyHeaderAvatar').src = prof.avatar || DEFAULT_AVATAR; document.getElementById('storyHeaderName').textContent = prof.nickname || 'ユーザー'; document.getElementById('storyHeaderTime').textContent = formatShortTime(item.createdAt);
+  const bar = document.getElementById('storyProgressBar'); bar.innerHTML = ''; currentStoryList.forEach((_, idx) => { const seg = document.createElement('div'); seg.className = 'story-segment'; seg.innerHTML = `<div style="width:${idx < currentStoryIndex ? '100%' : '0%'}"></div>`; bar.appendChild(seg); });
   const stage = document.getElementById('storyStageContent'); stage.innerHTML = '';
   if (item.videoUrl) stage.innerHTML = `<div class="story-video-wrap"><video src="${escapeHtml(item.videoUrl)}" autoplay playsinline controls></video></div>`;
   else if (item.mediaUrl && item.audioUrl) stage.innerHTML = `<div class="story-image-audio-wrap"><img src="${escapeHtml(item.mediaUrl)}" alt=""><audio src="${escapeHtml(item.audioUrl)}" autoplay></audio></div>`;
   else if (item.mediaUrl) stage.innerHTML = `<img src="${escapeHtml(item.mediaUrl)}" alt="">`;
   else if (item.audioUrl) stage.innerHTML = `<div class="story-audio-wrap"><div class="story-audio-label">${escapeHtml(item.text || '音声ストーリー')}</div><audio src="${escapeHtml(item.audioUrl)}" autoplay></audio></div>`;
   else stage.innerHTML = `<div class="story-text-content">${escapeHtml(item.text || '')}</div>`;
-  if (storyTimer) clearTimeout(storyTimer);
-  storyTimer = setTimeout(() => { if (currentStoryIndex + 1 < currentStoryList.length) { currentStoryIndex++; showStoryItem(); } else closeStoryViewer(); }, 5000);
+  if (storyTimer) clearTimeout(storyTimer); storyTimer = setTimeout(() => { if (currentStoryIndex + 1 < currentStoryList.length) { currentStoryIndex++; showStoryItem(); } else closeStoryViewer(); }, 5000);
 }
 function closeStoryViewer() { if (storyTimer) clearTimeout(storyTimer); document.getElementById('storyViewer').classList.remove('show'); }
 document.getElementById('storyCloseBtn').addEventListener('click', closeStoryViewer);
@@ -4032,32 +3391,19 @@ document.getElementById('storyNavLeft').addEventListener('click', () => { if (cu
 document.getElementById('storyNavRight').addEventListener('click', () => { if (currentStoryIndex + 1 < currentStoryList.length) { currentStoryIndex++; showStoryItem(); } else closeStoryViewer(); });
 document.getElementById('storyReplyInput').addEventListener('keydown', async (e) => {
   if (e.key === 'Enter') {
-    const val = e.target.value.trim(); if (!val || !currentUser || !currentStoryUserId) return;
-    e.target.value = '';
-    const item = currentStoryList[currentStoryIndex];
-    const directChatId = [currentUser.uid, currentStoryUserId].sort().join('_');
+    const val = e.target.value.trim(); if (!val || !currentUser || !currentStoryUserId) return; e.target.value = '';
+    const item = currentStoryList[currentStoryIndex]; const directChatId = [currentUser.uid, currentStoryUserId].sort().join('_');
     const chatData = { id: directChatId, type: 'direct', members: { [currentUser.uid]: true, [currentStoryUserId]: true }, createdAt: Date.now(), lastMessage: val, lastMessageAt: Date.now() };
-    await set(ref(db, `chatMeta/${directChatId}`), chatData);
-    await set(ref(db, `userChats/${currentUser.uid}/${directChatId}`), chatData);
-    await set(ref(db, `userChats/${currentStoryUserId}/${directChatId}`), chatData);
+    await set(ref(db, `chatMeta/${directChatId}`), chatData); await set(ref(db, `userChats/${currentUser.uid}/${directChatId}`), chatData); await set(ref(db, `userChats/${currentStoryUserId}/${directChatId}`), chatData);
     await push(ref(db, `chatMessages/${directChatId}`), { authorUid: currentUser.uid, content: val, storyReply: { text: item?.text || '', mediaUrl: item?.mediaUrl || '' }, createdAt: Date.now() });
     showBanner('返信を送信しました');
   }
 });
 document.getElementById('myArchiveBtn').addEventListener('click', async () => {
-  if (!currentUser) return;
-  const snap = await get(ref(db, `storyArchive/${currentUser.uid}`));
-  myArchivedStories = snap.exists() ? snap.val() : {};
-  const listEl = document.getElementById('archiveList'); listEl.innerHTML = '';
-  const entries = Object.entries(myArchivedStories).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-  if (entries.length === 0) listEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:20px;">アーカイブはありません</div>';
-  else entries.forEach(([id, st]) => {
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #e5e7eb;';
-    div.innerHTML = `<div><div style="font-size:13px;font-weight:700;">${escapeHtml(st.text || 'メディア')}</div><div style="font-size:11px;color:#9ca3af;">${formatTime(st.createdAt)}</div></div><button style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">削除</button>`;
-    div.querySelector('button').addEventListener('click', async () => { await remove(ref(db, `storyArchive/${currentUser.uid}/${id}`)); div.remove(); });
-    listEl.appendChild(div);
-  });
+  if (!currentUser) return; const snap = await get(ref(db, `storyArchive/${currentUser.uid}`)); myArchivedStories = snap.exists() ? snap.val() : {};
+  const listEl = document.getElementById('archiveList'); listEl.innerHTML = ''; const entries = Object.entries(myArchivedStories).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+  if (!entries.length) listEl.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:20px;">アーカイブはありません</div>';
+  else entries.forEach(([id, st]) => { const div = document.createElement('div'); div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #e5e7eb;'; div.innerHTML = `<div><div style="font-size:13px;font-weight:700;">${escapeHtml(st.text || 'メディア')}</div><div style="font-size:11px;color:#9ca3af;">${formatTime(st.createdAt)}</div></div><button style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">削除</button>`; div.querySelector('button').addEventListener('click', async () => { await remove(ref(db, `storyArchive/${currentUser.uid}/${id}`)); div.remove(); }); listEl.appendChild(div); });
   document.getElementById('archiveModal').classList.remove('hidden');
 });
 document.getElementById('archiveCloseBtn').addEventListener('click', () => document.getElementById('archiveModal').classList.add('hidden'));
@@ -4067,22 +3413,9 @@ document.getElementById('archiveCloseBtn').addEventListener('click', () => docum
    ============================================================ */
 function escapeHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function encodeEmailKey(email) { return String(email || '').trim().toLowerCase().replace(/\./g, ',').replace(/[#$\[\]]/g, '_'); }
-function linkifyText(text) {
-  const escaped = escapeHtml(text);
-  return escaped.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-}
-function formatTime(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
-function formatShortTime(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  const now = new Date();
-  if (d.toDateString() === now.toDateString()) return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  return `${d.getMonth() + 1}/${d.getDate()}`;
-}
+function linkifyText(text) { return escapeHtml(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'); }
+function formatTime(ts) { if (!ts) return ''; const d = new Date(ts); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
+function formatShortTime(ts) { if (!ts) return ''; const d = new Date(ts); const now = new Date(); if (d.toDateString() === now.toDateString()) return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; return `${d.getMonth() + 1}/${d.getDate()}`; }
 function openLightbox(src) { document.getElementById('lightboxImg').src = src; document.getElementById('lightbox').classList.add('show'); }
 document.getElementById('lightboxClose').addEventListener('click', () => document.getElementById('lightbox').classList.remove('show'));
 document.getElementById('lightbox').addEventListener('click', (e) => { if (e.target.id === 'lightbox') document.getElementById('lightbox').classList.remove('show'); });
@@ -4090,8 +3423,7 @@ let bannerTimer = null;
 function showBanner(msg, color = '#0284c7') {
   const el = document.getElementById('statusBanner'); if (!el) return;
   el.textContent = msg; el.style.background = color; el.classList.add('show');
-  if (bannerTimer) clearTimeout(bannerTimer);
-  bannerTimer = setTimeout(() => el.classList.remove('show'), 3200);
+  if (bannerTimer) clearTimeout(bannerTimer); bannerTimer = setTimeout(() => el.classList.remove('show'), 3500);
 }
 </script>
 </body>
