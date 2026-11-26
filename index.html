@@ -2214,7 +2214,7 @@ function renderChatList() {
     if (isGroup) {
       const others = Object.keys(chat.members||{}).filter(uid => uid !== currentUser.uid);
       const onlineCount = others.filter(uid => isUserOnline(uid)).length;
-      statusLine = `<span class="online-label ${onlineCount===0?'offline':''}"><span class="online-dot ${onlineCount>0?'online':''}"></span>${onlineCount}/${others.length} オンライン</span>`;
+      statusLine = `<span class="online-label ${onlineCount===0?'offline':''}"><span class="online-dot ${onlineCount>0?'online':''}"></span>${onlineCount}/${others.length}　</span>`;
     } else {
       const otherUid = Object.keys(chat.members||{}).find(uid => uid !== currentUser.uid);
       const online = isUserOnline(otherUid);
